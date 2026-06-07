@@ -1,0 +1,89 @@
+"""
+src/config.py — Central configuration for BreastCare AI.
+All paths, thresholds, and feature mappings live here.
+"""
+import os
+from pathlib import Path
+
+# ── Project root ────────────────────────────────────────────────
+ROOT = Path(__file__).parent.parent
+
+# ── Data paths ──────────────────────────────────────────────────
+DATA_RAW_DIR       = ROOT / "data" / "raw"
+DATA_PROCESSED_DIR = ROOT / "data" / "processed"
+CLEANED_CSV        = DATA_PROCESSED_DIR / "cleaned.csv"
+
+# ── Model paths ─────────────────────────────────────────────────
+MODELS_DIR           = ROOT / "models"
+LGBM_MODEL_PATH      = MODELS_DIR / "mammographic_lgbm.pkl"
+LGBM_SHAP_PATH       = MODELS_DIR / "mammographic_shap.pkl"
+XGBOOST_MODEL_PATH   = MODELS_DIR / "wdbc_xgboost.pkl"
+XGBOOST_SHAP_PATH    = MODELS_DIR / "wdbc_shap.pkl"
+MODEL_METADATA_PATH  = MODELS_DIR / "model_metadata.json"
+WDBC_FEATURES_PATH   = MODELS_DIR / "wdbc_features.json"
+
+# ── Knowledge base paths ─────────────────────────────────────────
+KB_DIR              = ROOT / "knowledge_base"
+KB_SOURCES_DIR      = KB_DIR / "sources"
+KB_CHUNKS_DIR       = KB_DIR / "chunks"
+KB_VECTORSTORE_DIR  = KB_DIR / "vectorstore"
+CHUNKS_JSONL        = KB_CHUNKS_DIR / "chunks.jsonl"
+FAISS_INDEX_PATH    = KB_VECTORSTORE_DIR / "faiss.index"
+CHUNK_METADATA_PATH = KB_VECTORSTORE_DIR / "chunk_metadata.json"
+TFIDF_PATH          = KB_VECTORSTORE_DIR / "tfidf_vectorizer.pkl"
+SVD_PATH            = KB_VECTORSTORE_DIR / "svd_reducer.pkl"
+EMBEDDER_FLAG_PATH  = KB_VECTORSTORE_DIR / "embedder_type.txt"
+
+# ── Risk thresholds ──────────────────────────────────────────────
+LOW_RISK_THRESHOLD      = 0.35   # below = Low
+HIGH_RISK_THRESHOLD     = 0.65   # above = Elevated
+DECISION_THRESHOLD      = 0.50   # binary classification
+CHUNK_TOP_K             = 3      # retrieved chunks per query
+
+# ── Mammographic feature mappings ────────────────────────────────
+SHAPE_MAP = {
+    1: "Round",
+    2: "Oval",
+    3: "Lobular",
+    4: "Irregular",
+}
+
+MARGIN_MAP = {
+    1: "Circumscribed",
+    2: "Microlobulated",
+    3: "Obscured",
+    4: "Ill-defined",
+    5: "Spiculated",
+}
+
+DENSITY_MAP = {
+    1: "High density",
+    2: "Iso density",
+    3: "Low density",
+    4: "Fat-containing",
+}
+
+FEATURE_NAMES = ["age", "shape", "margin", "density"]
+
+# ── LLM ─────────────────────────────────────────────────────────
+GEMINI_MODEL      = "gemini-2.5-flash"   # free tier: 1,500 req/day
+CLAUDE_MAX_TOKENS = 900
+
+# ── Chunking ─────────────────────────────────────────────────────
+CHUNK_MIN_LEN = 80
+CHUNK_MAX_LEN = 1200
+
+# ── SHAP embedding dims ──────────────────────────────────────────
+EMBED_DIM_DENSE    = 384   # all-MiniLM-L6-v2
+EMBED_DIM_FALLBACK = 128   # TF-IDF + SVD fallback
+
+# ── Google Gemini API key ────────────────────────────────────────
+# Free key (no credit card): https://aistudio.google.com
+def get_api_key() -> str:
+    # Load .env from this file's directory tree if present (no-op if missing)
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(override=False)
+    except ImportError:
+        pass
+    return os.environ.get("GEMINI_API_KEY", "")

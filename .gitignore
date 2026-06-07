@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+*.pkl
+farwa_env/
+.venv/
+venv/

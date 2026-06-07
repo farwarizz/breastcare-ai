@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>BreastCare AI — Breast Cancer Risk Estimation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+:root{
+  --ivory:#fdf8f5;--white:#ffffff;--off:#faf6f2;
+  --r50:#fff1f4;--r100:#ffe0e8;--r200:#ffc2d0;--r300:#ff94ae;
+  --r400:#e8647e;--r500:#c9445d;--r600:#a83050;--r700:#8c2242;
+  --navy:#0e1c2f;--navy2:#1a2d47;--navy3:#253d5e;
+  --blue:#3d6b9e;--blue2:#5585be;--slate:#607b96;--slate2:#8fa6bc;
+  --tp:#1a2332;--ts:#4a5568;--tm:#718096;
+  --bdr:#e8eff7;--bdp:#f5dde3;
+  --ss:0 1px 3px rgba(14,28,47,.07),0 1px 2px rgba(14,28,47,.04);
+  --sm:0 4px 20px rgba(14,28,47,.09),0 2px 8px rgba(14,28,47,.05);
+  --sl:0 16px 48px rgba(14,28,47,.11),0 4px 16px rgba(14,28,47,.06);
+  --sr:0 8px 40px rgba(201,68,93,.22);
+  --rmd:14px;--rlg:20px;--rxl:28px;
+  --fd:'Playfair Display',Georgia,serif;
+  --fb:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
+  --nh:68px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:var(--fb);background:var(--ivory);color:var(--tp);line-height:1.65;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:900;height:var(--nh);display:flex;align-items:center;padding:0 48px;transition:all .4s cubic-bezier(.22,.61,.36,1)}
+nav.scrolled{height:56px;background:rgba(255,255,255,.97);border-bottom:1px solid var(--bdr);box-shadow:var(--ss);backdrop-filter:blur(20px)}
+.nb{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nbt{font-family:var(--fd);font-size:1.2rem;font-weight:700;color:var(--navy)}
+.nl{display:flex;align-items:center;gap:4px;margin-left:36px}
+.nl a{font-size:.81rem;font-weight:500;color:var(--ts);text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .2s}
+.nl a:hover{color:var(--navy);background:var(--r50)}
+.nc{margin-left:auto}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:50px;font-family:var(--fb);font-size:.84rem;font-weight:500;text-decoration:none;border:none;cursor:pointer;transition:all .22s ease;letter-spacing:.01em;white-space:nowrap}
+.btn-p{background:var(--r500);color:#fff;box-shadow:var(--sr)}
+.btn-p:hover{background:var(--r600);transform:translateY(-2px);box-shadow:0 12px 36px rgba(201,68,93,.32)}
+.btn-g{background:transparent;color:var(--ts);border:1px solid var(--bdr)}
+.btn-g:hover{background:var(--white);color:var(--navy);border-color:var(--slate2);transform:translateY(-1px)}
+.btn-o{background:transparent;color:var(--r500);border:1.5px solid var(--r300)}
+.btn-o:hover{background:var(--r50);transform:translateY(-1px)}
+.btn-lg{padding:13px 30px;font-size:.93rem}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;position:relative;overflow:hidden;padding:var(--nh) 48px 0}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.hero-grd{position:absolute;inset:0;z-index:0;background:
+  radial-gradient(ellipse 80% 70% at 70% 35%,rgba(232,100,126,.09) 0%,transparent 60%),
+  radial-gradient(ellipse 40% 60% at 15% 80%,rgba(61,107,158,.06) 0%,transparent 50%),
+  linear-gradient(170deg,var(--ivory) 0%,#fef9f7 40%,var(--white) 100%)}
+.hero-inner{flex:1;position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:40px;max-width:1100px;width:100%;margin:0 auto;padding:80px 0 60px}
+@media(max-width:860px){.hero-inner{grid-template-columns:1fr;padding:100px 0 80px}}
+.hero-left{max-width:560px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--r50);border:1px solid var(--r200);border-radius:50px;padding:5px 14px 5px 8px;margin-bottom:26px;font-size:.76rem;font-weight:600;color:var(--r600);opacity:0;transform:translateY(14px);letter-spacing:.02em}
+.hbd{width:8px;height:8px;border-radius:50%;background:var(--r400);animation:pulse-dot 2.2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+h1.hero-h1{font-family:var(--fd);font-size:clamp(2.8rem,4.8vw,4.4rem);font-weight:700;line-height:1.06;letter-spacing:-.025em;color:var(--navy);margin-bottom:18px;opacity:0;transform:translateY(22px)}
+h1.hero-h1 em{font-style:italic;color:var(--r500)}
+.hero-sub{font-size:1.02rem;color:var(--ts);line-height:1.72;max-width:450px;margin-bottom:28px;opacity:0;transform:translateY(16px);font-weight:300}
+.hero-disc{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.75);border:1px solid var(--bdr);border-radius:12px;padding:12px 15px;margin-bottom:32px;font-size:.77rem;color:var(--tm);line-height:1.55;opacity:0;transform:translateY(12px);backdrop-filter:blur(10px)}
+.hero-acts{display:flex;gap:12px;flex-wrap:wrap;opacity:0;transform:translateY(12px)}
+.hero-right{display:flex;justify-content:center;align-items:center;opacity:0}
+@media(max-width:860px){.hero-right{display:none}}
+
+/* RIBBON SVG */
+.ribbon-wrap{position:relative;width:380px;height:430px}
+.ribbon-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(232,100,126,.18) 0%,transparent 70%);filter:blur(30px);animation:glow-pulse 4s ease-in-out infinite}
+@keyframes glow-pulse{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}}
+.ribbon-svg{position:relative;z-index:2;width:100%;height:100%;filter:drop-shadow(0 20px 40px rgba(201,68,93,.18))}
+.ribbon-float{animation:float-ribbon 6s ease-in-out infinite}
+@keyframes float-ribbon{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-10px) rotate(.8deg)}66%{transform:translateY(-5px) rotate(-.5deg)}}
+.leaf1{animation:float-leaf 7s ease-in-out infinite}
+.leaf2{animation:float-leaf 9s ease-in-out infinite 1.2s}
+.leaf3{animation:float-leaf 8s ease-in-out infinite .6s}
+@keyframes float-leaf{0%,100%{transform:translate(0,0) rotate(0deg)}33%{transform:translate(6px,-10px) rotate(6deg)}66%{transform:translate(-4px,-5px) rotate(-4deg)}}
+
+/* STAT BADGES */
+.stat-badge{position:absolute;background:rgba(255,255,255,.92);border:1px solid var(--bdr);border-radius:12px;padding:12px 16px;backdrop-filter:blur(12px);box-shadow:var(--sm);animation:badge-float var(--dur,5s) ease-in-out infinite var(--del,0s)}
+@keyframes badge-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.sb1{top:10%;right:-20px;--dur:5s;--del:0s}
+.sb2{bottom:28%;left:-24px;--dur:6s;--del:.8s}
+.sb3{bottom:8%;right:0;--dur:5.5s;--del:.4s}
+.sb-val{font-family:var(--fd);font-size:1.3rem;font-weight:700;color:var(--navy);line-height:1}
+.sb-lbl{font-size:.68rem;color:var(--tm);margin-top:3px;font-weight:400}
+.sb-sub{font-size:.62rem;color:var(--r400);font-weight:600;margin-top:2px}
+
+/* HERO STATS */
+.hero-stats-row{position:relative;z-index:3;padding:0 0 36px}
+.hsr-inner{max-width:1100px;margin:0 auto;padding:0 48px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.stat-pill{background:rgba(255,255,255,.82);border:1px solid var(--bdr);border-radius:14px;padding:14px 18px;backdrop-filter:blur(10px);transition:all .3s;cursor:default}
+.stat-pill:hover{transform:translateY(-3px);box-shadow:var(--sm);background:rgba(255,255,255,.95)}
+.sp-num{font-family:var(--fd);font-size:1.7rem;font-weight:700;color:var(--navy);line-height:1}
+.sp-lbl{font-size:.73rem;color:var(--tm);margin-top:3px}
+.sp-sub{font-size:.65rem;color:var(--r400);font-weight:600;margin-top:1px}
+
+/* REVEAL */
+.rv{opacity:0;transform:translateY(30px);transition:opacity .7s cubic-bezier(.22,.61,.36,1),transform .7s cubic-bezier(.22,.61,.36,1)}
+.rv.v{opacity:1;transform:none}
+.rv-l{opacity:0;transform:translateX(-30px);transition:opacity .7s cubic-bezier(.22,.61,.36,1),transform .7s cubic-bezier(.22,.61,.36,1)}
+.rv-l.v{opacity:1;transform:none}
+.rv-r{opacity:0;transform:translateX(30px);transition:opacity .7s cubic-bezier(.22,.61,.36,1),transform .7s cubic-bezier(.22,.61,.36,1)}
+.rv-r.v{opacity:1;transform:none}
+.rv-s{opacity:0;transform:scale(.94);transition:opacity .6s cubic-bezier(.22,.61,.36,1),transform .6s cubic-bezier(.22,.61,.36,1)}
+.rv-s.v{opacity:1;transform:none}
+
+/* SECTION HEADERS */
+.stag{display:inline-flex;align-items:center;gap:7px;font-size:.71rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--r500);margin-bottom:10px}
+.stag::before{content:'';width:16px;height:1.5px;background:currentColor}
+.sh2{font-family:var(--fd);font-size:clamp(1.8rem,3.2vw,2.7rem);font-weight:700;color:var(--navy);line-height:1.13;letter-spacing:-.02em;margin-bottom:14px}
+.slead{font-size:.97rem;color:var(--ts);line-height:1.72;max-width:540px;font-weight:300}
+.sec{padding:100px 48px;max-width:1100px;margin:0 auto}
+@media(max-width:640px){.sec{padding:64px 20px}nav{padding:0 20px}.hsr-inner{grid-template-columns:1fr;padding:0 20px}.hero{padding:var(--nh) 20px 0}}
+
+/* CARDS TILT */
+.tilt{transform-style:preserve-3d;transition:transform .1s ease}
+.tilt:hover{box-shadow:var(--sl)}
+
+/* ASSESSMENT */
+#assessment{background:var(--white)}
+.aw{max-width:1100px;margin:0 auto;padding:100px 48px;display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:start}
+@media(max-width:860px){.aw{grid-template-columns:1fr;padding:64px 20px}}
+.fcard{background:var(--ivory);border:1px solid var(--bdr);border-radius:var(--rxl);padding:36px;box-shadow:var(--sm);transition:box-shadow .3s}
+.fcard:hover{box-shadow:var(--sl)}
+.ft{font-family:var(--fd);font-size:1.25rem;font-weight:600;color:var(--navy);margin-bottom:4px}
+.fsub{font-size:.79rem;color:var(--tm);margin-bottom:26px}
+.fg{margin-bottom:20px}
+.fl{display:block;font-size:.79rem;font-weight:600;color:var(--tp);margin-bottom:7px;letter-spacing:.01em}
+.fl span{font-weight:400;color:var(--tm);font-size:.73rem}
+.asl{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:linear-gradient(to right,var(--r400) 0%,var(--r400) var(--pct,44%),var(--bdr) var(--pct,44%),var(--bdr) 100%);outline:none;cursor:pointer}
+.asl::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--r500);border:2.5px solid #fff;box-shadow:0 2px 8px rgba(201,68,93,.4);cursor:pointer;transition:transform .15s,box-shadow .15s}
+.asl::-webkit-slider-thumb:hover{transform:scale(1.2);box-shadow:0 4px 16px rgba(201,68,93,.5)}
+.adsp{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.av{font-family:var(--fd);font-size:1.6rem;font-weight:700;color:var(--r500)}
+.fbs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fb{font-size:.72rem;padding:5px 12px;border-radius:20px;background:var(--off);border:1px solid var(--bdr);color:var(--ts);cursor:pointer;transition:all .18s;font-weight:500}
+.fb:hover{background:var(--r50);border-color:var(--r200);color:var(--r600)}
+.fb.a{background:var(--r50);border-color:var(--r300);color:var(--r600);font-weight:600;box-shadow:0 0 0 3px rgba(201,68,93,.08)}
+.abtn{width:100%;margin-top:22px;justify-content:center}
+
+/* RESULT CARD */
+.rp{position:sticky;top:88px}
+.rcard{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rxl);padding:32px;box-shadow:var(--sl);overflow:hidden;position:relative;transition:all .4s}
+.rcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--r300),var(--r500),var(--blue));border-radius:var(--rxl) var(--rxl) 0 0}
+.re{text-align:center;padding:52px 20px}
+.re-icon{font-size:52px;margin-bottom:16px;opacity:.35;animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.re-t{font-size:.87rem;color:var(--tm);line-height:1.6}
+
+/* GAUGE */
+.gw{display:flex;justify-content:center;margin:8px 0 16px}
+#gauge-svg{overflow:visible}
+.rc-lbl{font-size:.76rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;text-align:center;margin-bottom:3px}
+.rc-name{font-family:var(--fd);font-size:1.5rem;font-weight:700;text-align:center;margin-bottom:16px}
+.r-low .rc-lbl,.r-low .rc-name{color:var(--blue)}
+.r-mod .rc-lbl,.r-mod .rc-name{color:#d97706}
+.r-hi .rc-lbl,.r-hi .rc-name{color:var(--r500)}
+.ri{font-size:.81rem;color:var(--ts);line-height:1.65;background:var(--off);border-radius:10px;padding:13px 14px;margin-bottom:16px}
+.shap-mini-t{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tp);margin-bottom:9px}
+.sbr{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.sfn{font-size:.73rem;color:var(--ts);width:54px;flex-shrink:0;text-transform:capitalize}
+.sbt{flex:1;height:7px;background:var(--bdr);border-radius:4px;overflow:hidden}
+.sbf{height:100%;border-radius:4px;width:0;transition:width .9s cubic-bezier(.22,.61,.36,1)}
+.sbf-up{background:linear-gradient(90deg,var(--r300),var(--r500))}
+.sbf-dn{background:linear-gradient(90deg,var(--blue2),var(--blue))}
+.sv{font-size:.68rem;font-family:var(--fm);color:var(--tm);width:44px;text-align:right}
+.cn{display:flex;gap:8px;align-items:flex-start;background:rgba(61,107,158,.05);border:1px solid rgba(61,107,158,.13);border-radius:10px;padding:11px 13px;margin-top:14px;font-size:.73rem;color:var(--slate);line-height:1.5}
+
+/* EXPLAINER */
+#explainer{background:var(--off)}
+.eg{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;margin-top:52px}
+@media(max-width:860px){.eg{grid-template-columns:1fr}}
+.ec{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rlg);padding:28px;box-shadow:var(--ss);transition:all .3s}
+.ec:hover{box-shadow:var(--sm);transform:translateY(-2px)}
+.ec-t{font-size:.87rem;font-weight:600;color:var(--navy);margin-bottom:3px}
+.ec-s{font-size:.76rem;color:var(--tm);margin-bottom:18px}
+.wfr{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.wfl{font-size:.73rem;color:var(--ts);width:74px;text-align:right;flex-shrink:0;line-height:1.3}
+.wft{flex:1;height:24px;position:relative;border-radius:4px;overflow:hidden;background:var(--off)}
+.wfb{position:absolute;top:3px;bottom:3px;border-radius:3px;width:0;transition:width 1s cubic-bezier(.22,.61,.36,1)}
+.wfb-p{background:linear-gradient(90deg,#fca5a5,var(--r500))}
+.wfb-n{background:linear-gradient(90deg,var(--blue2),var(--blue))}
+.wfp{font-size:.68rem;font-family:var(--fm);width:38px;flex-shrink:0}
+.fc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.fci{background:var(--off);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;transition:all .2s}
+.fci:hover{transform:translateY(-2px);box-shadow:var(--ss)}
+.fci.dom{background:var(--r50);border-color:var(--r200)}
+.fci.dom .fcn{color:var(--r600)}
+.fci.dom .fcv{color:var(--r600)}
+.fcn{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ts);margin-bottom:3px}
+.fcv{font-family:var(--fd);font-size:1.05rem;font-weight:600;color:var(--navy)}
+.fcm{font-size:.68rem;color:var(--tm);margin-top:2px}
+.pl{background:linear-gradient(135deg,var(--r50),rgba(61,107,158,.04));border:1px solid var(--r100);border-radius:var(--rlg);padding:22px;margin-top:24px}
+.pl-t{font-size:.77rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--r600);margin-bottom:8px}
+.pl p{font-size:.88rem;color:var(--ts);line-height:1.7}
+
+/* ASSISTANT */
+#assistant{background:var(--white)}
+.aw2{max-width:1100px;margin:0 auto;padding:100px 48px}
+@media(max-width:640px){.aw2{padding:64px 20px}}
+.cl{display:grid;grid-template-columns:300px 1fr;gap:28px;margin-top:44px}
+@media(max-width:900px){.cl{grid-template-columns:1fr}}
+.csb{display:flex;flex-direction:column;gap:12px}
+.cst{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);margin-bottom:2px}
+.pc{display:flex;align-items:center;gap:10px;background:var(--ivory);border:1px solid var(--bdr);border-radius:12px;padding:11px 13px;cursor:pointer;transition:all .2s;text-align:left;width:100%}
+.pc:hover{background:var(--r50);border-color:var(--r200);transform:translateX(4px)}
+.pci{width:28px;height:28px;border-radius:7px;background:var(--r50);border:1px solid var(--r100);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
+.pct{font-size:.77rem;color:var(--ts);line-height:1.4}
+.raf{background:var(--ivory);border:1px solid var(--bdr);border-radius:12px;padding:14px;margin-top:4px}
+.raf-t{font-size:.69rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);margin-bottom:9px}
+.raf-s{display:flex;align-items:center;gap:2px;overflow-x:auto;padding-bottom:2px}
+.rsn{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.rsn-n{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;border:1.5px solid var(--bdr);background:var(--white);transition:all .35s}
+.rsn-n.act{border-color:var(--r300);background:var(--r50);box-shadow:0 0 0 3px rgba(232,100,126,.12)}
+.rsn-l{font-size:.59rem;color:var(--tm);text-align:center;max-width:44px;line-height:1.2}
+.rarr{color:var(--bdr);font-size:13px;flex-shrink:0;padding-bottom:14px}
+.cwin{background:var(--ivory);border:1px solid var(--bdr);border-radius:var(--rxl);overflow:hidden;box-shadow:var(--sm);display:flex;flex-direction:column;height:520px;transition:box-shadow .3s}
+.cwin:hover{box-shadow:var(--sl)}
+.ch{background:var(--white);border-bottom:1px solid var(--bdr);padding:14px 18px;display:flex;align-items:center;gap:12px}
+.cha{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--r400),var(--r600));display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
+.chi{flex:1}
+.chn{font-size:.86rem;font-weight:600;color:var(--navy)}
+.chs{font-size:.71rem;color:var(--blue);display:flex;align-items:center;gap:4px}
+.sdot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse-dot 2s infinite}
+.cmsg{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+.mb,.mu{max-width:84%;display:flex;gap:7px;align-items:flex-end}
+.mu{align-self:flex-end;flex-direction:row-reverse}
+.mb{align-self:flex-start}
+.ma{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px}
+.mb .ma{background:linear-gradient(135deg,var(--r400),var(--r600));color:#fff}
+.mu .ma{background:var(--navy);color:#fff}
+.mbub{padding:9px 13px;border-radius:13px;font-size:.83rem;line-height:1.55;color:var(--tp)}
+.mb .mbub{background:var(--white);border:1px solid var(--bdr);border-bottom-left-radius:4px}
+.mu .mbub{background:var(--navy);color:#fff;border-bottom-right-radius:4px}
+.sp{display:inline-flex;align-items:center;gap:4px;font-size:.67rem;background:var(--r50);color:var(--r600);border:1px solid var(--r100);border-radius:20px;padding:2px 8px;margin-top:7px}
+.tdots{display:flex;gap:4px;padding:5px 2px;align-items:center}
+.tdots span{width:6px;height:6px;border-radius:50%;background:var(--slate2);animation:db 1.2s infinite}
+.tdots span:nth-child(2){animation-delay:.2s}
+.tdots span:nth-child(3){animation-delay:.4s}
+@keyframes db{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+.cir{border-top:1px solid var(--bdr);padding:12px 14px;display:flex;gap:9px;align-items:flex-end;background:var(--white)}
+.cta{flex:1;border:1.5px solid var(--bdr);border-radius:12px;padding:9px 13px;font-family:var(--fb);font-size:.83rem;color:var(--tp);background:var(--ivory);resize:none;outline:none;min-height:38px;max-height:96px;transition:border-color .2s;line-height:1.5}
+.cta:focus{border-color:var(--r300);background:var(--white)}
+.csend{width:37px;height:37px;border-radius:50%;background:var(--r500);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.csend:hover{background:var(--r600);transform:scale(1.08);box-shadow:0 4px 16px rgba(201,68,93,.4)}
+.csend:disabled{background:var(--bdr);cursor:not-allowed;transform:none;box-shadow:none}
+.csend svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* HOW IT WORKS */
+#hiw{background:var(--navy);color:#fff;padding:100px 48px}
+@media(max-width:640px){#hiw{padding:64px 20px}}
+.hiw-inner{max-width:1100px;margin:0 auto}
+#hiw .stag{color:rgba(255,255,255,.35)}
+#hiw .stag::before{background:rgba(255,255,255,.2)}
+#hiw .sh2{color:#fff}
+#hiw .slead{color:rgba(255,255,255,.45)}
+.pipe{margin-top:56px;position:relative}
+.pipe-line{position:absolute;top:44px;left:48px;right:48px;height:1.5px;background:linear-gradient(90deg,transparent,var(--r500) 30%,var(--r500) 70%,transparent);opacity:.3;z-index:0}
+@media(max-width:700px){.pipe-line{display:none}}
+.pipe-nodes{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;position:relative;z-index:1}
+@media(max-width:700px){.pipe-nodes{grid-template-columns:repeat(3,1fr)}}
+.pn{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.pni{width:78px;height:78px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);transition:all .35s;position:relative;overflow:hidden}
+.pni::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.06),transparent);pointer-events:none}
+.pn:hover .pni{transform:translateY(-8px);border-color:rgba(232,100,126,.5);background:rgba(232,100,126,.1);box-shadow:0 8px 32px rgba(232,100,126,.2)}
+.pnl{font-size:.73rem;font-weight:500;color:rgba(255,255,255,.65);line-height:1.35;max-width:84px}
+.pns{font-size:.63rem;color:rgba(255,255,255,.28);line-height:1.25;max-width:84px}
+.fdet{margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:700px){.fdet{grid-template-columns:1fr}}
+.fdc{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;transition:all .3s}
+.fdc:hover{background:rgba(255,255,255,.06);transform:translateY(-3px)}
+.fdc-n{font-family:var(--fm);font-size:.66rem;color:var(--r400);margin-bottom:8px}
+.fdc-t{font-size:.9rem;font-weight:600;color:#fff;margin-bottom:7px}
+.fdc-p{font-size:.78rem;color:rgba(255,255,255,.42);line-height:1.65}
+.fdc-chip{display:inline-flex;margin-top:9px;font-size:.63rem;background:rgba(232,100,126,.1);color:var(--r400);border:1px solid rgba(232,100,126,.18);border-radius:20px;padding:2px 9px;font-family:var(--fm)}
+
+/* DATA */
+#data{background:var(--off)}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:44px}
+@media(max-width:860px){.dgrid{grid-template-columns:1fr}}
+.dc{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rlg);padding:26px;box-shadow:var(--ss);transition:all .28s}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sm)}
+.dbadge{display:inline-flex;align-items:center;gap:5px;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:3px 10px;border-radius:20px;margin-bottom:14px}
+.bb{background:rgba(61,107,158,.09);color:var(--blue);border:1px solid rgba(61,107,158,.18)}
+.br{background:var(--r50);color:var(--r600);border:1px solid var(--r200)}
+.bg{background:rgba(217,119,6,.08);color:#b45309;border:1px solid rgba(217,119,6,.18)}
+.dt{font-family:var(--fd);font-size:1rem;font-weight:600;color:var(--navy);margin-bottom:7px;line-height:1.25}
+.dd{font-size:.79rem;color:var(--ts);line-height:1.65;margin-bottom:14px}
+.ds{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dst{background:var(--off);border-radius:8px;padding:9px 11px}
+.dsv{font-family:var(--fd);font-size:1.05rem;font-weight:700;color:var(--navy)}
+.dsk{font-size:.66rem;color:var(--tm);margin-top:1px}
+.mperf{margin-top:36px;background:var(--white);border:1px solid var(--bdr);border-radius:var(--rxl);padding:32px;box-shadow:var(--sm)}
+.mpt{font-family:var(--fd);font-size:1.15rem;font-weight:600;color:var(--navy);margin-bottom:4px}
+.mps{font-size:.79rem;color:var(--tm);margin-bottom:24px}
+.ptbl{width:100%;border-collapse:collapse;font-size:.81rem}
+.ptbl th{text-align:left;padding:7px 14px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tm);border-bottom:1px solid var(--bdr)}
+.ptbl td{padding:11px 14px;border-bottom:1px solid var(--bdr);color:var(--ts);vertical-align:middle}
+.ptbl tr:last-child td{border-bottom:none}
+.ptbl tr.br td{background:var(--r50);font-weight:500;color:var(--tp)}
+.ptbl tr.br td:first-child{border-left:3px solid var(--r400)}
+.mbw{display:flex;align-items:center;gap:7px}
+.mbar{height:5px;border-radius:3px;transition:width 1.2s cubic-bezier(.22,.61,.36,1);width:0}
+.mba{background:linear-gradient(90deg,var(--blue2),var(--blue))}
+.mbr{background:linear-gradient(90deg,var(--r300),var(--r500))}
+.mv{font-family:var(--fm);font-size:.73rem;color:var(--tp);flex-shrink:0}
+.src-row{margin-top:28px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:640px){.src-row{grid-template-columns:repeat(2,1fr)}}
+.src-c{background:var(--white);border:1px solid var(--bdr);border-radius:12px;padding:14px;transition:all .2s}
+.src-c:hover{transform:translateY(-2px);box-shadow:var(--ss)}
+.src-ic{font-size:18px;margin-bottom:6px}
+.src-t{font-size:.78rem;font-weight:600;color:var(--navy);margin-bottom:3px}
+.src-s{font-size:.68rem;color:var(--tm)}
+
+/* SAFETY */
+#safety{background:linear-gradient(160deg,var(--ivory) 0%,var(--r50) 100%)}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:48px;align-items:start}
+@media(max-width:860px){.sg{grid-template-columns:1fr}}
+.sc{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rlg);padding:26px;box-shadow:var(--ss);transition:all .3s;margin-bottom:14px}
+.sc:hover{box-shadow:var(--sm);transform:translateY(-2px)}
+.sci{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px}
+.sci-b{background:rgba(61,107,158,.07);border:1px solid rgba(61,107,158,.14)}
+.sci-r{background:var(--r50);border:1px solid var(--r100)}
+.sc-t{font-size:.89rem;font-weight:600;color:var(--navy);margin-bottom:7px}
+.sc-p{font-size:.79rem;color:var(--ts);line-height:1.65}
+.ll{display:flex;flex-direction:column;gap:9px;margin-top:13px}
+.li{display:flex;gap:9px;font-size:.78rem;color:var(--ts);line-height:1.5;padding:9px 12px;background:var(--off);border-radius:8px}
+.lix{flex-shrink:0;margin-top:1px;color:var(--r400);font-weight:700}
+.dbox{background:linear-gradient(135deg,rgba(232,100,126,.06),rgba(61,107,158,.04));border:1px solid var(--r200);border-radius:var(--rxl);padding:28px;margin-top:44px;display:flex;gap:18px;align-items:flex-start}
+.dbox-ic{font-size:32px;flex-shrink:0}
+.dbox-t{font-family:var(--fd);font-size:1.15rem;font-weight:600;color:var(--navy);margin-bottom:7px}
+.dbox-p{font-size:.83rem;color:var(--ts);line-height:1.7}
+
+/* FOOTER */
+footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px;text-align:center}
+.ft-brand{font-family:var(--fd);font-size:1.45rem;color:#fff;margin-bottom:6px}
+.ft-tag{font-size:.8rem;margin-bottom:24px;line-height:1.6}
+.ft-refs{font-size:.69rem;line-height:1.85;max-width:580px;margin:0 auto 20px;opacity:.35}
+.ft-legal{font-size:.69rem;border-top:1px solid rgba(255,255,255,.06);padding-top:20px}
+
+/* GRADIENT HEADLINE */
+.h1-ai{background:linear-gradient(135deg,#E8647E 0%,#C9445D 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline-block;font-style:normal}
+
+/* PIPELINE SVG */
+.pipe-svg{width:100%;overflow:visible;display:block;margin-bottom:8px}
+.pipe-connector{fill:none;stroke:rgba(232,100,126,.22);stroke-width:1.5;stroke-dasharray:7 5}
+.pn{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;position:relative}
+.pn-badge{font-size:.58rem;font-family:var(--fm);background:rgba(232,100,126,.15);color:var(--r400);border-radius:20px;padding:2px 8px;display:inline-block}
+.pn-tip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:rgba(10,20,36,.96);color:rgba(255,255,255,.75);font-size:.69rem;line-height:1.5;padding:9px 13px;border-radius:10px;width:200px;text-align:left;z-index:20;pointer-events:none;opacity:0;transition:opacity .22s;border:1px solid rgba(232,100,126,.18)}
+.pn-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:rgba(10,20,36,.96)}
+.pn:hover .pn-tip{opacity:1}
+
+/* MINI DEMO */
+.mini-demo{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:36px 40px;margin-top:56px}
+.mini-demo-hd{margin-bottom:28px}
+.mini-demo-title{font-family:var(--fd);font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:5px;display:flex;align-items:center;gap:10px}
+.mini-demo-title::before{content:'⚡';font-size:1.2rem}
+.mini-demo-sub{font-size:.79rem;color:rgba(255,255,255,.38);line-height:1.6}
+.mini-demo-inner{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+@media(max-width:700px){.mini-demo-inner{grid-template-columns:1fr}}
+.md-lbl{display:block;font-size:.67rem;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase}
+.md-age-row{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.md-age-num{font-family:var(--fd);font-size:1.5rem;font-weight:700;color:#fff;width:40px;flex-shrink:0}
+.md-asl{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:linear-gradient(to right,var(--r400) var(--pct,46%),rgba(255,255,255,.15) var(--pct,46%));outline:none;cursor:pointer}
+.md-asl::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--r500);border:2px solid #fff;box-shadow:0 2px 10px rgba(201,68,93,.5);cursor:pointer}
+.md-fbs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px}
+.md-fb{font-size:.67rem;padding:5px 11px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);cursor:pointer;transition:all .18s}
+.md-fb:hover{background:rgba(232,100,126,.1);border-color:rgba(232,100,126,.28);color:rgba(255,255,255,.8)}
+.md-fb.a{background:rgba(232,100,126,.18);border-color:rgba(232,100,126,.5);color:#fff;font-weight:600}
+.md-run{width:100%;margin-top:6px;padding:12px;border:none;border-radius:50px;background:linear-gradient(135deg,var(--r400),var(--r600));color:#fff;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .22s;font-family:var(--fb);letter-spacing:.02em}
+.md-run:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,68,93,.42)}
+.md-run:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.md-waiting{text-align:center;padding:48px 20px;color:rgba(255,255,255,.25);font-size:.82rem;line-height:1.7}
+.md-waiting-icon{font-size:36px;display:block;margin-bottom:10px;opacity:.35}
+.md-result{display:none}
+.md-pct-big{font-family:var(--fd);font-size:3.5rem;font-weight:700;color:#fff;line-height:1;margin-bottom:6px}
+.md-risk-badge{display:inline-block;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;padding:3px 11px;border-radius:20px;margin-bottom:14px}
+.md-rb-low{background:rgba(61,107,158,.2);color:#93c5fd;border:1px solid rgba(61,107,158,.3)}
+.md-rb-mod{background:rgba(217,119,6,.15);color:#fbbf24;border:1px solid rgba(217,119,6,.3)}
+.md-rb-hi{background:rgba(232,100,126,.18);color:var(--r300);border:1px solid rgba(232,100,126,.35)}
+.md-interp{font-size:.8rem;color:rgba(255,255,255,.48);line-height:1.65;margin-bottom:18px}
+.md-shap-hd{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.32);margin-bottom:9px}
+.md-sbr{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.md-sfn{font-size:.7rem;color:rgba(255,255,255,.4);width:52px;flex-shrink:0;text-transform:capitalize}
+.md-sbt{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.md-sbf{height:100%;border-radius:3px;width:0;transition:width .9s cubic-bezier(.22,.61,.36,1)}
+.md-sbf-up{background:linear-gradient(90deg,rgba(232,100,126,.55),#E8647E)}
+.md-sbf-dn{background:linear-gradient(90deg,rgba(61,107,158,.55),var(--blue2))}
+.md-dominant{font-size:.76rem;color:rgba(255,255,255,.55);line-height:1.55;margin-top:10px;font-style:italic}
+
+/* SCROLL BAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--off)}
+::-webkit-scrollbar-thumb{background:var(--r200);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--r300)}
+
+/* IMAGE ANALYSIS SECTION */
+#imganalysis{background:var(--white)}
+.ia-wrap{max-width:1100px;margin:0 auto;padding:100px 48px}
+@media(max-width:640px){.ia-wrap{padding:64px 20px}}
+.ia-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;margin-top:48px}
+@media(max-width:860px){.ia-grid{grid-template-columns:1fr}}
+.ia-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.ia-badge{font-size:.67rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:4px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px}
+.ia-badge-cnn{background:rgba(61,107,158,.09);color:var(--blue);border:1px solid rgba(61,107,158,.2)}
+.ia-badge-cam{background:var(--r50);color:var(--r600);border:1px solid var(--r200)}
+.ia-badge-free{background:rgba(16,185,129,.08);color:#059669;border:1px solid rgba(16,185,129,.2)}
+/* Drop zone */
+.drop-zone{border:2px dashed var(--bdr);border-radius:var(--rxl);padding:52px 24px;text-align:center;cursor:pointer;transition:all .25s;background:var(--off);position:relative}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--r300);background:var(--r50)}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-icon{font-size:42px;margin-bottom:12px;opacity:.45}
+.dz-title{font-size:.93rem;font-weight:600;color:var(--navy);margin-bottom:5px}
+.dz-sub{font-size:.77rem;color:var(--tm);line-height:1.55}
+.dz-btn{display:inline-block;margin-top:14px;padding:8px 20px;border-radius:50px;background:var(--r500);color:#fff;font-size:.8rem;font-weight:600;font-family:var(--fb);border:none;cursor:pointer;transition:all .2s}
+.dz-btn:hover{background:var(--r600);transform:translateY(-1px)}
+/* Image result panel */
+.ia-result{display:none}
+.ia-imgs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.ia-img-box{border-radius:12px;overflow:hidden;background:var(--off);border:1px solid var(--bdr)}
+.ia-img-box img{width:100%;height:auto;display:block}
+.ia-img-lbl{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);padding:6px 10px;text-align:center;background:var(--off)}
+.ia-prob{font-family:var(--fd);font-size:2.8rem;font-weight:700;color:var(--navy);line-height:1;margin-bottom:4px}
+.ia-risk{display:inline-block;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:3px 11px;border-radius:20px;margin-bottom:12px}
+.ia-risk-low{background:rgba(61,107,158,.09);color:var(--blue);border:1px solid rgba(61,107,158,.2)}
+.ia-risk-mod{background:rgba(217,119,6,.08);color:#b45309;border:1px solid rgba(217,119,6,.2)}
+.ia-risk-hi{background:var(--r50);color:var(--r600);border:1px solid var(--r200)}
+.ia-caption{font-size:.78rem;color:var(--ts);line-height:1.65;background:var(--off);border-radius:10px;padding:12px 14px;border:1px solid var(--bdr)}
+.ia-loading{text-align:center;padding:40px;color:var(--tm);font-size:.84rem}
+.ia-model-note{margin-top:16px;font-size:.72rem;color:var(--tm);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+/* When model not ready */
+.ia-not-ready{background:var(--off);border:1px solid var(--bdr);border-radius:var(--rlg);padding:28px;text-align:center}
+.ia-nr-icon{font-size:36px;margin-bottom:10px;opacity:.4}
+.ia-nr-t{font-size:.9rem;font-weight:600;color:var(--navy);margin-bottom:6px}
+.ia-nr-p{font-size:.79rem;color:var(--ts);line-height:1.65}
+
+/* ANIMATED NUMBER COUNTER */
+.counter-num{display:inline-block;transition:all .1s}
+
+/* GLOWING BORDER ON RESULT */
+@keyframes border-glow{0%,100%{box-shadow:0 0 0 0 rgba(201,68,93,0)}50%{box-shadow:0 0 24px 4px rgba(201,68,93,.15)}}
+.rcard.glowing{animation:border-glow 2s ease-in-out}
+
+/* SHIMMER LOADING */
+@keyframes shimmer{0%{background-position:-300px 0}100%{background-position:300px 0}}
+.shimmer{background:linear-gradient(90deg,var(--off) 25%,var(--bdr) 37%,var(--off) 63%);background-size:600px 100%;animation:shimmer 1.4s infinite}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nb" aria-label="BreastCare AI home">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+      <path d="M14 4C11 4 8 6.5 8 9.5C8 12 9.5 13.8 11.5 15.5L14 17.5L16.5 15.5C18.5 13.8 20 12 20 9.5C20 6.5 17 4 14 4Z" fill="#E8647E" opacity=".9"/>
+      <path d="M11.5 15.5L9 20C9 20 11 22 14 22C17 22 19 20 19 20L16.5 15.5C15.5 16.3 14.8 16.8 14 16.8C13.2 16.8 12.5 16.3 11.5 15.5Z" fill="#C9445D" opacity=".9"/>
+    </svg>
+    <span class="nbt">BreastCare <em style="font-style:italic;color:var(--r500)">AI</em></span>
+  </a>
+  <div class="nl">
+    <a href="#assessment">Assessment</a>
+    <a href="#imganalysis">Image AI</a>
+    <a href="#explainer">SHAP</a>
+    <a href="#assistant">AI Chat</a>
+    <a href="#hiw">Architecture</a>
+    <a href="#data">Models</a>
+    <a href="#safety">Safety</a>
+  </div>
+  <div class="nc">
+    <a href="#assessment" class="btn btn-p" style="font-size:.82rem;padding:8px 18px">Start Assessment</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-grd"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-badge" id="hbadge"><span class="hbd"></span>Research &amp; Educational Prototype</div>
+      <h1 class="hero-h1" id="hh1">Breast Cancer<br/>Risk <em>Estimation</em><br/><span class="h1-ai">AI</span> Platform</h1>
+      <p class="hero-sub" id="hsub">LightGBM + XGBoost dual-model architecture with SHAP explainability and Gemini AI grounded explanations via RAG over ACR BI-RADS knowledge.</p>
+      <div class="hero-disc" id="hdisc">
+        <span style="flex-shrink:0;margin-top:1px">🛡️</span>
+        <span><strong>Educational only — not medical advice.</strong> Provides research-grade risk estimates. Always consult a qualified radiologist for clinical decisions.</span>
+      </div>
+      <div class="hero-acts" id="hacts">
+        <a href="#assessment" class="btn btn-p btn-lg">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5.5v2.5l1.5 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Run Assessment
+        </a>
+        <a href="#hiw" class="btn btn-o btn-lg">How It Works</a>
+      </div>
+    </div>
+    <div class="hero-right" id="hright">
+      <div class="ribbon-wrap">
+        <div class="ribbon-glow"></div>
+        <svg class="ribbon-svg ribbon-float" viewBox="0 0 380 430" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="rg1" cx="50%" cy="35%" r="55%"><stop offset="0%" stop-color="#fce7ed"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+            <!-- Left loop gradient: lighter pink (front loop) -->
+            <linearGradient id="ll1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fbb6ce"/><stop offset="100%" stop-color="#E8647E"/></linearGradient>
+            <!-- Right loop gradient: deeper rose (rear loop) -->
+            <linearGradient id="ll2" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#E8647E"/><stop offset="100%" stop-color="#be185d"/></linearGradient>
+            <!-- Tail gradient -->
+            <linearGradient id="ltail" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#C9445D"/><stop offset="100%" stop-color="#9d174d"/></linearGradient>
+            <filter id="glow-f" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="inner-glow" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <!-- Background radial glow -->
+          <circle cx="190" cy="195" r="168" fill="url(#rg1)" opacity=".6"/>
+          <!-- Floating accent petals -->
+          <g class="leaf2"><ellipse cx="72" cy="118" rx="13" ry="22" fill="#fbb6ce" opacity=".38" transform="rotate(-32 72 118)"/></g>
+          <g class="leaf1"><ellipse cx="318" cy="135" rx="10" ry="18" fill="#fbb6ce" opacity=".3" transform="rotate(36 318 135)"/></g>
+          <g class="leaf3"><ellipse cx="62" cy="320" rx="8" ry="14" fill="#fca5a5" opacity=".25" transform="rotate(-18 62 320)"/></g>
+          <g class="leaf2"><ellipse cx="322" cy="305" rx="7" ry="13" fill="#fbb8c4" opacity=".3" transform="rotate(24 322 305)"/></g>
+          <!-- RIGHT loop (behind) — drawn first so left loop overlaps it at crossing -->
+          <path d="M190 215
+                   C212 188, 264 155, 284 118
+                   C304 80, 278 42, 244 54
+                   C224 61, 204 88, 200 128
+                   C197 158, 192 188, 190 215 Z"
+                fill="url(#ll2)" opacity=".9" filter="url(#inner-glow)"/>
+          <!-- RIGHT tail -->
+          <path d="M197 222
+                   C212 248, 232 284, 244 322
+                   C254 353, 250 382, 236 388
+                   C224 393, 214 374, 210 350
+                   C206 326, 200 282, 193 242 Z"
+                fill="url(#ltail)" opacity=".85"/>
+          <!-- LEFT tail -->
+          <path d="M183 222
+                   C168 248, 148 284, 136 322
+                   C126 353, 130 382, 144 388
+                   C156 393, 166 374, 170 350
+                   C174 326, 180 282, 187 242 Z"
+                fill="url(#ltail)" opacity=".88"/>
+          <!-- LEFT loop (front) — drawn last so it overlaps right at crossing -->
+          <path d="M190 215
+                   C168 188, 116 155, 96 118
+                   C76 80, 102 42, 136 54
+                   C156 61, 176 88, 180 128
+                   C183 158, 188 188, 190 215 Z"
+                fill="url(#ll1)" opacity=".95" filter="url(#inner-glow)"/>
+          <!-- Center knot -->
+          <ellipse cx="190" cy="214" rx="19" ry="13" fill="#C9445D"/>
+          <ellipse cx="190" cy="213" rx="11" ry="7.5" fill="#E8647E"/>
+          <!-- Sheen highlights on loops -->
+          <path d="M102 102 C108 86 124 78 136 85" stroke="rgba(255,255,255,.32)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M278 102 C272 86 256 78 244 85" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M150 68 C158 58 170 56 178 62" stroke="rgba(255,255,255,.22)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <path d="M144 365 C148 355 152 345 156 335" stroke="rgba(255,255,255,.18)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <path d="M236 365 C232 355 228 345 224 335" stroke="rgba(255,255,255,.15)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        </svg>
+        <!-- Floating stat badges -->
+        <div class="stat-badge sb1">
+          <div class="sb-val">0.9924</div>
+          <div class="sb-lbl">XGBoost AUC</div>
+          <div class="sb-sub">WDBC dataset</div>
+        </div>
+        <div class="stat-badge sb2">
+          <div class="sb-val">72.4%</div>
+          <div class="sb-lbl">Risk estimate</div>
+          <div class="sb-sub">LightGBM · SHAP</div>
+        </div>
+        <div class="stat-badge sb3">
+          <div class="sb-val">60</div>
+          <div class="sb-lbl">RAG chunks</div>
+          <div class="sb-sub">ACR BI-RADS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-stats-row">
+    <div class="hsr-inner" id="hstats">
+      <div class="stat-pill rv"><div class="sp-num" data-count="0.9957" data-fixed="4">0</div><div class="sp-lbl">XGBoost AUC — WDBC Research Model</div><div class="sp-sub">30-feature · SMOTE augmented</div></div>
+      <div class="stat-pill rv" style="transition-delay:.12s"><div class="sp-num" data-count="0.7251" data-fixed="4">0</div><div class="sp-lbl">LightGBM AUC — Mammographic Model</div><div class="sp-sub">4-feature · Youden calibrated</div></div>
+      <div class="stat-pill rv" style="transition-delay:.24s"><div class="sp-num" data-count="60" data-fixed="0">0</div><div class="sp-lbl">Curated RAG Knowledge Chunks</div><div class="sp-sub">ACR BI-RADS · 4 documents</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ASSESSMENT -->
+<section id="assessment" style="background:var(--white)">
+  <div class="aw">
+    <div>
+      <div class="stag rv">Risk Assessment</div>
+      <h2 class="sh2 rv">Mammographic<br/>Feature Input</h2>
+      <p class="slead rv">Enter four standard mammographic descriptors to receive an AI-estimated malignancy probability with SHAP-driven feature attribution.</p>
+      <div class="fcard rv tilt" style="margin-top:32px">
+        <div class="ft">Clinical Feature Input</div>
+        <div class="fsub">LightGBM model · Mammographic Masses dataset (UCI)</div>
+        <div class="fg">
+          <label class="fl" for="asl">Patient Age <span>— Continuous (18–96 years)</span></label>
+          <input type="range" class="asl" id="asl" min="18" max="96" value="52" aria-label="Patient age"/>
+          <div class="adsp"><div><span class="av" id="adsp">52</span><span style="font-size:.77rem;color:var(--tm)"> years</span></div><span style="font-size:.7rem;color:var(--tm)">18 — 96</span></div>
+        </div>
+        <div class="fg">
+          <label class="fl">Mass Shape <span>— BI-RADS ordinal</span></label>
+          <div class="fbs" id="sg" role="radiogroup" aria-label="Mass shape">
+            <button class="fb" data-val="1" onclick="sel('sg',this)">Round</button>
+            <button class="fb" data-val="2" onclick="sel('sg',this)">Oval</button>
+            <button class="fb a" data-val="3" onclick="sel('sg',this)">Lobular</button>
+            <button class="fb" data-val="4" onclick="sel('sg',this)">Irregular</button>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Mass Margin <span>— Strongest malignancy predictor</span></label>
+          <div class="fbs" id="mg" role="radiogroup" aria-label="Mass margin">
+            <button class="fb" data-val="1" onclick="sel('mg',this)">Circumscribed</button>
+            <button class="fb" data-val="2" onclick="sel('mg',this)">Microlobulated</button>
+            <button class="fb" data-val="3" onclick="sel('mg',this)">Obscured</button>
+            <button class="fb a" data-val="4" onclick="sel('mg',this)">Ill-defined</button>
+            <button class="fb" data-val="5" onclick="sel('mg',this)">Spiculated</button>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Mass Density <span>— Weaker predictor</span></label>
+          <div class="fbs" id="dg" role="radiogroup" aria-label="Mass density">
+            <button class="fb" data-val="1" onclick="sel('dg',this)">High</button>
+            <button class="fb a" data-val="2" onclick="sel('dg',this)">Iso</button>
+            <button class="fb" data-val="3" onclick="sel('dg',this)">Low</button>
+            <button class="fb" data-val="4" onclick="sel('dg',this)">Fat-containing</button>
+          </div>
+        </div>
+        <button class="btn btn-p btn-lg abtn" id="abtn" onclick="runAssessment()">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Run Risk Assessment
+        </button>
+      </div>
+    </div>
+    <div class="rp">
+      <div class="rcard rv-s" id="rcard">
+        <div class="re" id="re">
+          <div class="re-icon">🩺</div>
+          <div class="re-t">Enter mammographic features and click <strong>Run Risk Assessment</strong> to receive your AI-estimated malignancy probability with SHAP explainability.</div>
+        </div>
+        <div id="rc" style="display:none">
+          <div class="gw">
+            <svg id="gauge-svg" class="gauge-svg" width="186" height="132" viewBox="0 0 186 132" style="overflow:visible">
+              <defs>
+                <linearGradient id="gl" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3d6b9e"/></linearGradient>
+                <linearGradient id="gm" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient>
+                <linearGradient id="gh" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#fca5a5"/><stop offset="100%" stop-color="#C9445D"/></linearGradient>
+                <filter id="gf2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              </defs>
+              <path d="M22 88 A72 72 0 0 1 164 88" stroke="var(--bdr)" stroke-width="13" fill="none" stroke-linecap="round"/>
+              <path id="gfill" d="M22 88 A72 72 0 0 1 164 88" stroke="url(#gh)" stroke-width="13" fill="none" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="226" style="transition:stroke-dashoffset 1.3s cubic-bezier(.22,.61,.36,1)" filter="url(#gf2)"/>
+              <text x="15" y="98" font-size="9" fill="#94a3b8" text-anchor="middle" font-family="DM Sans">0</text>
+              <text x="93" y="14" font-size="9" fill="#94a3b8" text-anchor="middle" font-family="DM Sans">50%</text>
+              <text x="171" y="98" font-size="9" fill="#94a3b8" text-anchor="middle" font-family="DM Sans">100</text>
+              <g id="gneedle" style="transform-origin:93px 88px;transition:transform 1.3s cubic-bezier(.22,.61,.36,1);transform:rotate(-90deg)">
+                <line x1="93" y1="88" x2="93" y2="30" stroke="var(--navy)" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="93" cy="88" r="5" fill="var(--navy)"/>
+              </g>
+              <circle cx="93" cy="112" r="24" fill="white" opacity="0.95"/>
+              <text id="gpct" x="93" y="117" font-size="21" font-weight="700" text-anchor="middle" fill="var(--navy)" font-family="Playfair Display,serif">--</text>
+              <text x="93" y="129" font-size="8" text-anchor="middle" fill="#94a3b8" font-family="DM Sans">probability</text>
+            </svg>
+          </div>
+          <div id="rcat"></div>
+          <div class="ri" id="ri"></div>
+          <div class="shap-mini-t">Feature Attribution (SHAP)</div>
+          <div id="sbars"></div>
+          <div class="cn"><span>🔬</span><span>Research model estimate only. All findings require review by a qualified radiologist. Not for clinical use.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMAGE ANALYSIS -->
+<section id="imganalysis">
+  <div class="ia-wrap">
+    <div class="stag rv">Image Analysis</div>
+    <h2 class="sh2 rv">Mammogram <em style="font-style:italic;color:var(--r500)">Image</em> Classification</h2>
+    <p class="slead rv">Upload a mammogram image — EfficientNet-B0 (trained on CBIS-DDSM, 10,000+ real mammograms) predicts malignancy risk and overlays a Grad-CAM heatmap showing exactly which regions elevated the score.</p>
+    <div class="ia-badge-row rv">
+      <span class="ia-badge ia-badge-cnn">🧠 EfficientNet-B0</span>
+      <span class="ia-badge ia-badge-cam">🔥 Grad-CAM XAI</span>
+      <span class="ia-badge ia-badge-free">CBIS-DDSM · 10k+ images</span>
+    </div>
+
+    <div class="ia-grid">
+      <!-- Left: upload + not-ready notice -->
+      <div>
+        <div class="drop-zone rv tilt" id="ia-drop" onclick="document.getElementById('ia-file').click()">
+          <input type="file" id="ia-file" accept="image/jpeg,image/jpg,image/png" style="display:none" onchange="handleImageUpload(this.files[0])"/>
+          <div class="dz-icon">🩻</div>
+          <div class="dz-title">Drop mammogram image here</div>
+          <div class="dz-sub">JPEG or PNG — ROI crop or full view<br/>Model analyzes mass morphology for malignancy risk</div>
+          <button class="dz-btn" onclick="event.stopPropagation();document.getElementById('ia-file').click()">Browse Image</button>
+        </div>
+
+        <div class="ia-model-note rv" style="margin-top:16px">
+          <span>ℹ️</span>
+          <span>The image model requires <strong>efficientnet_cbis.pth</strong> weights (train on Kaggle free GPU in ~15 min). Once placed in <code style="font-size:.69rem;background:var(--off);padding:1px 5px;border-radius:4px">models/</code>, this section becomes fully live. Use any publicly available CBIS-DDSM sample image to test.</span>
+        </div>
+      </div>
+
+      <!-- Right: result panel -->
+      <div id="ia-right">
+        <div class="ia-not-ready rv" id="ia-not-ready">
+          <div class="ia-nr-icon">🏋️</div>
+          <div class="ia-nr-t">Image Model Not Yet Loaded</div>
+          <div class="ia-nr-p">This panel becomes live once <strong>efficientnet_cbis.pth</strong> is placed in the <code>models/</code> folder. Train it for free on Kaggle (30h/week GPU) using the script in the Architecture section — takes ~15 minutes on a T4 GPU.</div>
+        </div>
+        <div class="ia-result" id="ia-result">
+          <div class="ia-prob" id="ia-pct">--</div>
+          <div class="ia-risk" id="ia-risk-badge">Moderate</div>
+          <div class="ia-imgs" id="ia-imgs" style="display:none">
+            <div class="ia-img-box">
+              <div class="ia-img-lbl">Original</div>
+              <img id="ia-orig" src="" alt="Original mammogram"/>
+            </div>
+            <div class="ia-img-box">
+              <div class="ia-img-lbl">Grad-CAM</div>
+              <img id="ia-cam" src="" alt="Grad-CAM activation map"/>
+            </div>
+          </div>
+          <div class="ia-caption" id="ia-caption">Activation map highlights image regions that most elevated the malignancy risk score. Red/yellow = high activation. This is Grad-CAM — the standard XAI technique for CNNs in medical imaging.</div>
+        </div>
+        <div class="ia-loading" id="ia-loading" style="display:none">
+          <div style="font-size:32px;margin-bottom:8px">⚙️</div>
+          Running EfficientNet + Grad-CAM…<br/><span style="font-size:.72rem;color:var(--tm)">First inference loads the model (~2–5 s)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPLAINER -->
+<section id="explainer" style="background:var(--off)">
+  <div class="sec">
+    <div class="stag rv">Explainability</div>
+    <h2 class="sh2 rv">Why This Result?</h2>
+    <p class="slead rv">SHAP (SHapley Additive exPlanations) reveals which features drove the estimate and by how much — grounded in cooperative game theory, exact for tree models.</p>
+    <div class="eg">
+      <div>
+        <div class="ec rv tilt">
+          <div class="ec-t">Feature Attribution Waterfall</div>
+          <div class="ec-s">SHAP values — LightGBM TreeExplainer</div>
+          <div id="wfall"></div>
+        </div>
+        <div class="pl rv" style="margin-top:18px">
+          <div class="pl-t">Plain Language Explanation</div>
+          <p id="pltext">Run an assessment above to see which mammographic features drove the risk estimate — explained without requiring a medical degree.</p>
+        </div>
+      </div>
+      <div>
+        <div class="ec rv tilt">
+          <div class="ec-t">Input Feature Values</div>
+          <div class="ec-s">Submitted mammographic descriptors</div>
+          <div class="fc-grid" id="fcards">
+            <div class="fci"><div class="fcn">Age</div><div class="fcv">—</div><div class="fcm">Patient age</div></div>
+            <div class="fci"><div class="fcn">Shape</div><div class="fcv">—</div><div class="fcm">Mass morphology</div></div>
+            <div class="fci"><div class="fcn">Margin</div><div class="fcv">—</div><div class="fcm">Border characteristics</div></div>
+            <div class="fci"><div class="fcn">Density</div><div class="fcv">—</div><div class="fcm">Tissue composition</div></div>
+          </div>
+        </div>
+        <div class="ec rv tilt" style="margin-top:18px">
+          <div class="ec-t">SHAP → RAG Query Bridge</div>
+          <div class="ec-s">How SHAP drives knowledge retrieval</div>
+          <div style="font-size:.81rem;color:var(--ts);line-height:1.7">
+            <p>The dominant SHAP feature generates a <strong>natural-language query</strong> sent to the FAISS vectorstore — e.g., <em style="color:var(--r500)">"margin (spiculated) was the strongest factor pushing risk up."</em></p>
+            <p style="margin-top:9px">This semantic coupling ensures retrieved ACR BI-RADS documents align with what actually drove the prediction, not just the user's question.</p>
+          </div>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--tm)">
+              <span style="width:26px;height:26px;border-radius:7px;background:var(--r50);border:1px solid var(--r100);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">📐</span>
+              <div><strong style="color:var(--tp)">SHAP additivity:</strong> values sum to pred − E[f(x)]</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--tm)">
+              <span style="width:26px;height:26px;border-radius:7px;background:rgba(61,107,158,.06);border:1px solid rgba(61,107,158,.12);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">⚡</span>
+              <div><strong style="color:var(--tp)">TreeExplainer:</strong> exact SHAP, linear time complexity</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--tm)">
+              <span style="width:26px;height:26px;border-radius:7px;background:rgba(61,107,158,.06);border:1px solid rgba(61,107,158,.12);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">🔗</span>
+              <div><strong style="color:var(--tp)">Pipeline:</strong> shap_text → FAISS → top-3 chunks → Gemini</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ASSISTANT -->
+<section id="assistant" style="background:var(--white)">
+  <div class="aw2">
+    <div class="stag rv">AI Assistant</div>
+    <h2 class="sh2 rv">Ask the BreastCare AI</h2>
+    <p class="slead rv">Powered by Gemini AI with Retrieval-Augmented Generation over 60 curated ACR BI-RADS knowledge chunks. Grounded in retrieved documents — not parametric memory.</p>
+    <div class="cl">
+      <div class="csb rv-l">
+        <div class="cst">Suggested Questions</div>
+        <button class="pc" onclick="chip(this)"><div class="pci">🔬</div><div class="pct">What does <strong>spiculated margin</strong> mean?</div></button>
+        <button class="pc" onclick="chip(this)"><div class="pci">📊</div><div class="pct">What does this <strong>risk estimate</strong> mean?</div></button>
+        <button class="pc" onclick="chip(this)"><div class="pci">➡️</div><div class="pct">What <strong>should happen next</strong> clinically?</div></button>
+        <button class="pc" onclick="chip(this)"><div class="pci">🎯</div><div class="pct">How <strong>accurate</strong> is this AI model?</div></button>
+        <button class="pc" onclick="chip(this)"><div class="pci">📚</div><div class="pct">What is <strong>BI-RADS</strong>?</div></button>
+        <button class="pc" onclick="chip(this)"><div class="pci">💡</div><div class="pct">What is <strong>SHAP</strong> and why does it matter?</div></button>
+        <div class="raf rv">
+          <div class="raf-t">RAG Pipeline</div>
+          <div class="raf-s">
+            <div class="rsn"><div class="rsn-n" id="rn1">💬</div><div class="rsn-l">Question</div></div>
+            <div class="rarr">→</div>
+            <div class="rsn"><div class="rsn-n" id="rn2">🔍</div><div class="rsn-l">FAISS</div></div>
+            <div class="rarr">→</div>
+            <div class="rsn"><div class="rsn-n" id="rn3">📄</div><div class="rsn-l">BI-RADS</div></div>
+            <div class="rarr">→</div>
+            <div class="rsn"><div class="rsn-n" id="rn4">✨</div><div class="rsn-l">Gemini</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="rv-r">
+        <div class="cwin">
+          <div class="ch">
+            <div class="cha">✨</div>
+            <div class="chi">
+              <div class="chn">BreastCare AI Assistant</div>
+              <div class="chs"><span class="sdot"></span>RAG-grounded · Gemini AI · ACR BI-RADS</div>
+            </div>
+          </div>
+          <div class="cmsg" id="cmsg" aria-live="polite">
+            <div class="mb">
+              <div class="ma">✨</div>
+              <div class="mbub">Hello! I'm grounded in ACR BI-RADS guidelines via RAG retrieval.<br/><br/>I can explain mammographic terms, discuss risk estimates, or describe typical next steps. I'm not a doctor — always consult a qualified clinician.<div><span class="sp">📚 ACR BI-RADS Atlas · Breast Imaging Glossary</span></div></div>
+            </div>
+          </div>
+          <div class="cir">
+            <textarea class="cta" id="cta" placeholder="Ask about mammographic findings, BI-RADS terms, or next steps…" rows="1" onkeydown="chatKey(event)" oninput="chatGrow(this)"></textarea>
+            <button class="csend" id="csend" onclick="sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="hiw">
+  <div class="hiw-inner">
+    <div class="stag rv">Architecture</div>
+    <h2 class="sh2 rv">How It Works</h2>
+    <p class="slead rv">Six-stage AI pipeline — input flows through dual ML models, exact SHAP attribution, FAISS vector retrieval, Gemini generation, and a deterministic safety filter. Hover any stage for details.</p>
+
+    <!-- Animated pipeline -->
+    <div class="pipe" style="margin-top:52px">
+      <!-- Traveling dot SVG line (sits above nodes, matches 6-column grid) -->
+      <svg class="pipe-svg" viewBox="0 0 1060 18" preserveAspectRatio="none" height="18" id="pipe-svg-el">
+        <defs>
+          <filter id="dot-glow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <path id="pp" d="M 0 9 L 1060 9" class="pipe-connector"/>
+        <circle r="7" fill="#E8647E" filter="url(#dot-glow)" opacity=".9">
+          <animateMotion dur="3.4s" repeatCount="indefinite">
+            <mpath href="#pp"/>
+          </animateMotion>
+        </circle>
+      </svg>
+
+      <div class="pipe-nodes">
+        <div class="pn rv">
+          <div class="pni">🩻</div>
+          <div class="pnl">Feature Input</div>
+          <div class="pns">Age · Shape · Margin · Density</div>
+          <div class="pn-badge">4 features</div>
+          <div class="pn-tip">4 BI-RADS mammographic descriptors. BI-RADS assessment score excluded — it IS the radiologist's conclusion and would cause severe data leakage.</div>
+        </div>
+        <div class="pn rv" style="transition-delay:.1s">
+          <div class="pni">🤖</div>
+          <div class="pnl">LightGBM</div>
+          <div class="pns">Malignancy probability</div>
+          <div class="pn-badge">AUC 0.7251</div>
+          <div class="pn-tip">Trained on 849 real UCI cases. Youden's J threshold calibration replaces the fixed 0.50 cutoff — optimizes sensitivity/specificity tradeoff on held-out validation data.</div>
+        </div>
+        <div class="pn rv" style="transition-delay:.2s">
+          <div class="pni">📐</div>
+          <div class="pnl">SHAP Layer</div>
+          <div class="pns">TreeExplainer · exact</div>
+          <div class="pn-badge">Exact values</div>
+          <div class="pn-tip">SHAP TreeExplainer computes exact (not approximate) Shapley values. The dominant feature drives the RAG query — ensuring retrieved context always explains what actually elevated the risk score.</div>
+        </div>
+        <div class="pn rv" style="transition-delay:.3s">
+          <div class="pni">🔍</div>
+          <div class="pnl">FAISS RAG</div>
+          <div class="pns">Dense vector search</div>
+          <div class="pn-badge">384-dim · 60 chunks</div>
+          <div class="pn-tip">all-MiniLM-L6-v2 encodes a SHAP-generated query against 60 curated ACR BI-RADS chunks. SHAP drives the query — not just the user's question — so retrieval is always clinically aligned.</div>
+        </div>
+        <div class="pn rv" style="transition-delay:.4s">
+          <div class="pni">✨</div>
+          <div class="pnl">Gemini 2.5</div>
+          <div class="pns">Grounded response</div>
+          <div class="pn-badge">RAG-grounded</div>
+          <div class="pn-tip">Gemini generates explanations using ONLY the retrieved BI-RADS context. It cannot hallucinate features it wasn't given. System prompt enforces educational framing throughout.</div>
+        </div>
+        <div class="pn rv" style="transition-delay:.5s">
+          <div class="pni">🛡️</div>
+          <div class="pnl">Safety Filter</div>
+          <div class="pns">Post-processing</div>
+          <div class="pn-badge">Deterministic</div>
+          <div class="pn-tip">Regex-based post-processing strips all diagnostic language from every response. Code-level enforcement — fires even if Gemini ignores prompt instructions under adversarial conditions.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Watch It Think — Live Demo -->
+    <div class="mini-demo rv" style="transition-delay:.3s">
+      <div class="mini-demo-hd">
+        <div class="mini-demo-title">Watch It Think</div>
+        <div class="mini-demo-sub">Set parameters below and click Run — the live ML pipeline executes and shows you exactly what the model computed and why.</div>
+      </div>
+      <div class="mini-demo-inner">
+
+        <!-- Left: Controls -->
+        <div>
+          <span class="md-lbl">Patient Age</span>
+          <div class="md-age-row">
+            <span class="md-age-num" id="md-age-val">52</span>
+            <input type="range" id="md-age-sl" class="md-asl" min="18" max="96" value="52" style="--pct:46%"/>
+          </div>
+
+          <span class="md-lbl">Mass Shape</span>
+          <div class="md-fbs" id="md-sg">
+            <span class="md-fb" data-val="1" onclick="mdSel('md-sg',this)">Round</span>
+            <span class="md-fb" data-val="2" onclick="mdSel('md-sg',this)">Oval</span>
+            <span class="md-fb a" data-val="3" onclick="mdSel('md-sg',this)">Lobular</span>
+            <span class="md-fb" data-val="4" onclick="mdSel('md-sg',this)">Irregular</span>
+          </div>
+
+          <span class="md-lbl">Margin</span>
+          <div class="md-fbs" id="md-mg">
+            <span class="md-fb" data-val="1" onclick="mdSel('md-mg',this)">Circumscribed</span>
+            <span class="md-fb" data-val="2" onclick="mdSel('md-mg',this)">Microlobulated</span>
+            <span class="md-fb" data-val="3" onclick="mdSel('md-mg',this)">Obscured</span>
+            <span class="md-fb a" data-val="4" onclick="mdSel('md-mg',this)">Ill-defined</span>
+            <span class="md-fb" data-val="5" onclick="mdSel('md-mg',this)">Spiculated</span>
+          </div>
+
+          <span class="md-lbl">Breast Density</span>
+          <div class="md-fbs" id="md-dg">
+            <span class="md-fb" data-val="1" onclick="mdSel('md-dg',this)">High</span>
+            <span class="md-fb a" data-val="2" onclick="mdSel('md-dg',this)">Iso</span>
+            <span class="md-fb" data-val="3" onclick="mdSel('md-dg',this)">Low</span>
+            <span class="md-fb" data-val="4" onclick="mdSel('md-dg',this)">Fat</span>
+          </div>
+
+          <button class="md-run" id="md-run" onclick="runMiniDemo()">Run Pipeline →</button>
+        </div>
+
+        <!-- Right: Live output -->
+        <div>
+          <div id="md-waiting" class="md-waiting">
+            <span class="md-waiting-icon">⚡</span>
+            Set parameters and click <strong style="color:rgba(255,255,255,.5)">Run Pipeline</strong> to watch the AI execute — probability, SHAP values, and interpretation appear here in real time.
+          </div>
+          <div id="md-result" class="md-result">
+            <div class="md-pct-big" id="md-pct">--</div>
+            <div id="md-risk-badge" class="md-risk-badge md-rb-mod">Moderate</div>
+            <div class="md-interp" id="md-interp"></div>
+            <div class="md-shap-hd">SHAP Feature Attribution</div>
+            <div class="md-sbr"><span class="md-sfn">margin</span><span class="md-sbt"><span class="md-sbf" id="mdb-margin"></span></span></div>
+            <div class="md-sbr"><span class="md-sfn">shape</span><span class="md-sbt"><span class="md-sbf" id="mdb-shape"></span></span></div>
+            <div class="md-sbr"><span class="md-sfn">density</span><span class="md-sbt"><span class="md-sbf" id="mdb-density"></span></span></div>
+            <div class="md-sbr"><span class="md-sfn">age</span><span class="md-sbt"><span class="md-sbf" id="mdb-age"></span></span></div>
+            <div class="md-dominant" id="md-dominant"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- DATA & MODELS -->
+<section id="data" style="background:var(--off)">
+  <div class="sec">
+    <div class="stag rv">Data Foundation</div>
+    <h2 class="sh2 rv">Datasets &amp; Models</h2>
+    <p class="slead rv">Three data sources underpin the system: two clinical research datasets and a curated medical knowledge base for RAG retrieval.</p>
+    <div class="dgrid">
+      <div class="dc rv tilt">
+        <div class="dbadge bb">Dataset 1 · WDBC</div>
+        <div class="dt">Wisconsin Breast Cancer Diagnostic</div>
+        <div class="dd">30 nuclear characteristics from FNA images. Powers the XGBoost research model with 10-fold CV.</div>
+        <div class="ds">
+          <div class="dst"><div class="dsv">569</div><div class="dsk">Total cases</div></div>
+          <div class="dst"><div class="dsv">30</div><div class="dsk">Features</div></div>
+          <div class="dst"><div class="dsv">212</div><div class="dsk">Malignant</div></div>
+          <div class="dst"><div class="dsv">357</div><div class="dsk">Benign</div></div>
+        </div>
+      </div>
+      <div class="dc rv tilt" style="transition-delay:.12s">
+        <div class="dbadge br">Dataset 2 · Mammographic</div>
+        <div class="dt">UCI Mammographic Masses</div>
+        <div class="dd">Four BI-RADS features from mammogram reports. BI-RADS assessment excluded to prevent data leakage.</div>
+        <div class="ds">
+          <div class="dst"><div class="dsv">860</div><div class="dsk">Cleaned cases</div></div>
+          <div class="dst"><div class="dsv">4</div><div class="dsk">Features</div></div>
+          <div class="dst"><div class="dsv">397</div><div class="dsk">Malignant</div></div>
+          <div class="dst"><div class="dsv">463</div><div class="dsk">Benign</div></div>
+        </div>
+      </div>
+      <div class="dc rv tilt" style="transition-delay:.24s">
+        <div class="dbadge bg">Knowledge Base · RAG</div>
+        <div class="dt">ACR BI-RADS Corpus</div>
+        <div class="dd">60 curated paragraph-level chunks from 4 authoritative documents. Small and curated by design — distraction degrades LLM quality.</div>
+        <div class="ds">
+          <div class="dst"><div class="dsv">60</div><div class="dsk">Chunks</div></div>
+          <div class="dst"><div class="dsv">4</div><div class="dsk">Source docs</div></div>
+          <div class="dst"><div class="dsv">FAISS</div><div class="dsk">Vector index</div></div>
+          <div class="dst"><div class="dsv">384-d</div><div class="dsk">Embedding dim</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="mperf rv tilt" style="margin-top:32px">
+      <div class="mpt">5-Model Cross-Validation Comparison</div>
+      <div class="mps">Stratified 10-fold CV on WDBC training split (n=455). Scoring criterion: ROC-AUC.</div>
+      <div style="overflow-x:auto">
+        <table class="ptbl">
+          <thead><tr><th>Model</th><th>AUC</th><th>Accuracy</th><th>Recall</th><th>AUC Bar</th></tr></thead>
+          <tbody>
+            <tr class="br"><td>XGBoost ★</td><td><span class="mv">0.9919</span></td><td><span class="mv">96.49%</span></td><td><span class="mv">94.71%</span></td><td><div class="mbw"><div class="mbar mba" data-w="99.19%"></div></div></td></tr>
+            <tr><td>LightGBM</td><td><span class="mv">0.9909</span></td><td><span class="mv">96.27%</span></td><td><span class="mv">93.53%</span></td><td><div class="mbw"><div class="mbar mba" data-w="99.09%"></div></div></td></tr>
+            <tr><td>Random Forest</td><td><span class="mv">0.9889</span></td><td><span class="mv">96.04%</span></td><td><span class="mv">92.94%</span></td><td><div class="mbw"><div class="mbar mba" data-w="98.89%"></div></div></td></tr>
+            <tr><td>SVM (RBF)</td><td><span class="mv">0.9942</span></td><td><span class="mv">97.14%</span></td><td><span class="mv">94.71%</span></td><td><div class="mbw"><div class="mbar mba" data-w="99.42%"></div></div></td></tr>
+            <tr><td>Logistic Reg.</td><td><span class="mv">0.9952</span></td><td><span class="mv">97.58%</span></td><td><span class="mv">95.88%</span></td><td><div class="mbw"><div class="mbar mba" data-w="99.52%"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="src-row rv">
+      <div class="src-c"><div class="src-ic">📘</div><div class="src-t">BI-RADS Terminology</div><div class="src-s">ACR 5th Edition</div></div>
+      <div class="src-c"><div class="src-ic">📗</div><div class="src-t">Breast Imaging Glossary</div><div class="src-s">Radiological definitions</div></div>
+      <div class="src-c"><div class="src-ic">📙</div><div class="src-t">ACR Follow-Up Guidelines</div><div class="src-s">Clinical workflows</div></div>
+      <div class="src-c"><div class="src-ic">🛡️</div><div class="src-t">Safety Disclaimers</div><div class="src-s">Ethical use notices</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SAFETY -->
+<section id="safety">
+  <div class="sec">
+    <div class="stag rv">Safety</div>
+    <h2 class="sh2 rv">Safety &amp; Limitations</h2>
+    <p class="slead rv">Responsible AI in healthcare requires explicit, visible safety design — not just a footnote.</p>
+    <div class="sg">
+      <div>
+        <div class="sc rv tilt">
+          <div class="sci sci-r">🛡️</div>
+          <div class="sc-t">Rule-Based Safety Filter</div>
+          <div class="sc-p">A deterministic post-processing filter strips diagnostic language from every LLM response. Code-level enforcement — fires even if Gemini ignores system prompt instructions.</div>
+        </div>
+        <div class="sc rv tilt">
+          <div class="sci sci-b">🔬</div>
+          <div class="sc-t">Research Prototype — Not FDA-Cleared</div>
+          <div class="sc-p">Not validated in clinical trials. Trained on single-institution research datasets. Performance in real screening workflows is unknown.</div>
+        </div>
+        <div class="sc rv tilt">
+          <div class="sci sci-r">📋</div>
+          <div class="sc-t">Mandatory Clinical Review</div>
+          <div class="sc-p">Every output includes a mandatory notice requiring review by a qualified radiologist or physician before any clinical decision.</div>
+        </div>
+      </div>
+      <div>
+        <div class="sc rv tilt">
+          <div class="sci sci-b">⚠️</div>
+          <div class="sc-t">Technical Limitations</div>
+          <div class="ll">
+            <div class="li"><span class="lix">✗</span><span><strong>Small datasets:</strong> 569 (WDBC) and 860 (Mammographic) cases — wide confidence intervals</span></div>
+            <div class="li"><span class="lix">✗</span><span><strong>Four features only:</strong> production systems use 20+ descriptors including calcification</span></div>
+            <div class="li"><span class="lix">✗</span><span><strong>No image processing:</strong> this uses structured tabular features; real systems use pixel-level CNNs</span></div>
+            <div class="li"><span class="lix">✗</span><span><strong>Single-institution data:</strong> WDBC (Wisconsin) and Mammographic (Germany) — dataset shift risk</span></div>
+            <div class="li"><span class="lix">✗</span><span><strong>Fixed 0.50 threshold:</strong> not calibrated to any clinical cost-benefit ratio</span></div>
+            <div class="li"><span class="lix">✗</span><span><strong>Temporal validity:</strong> mammographic dataset from 2003–2006; imaging practice has evolved</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dbox rv">
+      <div class="dbox-ic">🏥</div>
+      <div>
+        <div class="dbox-t">Important Medical Disclaimer</div>
+        <div class="dbox-p">BreastCare AI is a <strong>research and educational prototype</strong>. It is not a medical device, not FDA-cleared, and not intended for clinical diagnosis or treatment planning. All outputs must be reviewed by a qualified radiologist or physician before any clinical decision is made. If you have concerns about a mammographic finding, consult a healthcare professional immediately.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="ft-brand">BreastCare <em style="color:var(--r400);font-style:italic">AI</em></div>
+  <p class="ft-tag">Multi-layer breast cancer risk estimation prototype<br/>XGBoost · LightGBM · SHAP · FAISS · Gemini AI · FastAPI</p>
+  <p class="ft-refs">Elter (2007) · Street et al. (1993) · ACR BI-RADS Atlas 5th Ed · Chen &amp; Guestrin (2016) XGBoost · Ke et al. (2017) LightGBM · Lundberg &amp; Lee (2017) SHAP · JMIR Cancer (2024)</p>
+  <div class="ft-legal"><strong style="color:rgba(255,255,255,.55)">Not for clinical use.</strong> Educational prototype only. Not FDA-cleared. Always consult a qualified clinician.</div>
+</footer>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+// ── Nav shrink ──────────────────────────────────────────────────────────────
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>24);
+});
+
+// ── Hero entrance ───────────────────────────────────────────────────────────
+gsap.set('#hright',{scale:.72,rotation:-11,opacity:0});
+const tl=gsap.timeline({delay:.15});
+tl.to('#hbadge',{opacity:1,y:0,duration:.6,ease:'power3.out'})
+  .to('#hh1',{opacity:1,y:0,duration:.75,ease:'power3.out'},'-=.35')
+  .to('#hsub',{opacity:1,y:0,duration:.6,ease:'power3.out'},'-=.4')
+  .to('#hdisc',{opacity:1,y:0,duration:.5,ease:'power3.out'},'-=.35')
+  .to('#hacts',{opacity:1,y:0,duration:.5,ease:'power3.out'},'-=.3')
+  .to('#hright',{opacity:1,scale:1,rotation:0,duration:1.3,ease:'elastic.out(1,0.52)'},'-=.45')
+  .to('#hstats',{opacity:1,y:0,duration:.6,ease:'power3.out'},'-=.7');
+
+// ── Scroll reveals ──────────────────────────────────────────────────────────
+document.querySelectorAll('.rv,.rv-l,.rv-r,.rv-s').forEach((el,i)=>{
+  ScrollTrigger.create({
+    trigger:el,start:'top 90%',once:true,
+    onEnter:()=>{setTimeout(()=>el.classList.add('v'),parseInt(el.style.transitionDelay||'0')*1000||0)}
+  });
+});
+
+// ── Metric bars (data section) ──────────────────────────────────────────────
+ScrollTrigger.create({trigger:'#data',start:'top 72%',once:true,onEnter:()=>{
+  setTimeout(()=>{
+    document.querySelectorAll('.mbar').forEach(b=>{b.style.width=b.dataset.w;});
+  },300);
+}});
+
+// ── Counter animation ───────────────────────────────────────────────────────
+ScrollTrigger.create({trigger:'#hstats',start:'top 90%',once:true,onEnter:()=>{
+  document.querySelectorAll('.sp-num[data-count]').forEach(el=>{
+    const target=parseFloat(el.dataset.count);
+    const fixed=parseInt(el.dataset.fixed||'0');
+    const dur=1400;const start=performance.now();
+    function step(now){
+      const p=Math.min((now-start)/dur,1);
+      const ease=1-Math.pow(1-p,4);
+      el.textContent=(target*ease).toFixed(fixed);
+      if(p<1)requestAnimationFrame(step);
+      else el.textContent=target.toFixed(fixed);
+    }
+    requestAnimationFrame(step);
+  });
+}});
+
+// ── 3D card tilt ────────────────────────────────────────────────────────────
+document.querySelectorAll('.tilt').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5;
+    const y=(e.clientY-r.top)/r.height-.5;
+    card.style.transform=`perspective(800px) rotateY(${x*8}deg) rotateX(${-y*6}deg) translateY(-3px)`;
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.transform='perspective(800px) rotateY(0) rotateX(0) translateY(0)';
+    card.style.transition='transform .5s cubic-bezier(.22,.61,.36,1),box-shadow .3s';
+  });
+  card.addEventListener('mouseenter',()=>{card.style.transition='transform .1s ease,box-shadow .3s'});
+});
+
+// ── Particles ───────────────────────────────────────────────────────────────
+(()=>{
+  const c=document.getElementById('hero-canvas'),ctx=c.getContext('2d');
+  let W,H,pts=[],mx=-999,my=-999;
+  function rsz(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;}
+  rsz();window.addEventListener('resize',rsz);
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+  document.addEventListener('mouseleave',()=>{mx=-999;my=-999;});
+  class Pt{
+    constructor(){this.reset()}
+    reset(){this.x=Math.random()*W;this.y=Math.random()*H;this.r=Math.random()*2+.5;this.o=Math.random()*.22+.05;this.vx=(Math.random()-.5)*.16;this.vy=(Math.random()-.5)*.16;this.life=0;this.ml=250+Math.random()*200;}
+    update(){
+      // Mouse repulsion within 85px
+      const dx=this.x-mx,dy=this.y-my,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<85&&d>0){const f=(85-d)/85*.55;this.vx+=dx/d*f;this.vy+=dy/d*f;}
+      // Speed damping
+      this.vx*=.98;this.vy*=.98;
+      this.x+=this.vx;this.y+=this.vy;this.life++;
+      if(this.life>this.ml||this.x<-10||this.x>W+10||this.y<-10||this.y>H+10)this.reset();
+    }
+    draw(){ctx.save();ctx.globalAlpha=this.o;ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=this.life/this.ml<.5?'#f9a8b8':'#93c5fd';ctx.fill();ctx.restore();}
+  }
+  for(let i=0;i<78;i++)pts.push(new Pt());
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<88){ctx.save();ctx.globalAlpha=.045*(1-d/88);ctx.strokeStyle='#E8647E';ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.stroke();ctx.restore();}
+      }
+      pts[i].update();pts[i].draw();
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+// ── Mini Demo ────────────────────────────────────────────────────────────────
+(()=>{
+  const asl=document.getElementById('md-age-sl'),dsp=document.getElementById('md-age-val');
+  if(!asl)return;
+  function upd(){
+    const pct=((asl.value-18)/(96-18)*100).toFixed(1);
+    asl.style.setProperty('--pct',pct+'%');
+    dsp.textContent=asl.value;
+  }
+  asl.addEventListener('input',upd);
+  upd();
+})();
+
+function mdSel(gid,el){
+  document.getElementById(gid).querySelectorAll('.md-fb').forEach(b=>b.classList.remove('a'));
+  el.classList.add('a');
+}
+
+async function runMiniDemo(){
+  const btn=document.getElementById('md-run');
+  btn.textContent='Analyzing…';btn.disabled=true;
+  try{
+    const r=await fetch('/api/assess',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        age:+document.getElementById('md-age-sl').value,
+        shape:+document.querySelector('#md-sg .md-fb.a').dataset.val,
+        margin:+document.querySelector('#md-mg .md-fb.a').dataset.val,
+        density:+document.querySelector('#md-dg .md-fb.a').dataset.val,
+      })
+    });
+    const d=await r.json();
+    const pred=d.prediction,expl=d.explanation;
+    const pct=Math.round(pred.probability*100);
+
+    // Show result, hide waiting
+    document.getElementById('md-waiting').style.display='none';
+    const rp=document.getElementById('md-result');
+    rp.style.display='block';
+
+    // Probability
+    document.getElementById('md-pct').textContent=pct+'%';
+
+    // Risk badge
+    const rb=document.getElementById('md-risk-badge');
+    rb.textContent=pred.risk_category;
+    rb.className='md-risk-badge '+(pct<30?'md-rb-low':pct<60?'md-rb-mod':'md-rb-hi');
+
+    // Interpretation
+    const sentences=expl.shap_text.split('.');
+    document.getElementById('md-interp').textContent=sentences[0]+(sentences[1]?'. '+sentences[1].trim()+'.':'.');
+
+    // SHAP bars (staggered)
+    const attrs=expl.feature_attributions;
+    const maxAbs=Math.max(...Object.values(attrs).map(Math.abs))||1;
+    ['margin','shape','density','age'].forEach((f,i)=>{
+      const bar=document.getElementById('mdb-'+f);
+      if(!bar)return;
+      bar.style.width='0';
+      bar.style.transition='none';
+      setTimeout(()=>{
+        bar.style.transition='width .9s cubic-bezier(.22,.61,.36,1)';
+        bar.style.width=Math.abs(attrs[f])/maxAbs*100+'%';
+        bar.className='md-sbf '+(attrs[f]>0?'md-sbf-up':'md-sbf-dn');
+      },80+i*80);
+    });
+
+    // Dominant feature note
+    document.getElementById('md-dominant').textContent='Dominant predictor: '+expl.dominant_feature+' ('+expl.risk_direction+' risk signal)';
+
+  }catch(e){
+    console.error('Mini demo error:',e);
+    document.getElementById('md-waiting').textContent='⚠️ Server not reachable. Start the server at localhost:8000.';
+    document.getElementById('md-waiting').style.display='block';
+    document.getElementById('md-result').style.display='none';
+  }
+  btn.textContent='Run Pipeline →';btn.disabled=false;
+}
+
+// ── Age slider ──────────────────────────────────────────────────────────────
+const asl=document.getElementById('asl'),adsp=document.getElementById('adsp');
+function updateSlider(){
+  const pct=((asl.value-18)/(96-18)*100).toFixed(1);
+  asl.style.setProperty('--pct',pct+'%');
+  adsp.textContent=asl.value;
+}
+asl.addEventListener('input',updateSlider);
+updateSlider();
+
+// ── Badge select ─────────────────────────────────────────────────────────────
+function sel(gid,el){
+  document.getElementById(gid).querySelectorAll('.fb').forEach(b=>b.classList.remove('a'));
+  el.classList.add('a');
+}
+
+// ── Name maps ────────────────────────────────────────────────────────────────
+const SN={1:'Round',2:'Oval',3:'Lobular',4:'Irregular'};
+const MN={1:'Circumscribed',2:'Microlobulated',3:'Obscured',4:'Ill-defined',5:'Spiculated'};
+const DN={1:'High density',2:'Iso density',3:'Low density',4:'Fat-containing'};
+
+function getVals(){
+  return{
+    age:parseInt(asl.value),
+    shape:parseInt(document.querySelector('#sg .fb.a')?.dataset.val||3),
+    margin:parseInt(document.querySelector('#mg .fb.a')?.dataset.val||4),
+    density:parseInt(document.querySelector('#dg .fb.a')?.dataset.val||2),
+  };
+}
+
+// ── Simulation fallback ──────────────────────────────────────────────────────
+function sim(v){
+  const ms={1:-.38,2:-.15,3:-.05,4:.18,5:.44};
+  const ss={1:-.22,2:-.12,3:.05,4:.25};
+  const ds={1:.06,2:.02,3:-.04,4:-.18};
+  const ae=Math.max(-.2,Math.min(.3,(v.age-40)/100*.28));
+  const sm=ms[v.margin]||0,ss2=ss[v.shape]||0,sd=ds[v.density]||0;
+  const prob=Math.max(.04,Math.min(.97,.42+sm+ss2+ae+sd));
+  return{probability:prob,shap:{margin:sm,shape:ss2,age:ae,density:sd}};
+}
+
+// ── Assessment ───────────────────────────────────────────────────────────────
+let lastVals=null;
+async function runAssessment(){
+  const btn=document.getElementById('abtn');
+  btn.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.5 2.5"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur=".75s" repeatCount="indefinite"/></circle></svg> Analyzing…';
+  btn.disabled=true;
+  const v=getVals();lastVals=v;
+  let res;
+  try{
+    const r=await fetch('/api/assess',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    res={probability:d.prediction.probability,shap:d.explanation.feature_attributions};
+  }catch(e){
+    console.warn('Backend offline, using simulation:',e.message);
+    res=sim(v);
+  }
+  renderResult(res,v);renderExp(res,v);
+  btn.innerHTML='<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Run Risk Assessment';
+  btn.disabled=false;
+  document.getElementById('rcard').classList.add('glowing');
+  setTimeout(()=>document.getElementById('rcard').classList.remove('glowing'),2100);
+}
+
+function renderResult(res,v){
+  document.getElementById('re').style.display='none';
+  document.getElementById('rc').style.display='block';
+  const prob=res.probability,pct=Math.round(prob*100);
+  const arc=226;
+  setTimeout(()=>{
+    document.getElementById('gfill').style.strokeDashoffset=arc-(prob*arc);
+    const ang=-90+(prob*180);
+    document.getElementById('gneedle').style.transform=`rotate(${ang}deg)`;
+    document.getElementById('gneedle').style.transformOrigin='93px 88px';
+  },60);
+  document.getElementById('gpct').textContent=pct+'%';
+  const gf=document.getElementById('gfill');
+  if(prob<.35)gf.setAttribute('stroke','url(#gl)');
+  else if(prob<.65)gf.setAttribute('stroke','url(#gm)');
+  else gf.setAttribute('stroke','url(#gh)');
+  let cat,cls,interp;
+  if(prob<.35){cat='Low Risk';cls='r-low';interp=`At ${pct}% estimated probability, this pattern shows features more consistent with benign findings. The ${MN[v.margin].toLowerCase()} margin and ${SN[v.shape].toLowerCase()} shape contribute to a lower-risk profile. Clinical correlation remains important.`;}
+  else if(prob<.65){cat='Moderate Risk';cls='r-mod';interp=`At ${pct}% estimated probability, this pattern warrants careful clinical attention. A ${MN[v.margin].toLowerCase()} margin in a patient aged ${v.age} suggests further diagnostic work-up is appropriate.`;}
+  else{cat='Elevated Risk';cls='r-hi';interp=`At ${pct}% estimated probability, this pattern shows features associated with higher malignancy likelihood. A ${MN[v.margin].toLowerCase()} margin is among the strongest predictors. Prompt radiologist review is strongly recommended — this is not a diagnosis of cancer.`;}
+  document.getElementById('rcat').innerHTML=`<div class="rc-lbl ${cls}">Risk Category</div><div class="rc-name ${cls}">${cat}</div>`;
+  document.getElementById('ri').textContent=interp;
+  const feats=[
+    {n:'Margin',v:res.shap.margin,l:MN[v.margin]},
+    {n:'Shape',v:res.shap.shape,l:SN[v.shape]},
+    {n:'Age',v:res.shap.age,l:v.age+' yr'},
+    {n:'Density',v:res.shap.density,l:DN[v.density]},
+  ].sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
+  const mx=Math.max(...feats.map(f=>Math.abs(f.v)));
+  document.getElementById('sbars').innerHTML=feats.map(f=>{
+    const pct2=Math.round(Math.abs(f.v)/mx*88);
+    const cls2=f.v>=0?'sbf-up':'sbf-dn';
+    return`<div class="sbr"><span class="sfn">${f.n}</span><div class="sbt"><div class="sbf ${cls2}" style="width:0%" data-w="${pct2}%"></div></div><span class="sv">${f.v>=0?'+':''}${f.v.toFixed(3)}</span></div>`;
+  }).join('');
+  setTimeout(()=>{document.querySelectorAll('#sbars .sbf').forEach(b=>b.style.width=b.dataset.w)},80);
+}
+
+function renderExp(res,v){
+  const feats=[
+    {n:'Margin',v:res.shap.margin,l:MN[v.margin],m:'Border characteristics'},
+    {n:'Shape',v:res.shap.shape,l:SN[v.shape],m:'Mass morphology'},
+    {n:'Age',v:res.shap.age,l:v.age+' yr',m:'Patient age'},
+    {n:'Density',v:res.shap.density,l:DN[v.density],m:'Tissue composition'},
+  ].sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
+  const mx=Math.max(...feats.map(f=>Math.abs(f.v)));
+  const pctF=Math.round(res.probability*100);
+  let wf=`<div style="font-size:.69rem;color:var(--tm);margin-bottom:7px;display:flex;justify-content:space-between"><span>Base: 42%</span><span>Final: ${pctF}%</span></div>`;
+  wf+=feats.map(f=>{
+    const bp=Math.round(Math.abs(f.v)/mx*72);
+    const cls=f.v>=0?'wfb-p':'wfb-n';
+    const col=f.v>=0?'var(--r500)':'var(--blue)';
+    return`<div class="wfr"><div class="wfl">${f.n}<br/><span style="color:var(--tm);font-size:.67rem">${f.l}</span></div><div class="wft"><div class="wfb ${cls}" style="width:0%;${f.v>=0?'left:0':'left:auto;right:0'}" data-w="${bp}%"></div></div><div class="wfp" style="color:${col}">${f.v>=0?'+':''}${f.v.toFixed(3)}</div></div>`;
+  }).join('');
+  document.getElementById('wfall').innerHTML=wf;
+  setTimeout(()=>{document.querySelectorAll('#wfall .wfb').forEach(b=>b.style.width=b.dataset.w)},80);
+  const dom=feats[0];
+  const allF=[
+    {n:'Age',v:v.age+' yr',m:'Patient age at screening',key:'age'},
+    {n:'Shape',v:SN[v.shape],m:'Mass morphology',key:'shape'},
+    {n:'Margin',v:MN[v.margin],m:'Border characteristics',key:'margin'},
+    {n:'Density',v:DN[v.density],m:'Tissue composition',key:'density'},
+  ];
+  document.getElementById('fcards').innerHTML=allF.map(f=>{
+    const isDom=f.key===dom.n.toLowerCase();
+    return`<div class="fci ${isDom?'dom':''}"><div class="fcn">${f.n}${isDom?' ★':''}</div><div class="fcv">${f.v}</div><div class="fcm">${f.m}</div></div>`;
+  }).join('');
+  document.getElementById('pltext').innerHTML=`The model estimated <strong>${pctF}% malignancy probability</strong>. The strongest driver was <strong>${dom.n} (${dom.l})</strong>, which ${dom.v>=0?'elevated':'reduced'} the risk by the largest margin.`+(v.margin>=4?` A ${MN[v.margin].toLowerCase()} margin is one of the most significant BI-RADS risk indicators in the ACR literature.`:' A circumscribed margin generally suggests a more benign process.')+' This is a statistical estimate from a research model — not a clinical diagnosis. A radiologist must review the actual imaging.';
+}
+
+// ── Chat ─────────────────────────────────────────────────────────────────────
+let chatBusy=false;
+async function sendChat(){
+  if(chatBusy)return;
+  const inp=document.getElementById('cta');
+  const txt=inp.value.trim();if(!txt)return;
+  inp.value='';inp.style.height='auto';
+  addMsg('user',txt);
+  animRAG();
+  chatBusy=true;
+  document.getElementById('csend').disabled=true;
+  const typEl=addTyping();
+  const v=lastVals||getVals();
+  const busyTimer=setTimeout(()=>{chatBusy=false;document.getElementById('csend').disabled=false;},30000);
+  try{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...v,question:txt})});
+    if(!r.ok){
+      let msg='Server error ('+r.status+')';
+      try{const e=await r.json();msg=e.detail||msg;}catch(_){}
+      typEl.remove();addMsg('bot','⚠️ '+msg);
+    }else{
+      const d=await r.json();
+      typEl.remove();
+      const src=(d.sources||[]).filter(Boolean).join(' · ')||'ACR BI-RADS Atlas';
+      addMsg('bot',d.response||'I encountered an issue generating a response.',src);
+    }
+  }catch(e){
+    typEl.remove();
+    addMsg('bot','⚠️ Connection error: '+e.message+'. Is the server running at '+window.location.host+'?');
+  }finally{
+    clearTimeout(busyTimer);
+    chatBusy=false;
+    document.getElementById('csend').disabled=false;
+  }
+}
+
+function addMsg(role,text,src){
+  const msgs=document.getElementById('cmsg');
+  const d=document.createElement('div');
+  d.className=role==='user'?'mu':'mb';
+  d.style.opacity='0';d.style.transform='translateY(8px)';d.style.transition='all .3s cubic-bezier(.22,.61,.36,1)';
+  const safe=text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const srcHtml=src&&role==='bot'?`<div><span class="sp">📚 ${src}</span></div>`:'';
+  d.innerHTML=`<div class="ma">${role==='user'?'👤':'✨'}</div><div class="mbub">${safe.replace(/\n/g,'<br/>')}${srcHtml}</div>`;
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
+  requestAnimationFrame(()=>{d.style.opacity='1';d.style.transform='none';});
+  return d;
+}
+
+function addTyping(){
+  const msgs=document.getElementById('cmsg');
+  const d=document.createElement('div');d.className='mb';
+  d.innerHTML=`<div class="ma">✨</div><div class="mbub"><div class="tdots"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;
+}
+
+function chip(btn){
+  const txt=btn.querySelector('.pct').textContent.replace(/\s+/g,' ').trim();
+  document.getElementById('cta').value=txt;
+  document.getElementById('assistant').scrollIntoView({behavior:'smooth'});
+  setTimeout(sendChat,240);
+}
+
+function chatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
+function chatGrow(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,96)+'px';}
+
+function animRAG(){
+  const ids=['rn1','rn2','rn3','rn4'];
+  ids.forEach(id=>document.getElementById(id).classList.remove('act'));
+  ids.forEach((id,i)=>setTimeout(()=>document.getElementById(id).classList.add('act'),i*380));
+  setTimeout(()=>ids.forEach(id=>document.getElementById(id).classList.remove('act')),ids.length*380+900);
+}
+
+// ── Page-load health check → update image model state ────────────────────────
+(async function checkHealth(){
+  try{
+    const d=await fetch('/health').then(r=>r.json());
+    if(d.image_model){
+      const notReady=document.getElementById('ia-not-ready');
+      if(notReady)notReady.style.display='none';
+      const sub=document.querySelector('#ia-drop .dz-sub');
+      if(sub)sub.innerHTML='Model ready — drop a mammogram image to analyze<br/><span style="color:var(--r400);font-size:.72rem">EfficientNet-B0 · Grad-CAM · CBIS-DDSM trained</span>';
+      const note=document.querySelector('.ia-model-note');
+      if(note)note.style.display='none';
+    }
+  }catch(_){}
+})();
+
+// ── Image Analysis ────────────────────────────────────────────────────────────
+(()=>{
+  // Drag-and-drop
+  const dz=document.getElementById('ia-drop');
+  if(!dz)return;
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+  dz.addEventListener('drop',e=>{
+    e.preventDefault();dz.classList.remove('drag-over');
+    const f=e.dataTransfer.files[0];
+    if(f)handleImageUpload(f);
+  });
+})();
+
+async function handleImageUpload(file){
+  if(!file)return;
+  const loading=document.getElementById('ia-loading');
+  const result=document.getElementById('ia-result');
+  const notReady=document.getElementById('ia-not-ready');
+
+  // Show loading
+  notReady.style.display='none';
+  result.style.display='none';
+  loading.style.display='block';
+
+  // Show original image preview immediately
+  const origEl=document.getElementById('ia-orig');
+  origEl.src=URL.createObjectURL(file);
+
+  try{
+    const fd=new FormData();
+    fd.append('file',file);
+    const r=await fetch('/api/assess-image',{method:'POST',body:fd});
+    if(!r.ok){
+      const err=await r.json().catch(()=>({detail:'Server error '+r.status}));
+      loading.style.display='none';
+      notReady.style.display='block';
+      notReady.querySelector('.ia-nr-t').textContent='⚠️ '+( err.detail||'Server error');
+      return;
+    }
+    const d=await r.json();
+    loading.style.display='none';
+
+    // Populate results
+    const pct=Math.round(d.probability*100);
+    document.getElementById('ia-pct').textContent=pct+'%';
+
+    const rb=document.getElementById('ia-risk-badge');
+    rb.textContent=d.risk_category;
+    rb.className='ia-risk '+(pct<35?'ia-risk-low':pct<65?'ia-risk-mod':'ia-risk-hi');
+
+    // Grad-CAM overlay
+    const imgs=document.getElementById('ia-imgs');
+    if(d.gradcam_png_b64){
+      document.getElementById('ia-cam').src='data:image/png;base64,'+d.gradcam_png_b64;
+      imgs.style.display='grid';
+    }else{
+      imgs.style.display='none';
+    }
+
+    document.getElementById('ia-caption').textContent=
+      'EfficientNet-B0 prediction: '+pct+'% malignancy probability ('+d.risk_category+' risk). '
+      +(d.gradcam_png_b64?'Grad-CAM overlay: red/yellow regions drove the elevated score. This is the standard XAI technique for CNNs in medical imaging.':'Grad-CAM not available for this image.');
+
+    result.style.display='block';
+    // Animate probability count-up
+    const target=pct,dur=900,t0=performance.now();
+    const el=document.getElementById('ia-pct');
+    (function step(now){
+      const p=Math.min((now-t0)/dur,1),ease=1-Math.pow(1-p,3);
+      el.textContent=Math.round(target*ease)+'%';
+      if(p<1)requestAnimationFrame(step);
+    })(performance.now());
+
+  }catch(e){
+    loading.style.display='none';
+    notReady.style.display='block';
+    notReady.querySelector('.ia-nr-t').textContent='⚠️ Connection error';
+    notReady.querySelector('.ia-nr-p').textContent='Could not reach the server. Is it running at '+window.location.host+'?';
+  }
+}
+</script>
+</body>
+</html>
