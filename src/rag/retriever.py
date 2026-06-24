@@ -71,6 +71,20 @@ def rag_query(query: str, k: int = CHUNK_TOP_K) -> list[dict]:
     index, metadata, embedder_type = _load_index_and_meta()
     query_vec = _encode_query(query, embedder_type)
 
+    # Handle dimension mismatch (e.g., index=384 dense, query=128 TF-IDF fallback)
+    index_dim = index.d
+    query_dim = query_vec.shape[1]
+    if query_dim != index_dim:
+        if query_dim < index_dim:
+            # Pad query vector with zeros to match index dimension
+            pad = np.zeros((1, index_dim - query_dim), dtype="float32")
+            query_vec = np.hstack([query_vec, pad])
+            faiss.normalize_L2(query_vec)
+        else:
+            # Truncate to index dimension
+            query_vec = query_vec[:, :index_dim].copy()
+            faiss.normalize_L2(query_vec)
+
     distances, indices = index.search(query_vec, k)
     results = []
     seen = set()

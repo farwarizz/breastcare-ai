@@ -1,6 +1,6 @@
 """
 src/config.py — Central configuration for BreastCare AI.
-All paths, thresholds, and feature mappings live here.
+All paths, thresholds, feature mappings, and extension settings live here.
 """
 import os
 from pathlib import Path
@@ -9,8 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 
 # ── Data paths ──────────────────────────────────────────────────
-DATA_RAW_DIR       = ROOT / "data" / "raw"
-DATA_PROCESSED_DIR = ROOT / "data" / "processed"
+DATA_DIR           = ROOT / "data"
+DATA_RAW_DIR       = DATA_DIR / "raw"
+DATA_PROCESSED_DIR = DATA_DIR / "processed"
 CLEANED_CSV        = DATA_PROCESSED_DIR / "cleaned.csv"
 
 # ── Model paths ─────────────────────────────────────────────────
@@ -21,6 +22,15 @@ XGBOOST_MODEL_PATH   = MODELS_DIR / "wdbc_xgboost.pkl"
 XGBOOST_SHAP_PATH    = MODELS_DIR / "wdbc_shap.pkl"
 MODEL_METADATA_PATH  = MODELS_DIR / "model_metadata.json"
 WDBC_FEATURES_PATH   = MODELS_DIR / "wdbc_features.json"
+
+# ── Ensemble & calibration paths ─────────────────────────────────
+ENSEMBLE_MODEL_PATH  = MODELS_DIR / "stacking_ensemble.pkl"
+ENSEMBLE_SHAP_PATH   = MODELS_DIR / "ensemble_shap.pkl"
+OPTUNA_RESULTS_PATH  = MODELS_DIR / "optuna_results.json"
+CALIBRATION_PATH     = MODELS_DIR / "calibration_results.json"
+
+# ── Image model paths ────────────────────────────────────────────
+IMG_MODEL_PATH       = MODELS_DIR / "efficientnet_cbis.pth"
 
 # ── Knowledge base paths ─────────────────────────────────────────
 KB_DIR              = ROOT / "knowledge_base"
@@ -33,6 +43,17 @@ CHUNK_METADATA_PATH = KB_VECTORSTORE_DIR / "chunk_metadata.json"
 TFIDF_PATH          = KB_VECTORSTORE_DIR / "tfidf_vectorizer.pkl"
 SVD_PATH            = KB_VECTORSTORE_DIR / "svd_reducer.pkl"
 EMBEDDER_FLAG_PATH  = KB_VECTORSTORE_DIR / "embedder_type.txt"
+
+# ── GraphRAG paths ───────────────────────────────────────────────
+KB_GRAPHSTORE_DIR    = KB_DIR / "graphstore"
+KNOWLEDGE_GRAPH_PATH = KB_GRAPHSTORE_DIR / "knowledge_graph.graphml"
+ENTITY_CACHE_PATH    = KB_GRAPHSTORE_DIR / "entity_cache.json"
+COMMUNITY_CACHE_PATH = KB_GRAPHSTORE_DIR / "community_summaries.json"
+
+# ── Audit & reporting paths ──────────────────────────────────────
+AUDIT_DB_PATH        = DATA_DIR / "audit.db"
+REPORTS_DIR          = DATA_DIR / "reports"
+AUDIT_ENABLED        = True
 
 # ── Risk thresholds ──────────────────────────────────────────────
 LOW_RISK_THRESHOLD      = 0.35   # below = Low
@@ -69,6 +90,11 @@ FEATURE_NAMES = ["age", "shape", "margin", "density"]
 GEMINI_MODEL      = "gemini-2.5-flash"   # free tier: 1,500 req/day
 CLAUDE_MAX_TOKENS = 900
 
+# ── Multi-agent pipeline ─────────────────────────────────────────
+MULTI_AGENT_ENABLED  = False   # opt-in via UI toggle
+AGENT_MAX_TOKENS     = 600
+AGENT_TEMPERATURE    = 0.3
+
 # ── Chunking ─────────────────────────────────────────────────────
 CHUNK_MIN_LEN = 80
 CHUNK_MAX_LEN = 1200
@@ -80,7 +106,7 @@ EMBED_DIM_FALLBACK = 128   # TF-IDF + SVD fallback
 # ── Google Gemini API key ────────────────────────────────────────
 # Free key (no credit card): https://aistudio.google.com
 def get_api_key() -> str:
-    # Load .env from this file's directory tree if present (no-op if missing)
+    """Load Gemini API key from environment or .env file."""
     try:
         from dotenv import load_dotenv
         load_dotenv(override=False)

@@ -469,6 +469,8 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
     <a href="#imganalysis">Image AI</a>
     <a href="#explainer">SHAP</a>
     <a href="#assistant">AI Chat</a>
+    <a href="#riskprofile">Risk Profile</a>
+    <a href="#analytics">Analytics</a>
     <a href="#hiw">Architecture</a>
     <a href="#data">Models</a>
     <a href="#safety">Safety</a>
@@ -1100,6 +1102,121 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
   </div>
 </section>
 
+<!-- RISK PROFILE -->
+<section id="riskprofile" style="background:var(--off)">
+  <div class="sec">
+    <div class="stag rv">Extended Risk Assessment</div>
+    <h2 class="sh2 rv">Patient Risk <em style="color:var(--r500);font-style:italic">Profile</em></h2>
+    <p class="slead rv">Compare ML predictions with validated clinical risk models — Gail (NCI) and Tyrer-Cuzick (IBIS) — for a comprehensive risk perspective.</p>
+    <div class="eg" style="margin-top:40px">
+      <div class="ec rv" style="padding:28px">
+        <div class="ec-t" style="margin-bottom:20px">Extended Patient History</div>
+        <div class="fg"><label class="fl">Family History (1st degree relative) <span>breast cancer</span></label>
+          <div class="fbs" id="rp-fam"><button class="fb a" onclick="rpToggle(this,'rp-fam')" data-v="false">No</button><button class="fb" onclick="rpToggle(this,'rp-fam')" data-v="true">Yes</button></div></div>
+        <div class="fg"><label class="fl">BRCA Status <span>genetic testing</span></label>
+          <div class="fbs" id="rp-brca"><button class="fb a" onclick="rpToggle(this,'rp-brca')" data-v="Unknown">Unknown</button><button class="fb" onclick="rpToggle(this,'rp-brca')" data-v="Negative">Negative</button><button class="fb" onclick="rpToggle(this,'rp-brca')" data-v="BRCA1">BRCA1</button><button class="fb" onclick="rpToggle(this,'rp-brca')" data-v="BRCA2">BRCA2</button></div></div>
+        <div class="fg"><label class="fl">Breast Density Category <span>ACR classification</span></label>
+          <div class="fbs" id="rp-dens"><button class="fb a" onclick="rpToggle(this,'rp-dens')" data-v="Unknown">Unknown</button><button class="fb" onclick="rpToggle(this,'rp-dens')" data-v="A">A (Fatty)</button><button class="fb" onclick="rpToggle(this,'rp-dens')" data-v="B">B (Scattered)</button><button class="fb" onclick="rpToggle(this,'rp-dens')" data-v="C">C (Dense)</button><button class="fb" onclick="rpToggle(this,'rp-dens')" data-v="D">D (Extremely Dense)</button></div></div>
+        <div class="fg"><label class="fl">Prior Biopsies <span>breast biopsies performed</span></label>
+          <div class="fbs" id="rp-biop"><button class="fb a" onclick="rpToggle(this,'rp-biop')" data-v="0">0</button><button class="fb" onclick="rpToggle(this,'rp-biop')" data-v="1">1</button><button class="fb" onclick="rpToggle(this,'rp-biop')" data-v="2">2+</button></div></div>
+        <div class="fg"><label class="fl">Hormone Replacement Therapy <span>current use</span></label>
+          <div class="fbs" id="rp-hrt"><button class="fb a" onclick="rpToggle(this,'rp-hrt')" data-v="false">No</button><button class="fb" onclick="rpToggle(this,'rp-hrt')" data-v="true">Yes</button></div></div>
+        <button class="btn btn-p abtn" onclick="runRiskProfile()">Calculate Risk Profile</button>
+      </div>
+      <div>
+        <div id="rp-waiting" class="ec rv" style="text-align:center;padding:52px 20px">
+          <div style="font-size:48px;margin-bottom:14px;opacity:.3">📊</div>
+          <div style="font-size:.87rem;color:var(--tm)">Run an assessment first, then calculate your<br/>extended risk profile for comparison.</div>
+        </div>
+        <div id="rp-result" style="display:none">
+          <div class="ec" style="margin-bottom:14px">
+            <div class="ec-t">Risk Model Comparison</div>
+            <div class="ec-s">ML estimate vs. validated clinical models</div>
+            <div id="rp-bars" style="margin-top:16px"></div>
+          </div>
+          <div class="ec">
+            <div class="ec-t">Active Risk Factors</div>
+            <div class="ec-s">Based on extended patient history</div>
+            <div id="rp-factors" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ANALYTICS DASHBOARD -->
+<section id="analytics" style="background:var(--white)">
+  <div class="sec">
+    <div class="stag rv">Analytics</div>
+    <h2 class="sh2 rv">Analytics <em style="color:var(--r500);font-style:italic">Dashboard</em></h2>
+    <p class="slead rv">Batch predictions, model comparison, monitoring, and audit trail — tools for systematic evaluation.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:44px">
+      <!-- Batch Prediction -->
+      <div class="ec rv">
+        <div class="ec-t">📊 Batch Prediction</div>
+        <div class="ec-s">Upload CSV with columns: age, shape, margin, density</div>
+        <div class="drop-zone" style="margin-top:16px;padding:28px 16px" id="batch-drop">
+          <input type="file" accept=".csv" onchange="runBatchPredict(this.files[0])"/>
+          <div class="dz-icon">📁</div>
+          <div class="dz-title">Drop CSV here or click to upload</div>
+          <div class="dz-sub">Results include predictions, risk categories, and SHAP analysis</div>
+        </div>
+        <div id="batch-loading" style="display:none;text-align:center;padding:20px;color:var(--tm)">⏳ Processing batch...</div>
+        <div id="batch-result" style="display:none;margin-top:14px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px" id="batch-stats"></div>
+          <button class="btn btn-o" style="width:100%" onclick="downloadBatchCSV()">📥 Download Results CSV</button>
+        </div>
+      </div>
+      <!-- Model Comparison -->
+      <div class="ec rv">
+        <div class="ec-t">🔬 A/B Model Comparison</div>
+        <div class="ec-s">Compare all models on the current assessment</div>
+        <div id="mc-waiting" style="text-align:center;padding:32px;color:var(--tm);font-size:.84rem">Run an assessment first, then compare models side-by-side.</div>
+        <div id="mc-result" style="display:none;margin-top:14px">
+          <div id="mc-table"></div>
+          <div id="mc-agreement" style="margin-top:12px;padding:12px;background:var(--off);border-radius:10px;font-size:.82rem;color:var(--ts)"></div>
+        </div>
+        <button class="btn btn-p abtn" style="margin-top:14px" onclick="runModelComparison()">Compare Models</button>
+      </div>
+      <!-- Audit Trail -->
+      <div class="ec rv">
+        <div class="ec-t">📜 Prediction Audit Trail</div>
+        <div class="ec-s">SQLite-backed history of all predictions</div>
+        <div id="audit-list" style="margin-top:14px;max-height:300px;overflow-y:auto"></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-g" style="flex:1" onclick="loadAuditHistory()">🔄 Refresh</button>
+          <button class="btn btn-o" style="flex:1" onclick="exportAuditCSV()">📥 Export CSV</button>
+        </div>
+      </div>
+      <!-- PDF Report -->
+      <div class="ec rv">
+        <div class="ec-t">📄 PDF Report Generator</div>
+        <div class="ec-s">Download a professional assessment report</div>
+        <div style="text-align:center;padding:28px;color:var(--tm);font-size:.84rem">
+          <div style="font-size:42px;margin-bottom:10px;opacity:.4">📋</div>
+          Run an assessment, then generate a branded PDF report with SHAP analysis, risk metrics, and disclaimers.
+        </div>
+        <button class="btn btn-p abtn" onclick="downloadPDFReport()">Generate PDF Report</button>
+      </div>
+    </div>
+    <!-- Pipeline Mode Selector -->
+    <div class="ec rv" style="margin-top:24px">
+      <div class="ec-t">🤖 AI Pipeline Mode</div>
+      <div class="ec-s">Select the reasoning mode for the AI chat assistant</div>
+      <div class="fbs" id="mode-select" style="margin-top:14px">
+        <button class="fb a" onclick="rpToggle(this,'mode-select')" data-v="single">⚡ Single Pass (Default)</button>
+        <button class="fb" onclick="rpToggle(this,'mode-select')" data-v="cot">🧠 Chain-of-Thought</button>
+        <button class="fb" onclick="rpToggle(this,'mode-select')" data-v="multi_agent">🤖 Multi-Agent (3 agents)</button>
+      </div>
+      <div id="cot-trace" style="display:none;margin-top:16px;background:var(--off);border:1px solid var(--bdr);border-radius:12px;padding:18px;max-height:400px;overflow-y:auto">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tm);margin-bottom:10px">Reasoning Trace</div>
+        <div id="cot-trace-content" style="font-size:.82rem;color:var(--ts);line-height:1.65;white-space:pre-wrap"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer>
   <div class="ft-brand">BreastCare <em style="color:var(--r400);font-style:italic">AI</em></div>
   <p class="ft-tag">Multi-layer breast cancer risk estimation prototype<br/>XGBoost · LightGBM · SHAP · FAISS · Gemini AI · FastAPI</p>
@@ -1438,7 +1555,7 @@ async function sendChat(){
   const v=lastVals||getVals();
   const busyTimer=setTimeout(()=>{chatBusy=false;document.getElementById('csend').disabled=false;},30000);
   try{
-    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...v,question:txt})});
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...v,question:txt,mode:getSelectedMode()})});
     if(!r.ok){
       let msg='Server error ('+r.status+')';
       try{const e=await r.json();msg=e.detail||msg;}catch(_){}
@@ -1447,7 +1564,13 @@ async function sendChat(){
       const d=await r.json();
       typEl.remove();
       const src=(d.sources||[]).filter(Boolean).join(' · ')||'ACR BI-RADS Atlas';
-      addMsg('bot',d.response||'I encountered an issue generating a response.',src);
+      const modeLabel=d.mode==='cot'?' 🧠 CoT':d.mode==='multi_agent'?' 🤖 Multi-Agent':'';
+      addMsg('bot',(d.response||'I encountered an issue generating a response.')+modeLabel,src);
+      // Show reasoning trace if available
+      if(d.reasoning_trace){
+        document.getElementById('cot-trace').style.display='block';
+        document.getElementById('cot-trace-content').textContent=d.reasoning_trace;
+      }
     }
   }catch(e){
     typEl.remove();
@@ -1591,6 +1714,126 @@ async function handleImageUpload(file){
     notReady.querySelector('.ia-nr-t').textContent='⚠️ Connection error';
     notReady.querySelector('.ia-nr-p').textContent='Could not reach the server. Is it running at '+window.location.host+'?';
   }
+}
+// ── Risk Profile ──────────────────────────────────────────
+function rpToggle(btn,groupId){
+  document.querySelectorAll('#'+groupId+' .fb').forEach(b=>b.classList.remove('a'));
+  btn.classList.add('a');
+}
+function getRpValue(groupId){
+  const active=document.querySelector('#'+groupId+' .fb.a');
+  return active?active.dataset.v:'';
+}
+function getSelectedMode(){
+  return getRpValue('mode-select')||'single';
+}
+
+async function runRiskProfile(){
+  const asl=document.querySelector('#age-slider')||document.querySelector('.asl');
+  const age=asl?parseInt(asl.value):50;
+  const shape=parseInt(getRpValue('shape-btns')||document.querySelector('#shape-btns .fb.a')?.dataset?.v||'2');
+  const margin=parseInt(getRpValue('margin-btns')||document.querySelector('#margin-btns .fb.a')?.dataset?.v||'3');
+  const density=parseInt(getRpValue('density-btns')||document.querySelector('#density-btns .fb.a')?.dataset?.v||'2');
+  try{
+    const r=await fetch('/api/risk-profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      age,shape,margin,density,
+      family_history:getRpValue('rp-fam')==='true',
+      brca_status:getRpValue('rp-brca')||'Unknown',
+      breast_density_category:getRpValue('rp-dens')||'Unknown',
+      prior_biopsies:parseInt(getRpValue('rp-biop')||'0'),
+      hormone_replacement:getRpValue('rp-hrt')==='true'
+    })});
+    const d=await r.json();
+    document.getElementById('rp-waiting').style.display='none';
+    document.getElementById('rp-result').style.display='block';
+    // Render comparison bars
+    const bars=document.getElementById('rp-bars');
+    const models=[d.population_baseline,d.gail_model,d.tyrer_cuzick,d.ml_estimate];
+    bars.innerHTML=models.map(m=>{
+      const pct=m.five_year_pct||m.probability_pct||0;
+      const cat=m.risk_category||'';
+      const col=cat==='High'||cat==='Elevated'?'var(--r500)':cat==='Moderate'?'#d97706':'var(--blue)';
+      return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:.78rem;font-weight:600;color:var(--navy)">${m.model||'ML'}</span><span style="font-size:.78rem;font-weight:700;color:${col}">${pct}%</span></div><div style="height:8px;background:var(--bdr);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.min(pct*2,100)}%;background:${col};border-radius:4px;transition:width .8s"></div></div><div style="font-size:.68rem;color:var(--tm);margin-top:2px">${cat} risk · RR: ${m.relative_risk||'N/A'}</div></div>`;
+    }).join('');
+    // Render risk factors
+    const factors=document.getElementById('rp-factors');
+    const rf=d.risk_factors||[];
+    factors.innerHTML=rf.length?rf.map(f=>`<div class="li"><span class="lix">⚠</span><span>${f}</span></div>`).join(''):'<div style="font-size:.82rem;color:var(--tm);padding:12px">No elevated risk factors identified.</div>';
+  }catch(e){console.error(e)}
+}
+
+// ── Batch Prediction ─────────────────────────────────────
+let batchResults=null;
+async function runBatchPredict(file){
+  if(!file)return;
+  document.getElementById('batch-loading').style.display='block';
+  document.getElementById('batch-result').style.display='none';
+  try{
+    const fd=new FormData();fd.append('file',file);
+    const r=await fetch('/api/batch-predict',{method:'POST',body:fd});
+    const d=await r.json();
+    document.getElementById('batch-loading').style.display='none';
+    batchResults=d;
+    const s=d.summary||{};
+    document.getElementById('batch-stats').innerHTML=[
+      ['Total',d.total_rows],['Avg P',((s.avg_probability||0)*100).toFixed(1)+'%'],
+      ['High Risk',s.high_risk_count||0],['Std',((s.std_probability||0)*100).toFixed(1)+'%']
+    ].map(([l,v])=>`<div class="dst"><div class="dsv">${v}</div><div class="dsk">${l}</div></div>`).join('');
+    document.getElementById('batch-result').style.display='block';
+  }catch(e){document.getElementById('batch-loading').style.display='none';console.error(e)}
+}
+function downloadBatchCSV(){
+  if(!batchResults)return;
+  const rows=batchResults.results||[];
+  if(!rows.length)return;
+  const keys=Object.keys(rows[0]);
+  const csv=[keys.join(','),...rows.map(r=>keys.map(k=>JSON.stringify(r[k]??'')).join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='batch_results.csv';a.click();
+}
+
+// ── Model Comparison ─────────────────────────────────────
+async function runModelComparison(){
+  const asl=document.querySelector('.asl');
+  const age=asl?parseInt(asl.value):50;
+  try{
+    const r=await fetch('/api/compare-models',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({age,shape:2,margin:3,density:2})});
+    const d=await r.json();
+    if(!d.available){document.getElementById('mc-waiting').textContent=d.message||'No models available.';return;}
+    document.getElementById('mc-waiting').style.display='none';
+    document.getElementById('mc-result').style.display='block';
+    const models=Object.values(d.models||{});
+    document.getElementById('mc-table').innerHTML='<table class="ptbl" style="width:100%"><tr><th>Model</th><th>Probability</th><th>Class</th><th>Risk</th></tr>'+models.map(m=>`<tr><td style="font-weight:600">${m.model_name}</td><td>${m.probability_pct}%</td><td>${m.predicted_class}</td><td>${m.risk_category}</td></tr>`).join('')+'</table>';
+    const ag=d.agreement||{};
+    document.getElementById('mc-agreement').innerHTML=ag.sufficient_models?`<strong>${ag.unanimous_class}</strong> · ${ag.agreement_pct}% agreement · Spread: ${((ag.spread||0)*100).toFixed(1)}pp`:'Insufficient models for comparison.';
+  }catch(e){console.error(e)}
+}
+
+// ── Audit Trail ──────────────────────────────────────────
+async function loadAuditHistory(){
+  try{
+    const r=await fetch('/api/audit/history?limit=20');
+    const d=await r.json();
+    const list=document.getElementById('audit-list');
+    const h=d.history||[];
+    if(!h.length){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--tm);font-size:.82rem">No predictions recorded yet.</div>';return;}
+    list.innerHTML=h.map(p=>{const col=p.risk_category==='Elevated'?'var(--r500)':p.risk_category==='Moderate'?'#d97706':'var(--blue)';return `<div style="padding:10px 12px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center"><div><span style="font-weight:600;font-size:.82rem">Age ${p.age} · Shape ${p.shape} · Margin ${p.margin}</span><br/><span style="font-size:.7rem;color:var(--tm)">${(p.timestamp||'').slice(0,16)}</span></div><div style="text-align:right"><span style="font-weight:700;color:${col}">${(p.probability*100).toFixed(1)}%</span><br/><span style="font-size:.68rem;color:var(--tm)">${p.risk_category} · ${p.model_used}</span></div></div>`;}).join('');
+  }catch(e){console.error(e)}
+}
+loadAuditHistory();
+
+async function exportAuditCSV(){
+  try{const r=await fetch('/api/audit/export');const b=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='breastcare_audit.csv';a.click();}catch(e){console.error(e)}
+}
+
+async function downloadPDFReport(){
+  const asl=document.querySelector('.asl');
+  const age=asl?parseInt(asl.value):50;
+  try{
+    const r=await fetch('/api/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({age,shape:2,margin:3,density:2})});
+    const b=await r.blob();
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='breastcare_report.pdf';a.click();
+  }catch(e){console.error(e)}
 }
 </script>
 </body>

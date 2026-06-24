@@ -5,3 +5,7 @@ __pycache__/
 farwa_env/
 .venv/
 venv/
+data/audit.db
+data/reports/
+test_trace.py
+test_api.py
