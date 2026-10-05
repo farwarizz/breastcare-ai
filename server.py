@@ -204,29 +204,22 @@ def chat(req: ChatRequest):
 @app.post("/api/assess-image")
 async def assess_image(file: UploadFile = File(...)):
     """Upload mammogram → EfficientNet risk score + Grad-CAM heatmap."""
-    from src.ml.image_model import is_available, predict_image, IMG_MODEL_PATH
-    if not is_available():
-        # Return demo mode response
-        try:
-            from PIL import Image as PILImage
-            data = await file.read()
-            img = PILImage.open(io.BytesIO(data))
-            from src.ml.image_model import predict_image_demo
-            return JSONResponse(predict_image_demo(img))
-        except Exception:
-            raise HTTPException(
-                status_code=503,
-                detail=f"Image model not ready. Train on Kaggle and place at {IMG_MODEL_PATH}",
-            )
+    from src.ml.image_model import is_available, predict_image, predict_image_demo
 
     allowed = {"image/jpeg", "image/png", "image/jpg"}
     if file.content_type not in allowed:
         raise HTTPException(status_code=400, detail="Upload a JPEG or PNG mammogram image")
+
     try:
         from PIL import Image as PILImage
         data = await file.read()
         img = PILImage.open(io.BytesIO(data))
-        return JSONResponse(predict_image(img))
+
+        if is_available():
+            return JSONResponse(predict_image(img))
+        else:
+            # Demo mode — no PyTorch or model weights
+            return JSONResponse(predict_image_demo(img))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
