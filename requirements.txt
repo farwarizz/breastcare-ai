@@ -1,18 +1,15 @@
-# BreastCare AI — Dependencies
+# BreastCare AI — runtime dependencies (what the deployed app needs)
 # Install: pip install -r requirements.txt
+# Training, evaluation, tests and the WDBC appendix: pip install -r requirements-dev.txt
 
 # ── Core ML ──────────────────────────────────────────────────────
-lightgbm>=4.0.0
-xgboost>=2.0.0
+lightgbm==4.6.0          # must match the version that trained models/*.joblib
 shap>=0.46.0
-scikit-learn>=1.4.0
+scikit-learn==1.7.2      # must match the version that trained models/*.joblib
 pandas>=2.0.0
 numpy>=1.26.0
 joblib>=1.3.0
 scipy>=1.12.0
-
-# ── Ensemble & Optimization ─────────────────────────────────────
-optuna>=3.0.0
 
 # ── Data verification (scripts/download_data.py) ────────────────
 ucimlrepo>=0.0.7
@@ -40,11 +37,8 @@ fpdf2>=2.7.0
 # ── Config ───────────────────────────────────────────────────────
 python-dotenv>=1.0.0
 
-# ── Deep Learning (Image Classification) ─────────────────────────
-# CPU-only PyTorch — ~125MB instead of ~2GB GPU version
---extra-index-url https://download.pytorch.org/whl/cpu
-torch
-torchvision
-timm
-pytorch-grad-cam
+# ── Images (PDF reports, upload decoding) ────────────────────────
 Pillow>=10.0.0
+# The experimental image model (PyTorch) is an optional extra kept out of the
+# deployment: pip install -r requirements-image.txt. Without it,
+# /api/assess-image returns HTTP 503.

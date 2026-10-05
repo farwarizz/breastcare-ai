@@ -1,0 +1,8 @@
+# BreastCare AI — optional experimental image model (EfficientNet-B0 + Grad-CAM)
+# Install: pip install -r requirements-image.txt
+# Not part of the deployed app (too heavy for a small instance, and the model's
+# accuracy is unverified). Without these, /api/assess-image returns HTTP 503.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+timm

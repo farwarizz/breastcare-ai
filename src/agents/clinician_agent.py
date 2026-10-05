@@ -8,6 +8,7 @@ Output: patient-friendly explanation with appropriate urgency calibration.
 from __future__ import annotations
 from typing import Any
 from src.agents.base_agent import BaseAgent
+from src.rag.prompt_builder import risk_summary_lines
 
 
 class ClinicianAgent(BaseAgent):
@@ -49,7 +50,7 @@ NEVER state "you have cancer", "this is cancer", or imply a diagnosis."""
 {analysis}
 
 PREDICTION SUMMARY:
-Malignancy probability (uncalibrated model output): {round(prob * 100, 1)}%
+{risk_summary_lines(prediction)}
 Risk category: {risk_cat}
 Analyst confidence: {confidence}
 {question_section}

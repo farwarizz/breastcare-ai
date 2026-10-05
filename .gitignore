@@ -10,6 +10,11 @@ venv/
 data/audit.db*
 data/reports/
 
+# Local MLflow tracking store (python -m src.ml.train logs here when mlflow is installed)
+mlflow.db
+mlruns/
+mlartifacts/
+
 # Local scratch scripts
 test_trace.py
 test_api.py
