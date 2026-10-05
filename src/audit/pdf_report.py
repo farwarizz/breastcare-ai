@@ -131,7 +131,7 @@ def generate_pdf_report(
     risk_data = [
         ["Metric", "Value"],
         ["Predicted Class", prediction["predicted_class"]],
-        ["Confidence Band", prediction.get("confidence_band", "N/A")],
+        ["Probability Type", "Uncalibrated model output (no uncertainty interval)"],
         ["Dominant Feature", explanation.get("dominant_feature", "N/A").title()],
         ["Risk Direction", explanation.get("risk_direction", "N/A")],
     ]

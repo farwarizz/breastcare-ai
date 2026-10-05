@@ -50,10 +50,12 @@ def predict(features: dict) -> dict:
     Returns
     -------
     dict:
-        probability     float   — P(malignant), 0–1
+        probability     float   — model score for P(malignant), 0–1.
+                                  Uncalibrated, and returned without an
+                                  uncertainty interval (none is computed yet).
+        calibrated      bool    — always False until calibration is added
         predicted_class str     — "Malignant" | "Benign"
         risk_category   str     — "Low" | "Moderate" | "Elevated"
-        confidence_band str     — e.g. "72% ± 8%"
         feature_array   list    — [age, shape, margin, density]
     """
     model = _load_model()
@@ -77,15 +79,11 @@ def predict(features: dict) -> dict:
     else:
         risk_cat = "Elevated"
 
-    # Simple ±8 pp confidence band (research model; not calibrated)
-    pct = round(prob * 100, 1)
-    band = f"{pct}% ± 8%"
-
     return {
         "probability":     prob,
+        "calibrated":      False,
         "predicted_class": pred,
         "risk_category":   risk_cat,
-        "confidence_band": band,
         "feature_array":   [features["age"], features["shape"],
                              features["margin"], features["density"]],
     }

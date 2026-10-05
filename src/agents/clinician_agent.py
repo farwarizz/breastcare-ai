@@ -49,7 +49,7 @@ NEVER state "you have cancer", "this is cancer", or imply a diagnosis."""
 {analysis}
 
 PREDICTION SUMMARY:
-Malignancy probability: {round(prob * 100, 1)}%
+Malignancy probability (uncalibrated model output): {round(prob * 100, 1)}%
 Risk category: {risk_cat}
 Analyst confidence: {confidence}
 {question_section}

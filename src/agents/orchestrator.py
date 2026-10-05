@@ -71,10 +71,9 @@ COT_USER_TEMPLATE = """PATIENT FEATURES:
   Density: {density_label} (code {density})
 
 RISK ESTIMATE:
-  Malignancy probability: {probability_pct}%
+  Malignancy probability (uncalibrated model output, no uncertainty interval): {probability_pct}%
   Risk category: {risk_category}
   Predicted class: {predicted_class}
-  Confidence band: {confidence_band}
 
 SHAP EXPLANATION:
   {shap_text}
@@ -245,7 +244,6 @@ class MultiAgentPipeline:
             probability_pct=round(prediction.get("probability", 0) * 100, 1),
             risk_category=prediction.get("risk_category", "?"),
             predicted_class=prediction.get("predicted_class", "?"),
-            confidence_band=prediction.get("confidence_band", "?"),
             shap_text=explanation.get("shap_text", ""),
             dominant_feature=explanation.get("dominant_feature", "?"),
             chunks_text=chunks_text,

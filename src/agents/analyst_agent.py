@@ -53,7 +53,7 @@ CLINICAL ALIGNMENT: [How well the model's reasoning aligns with retrieved guidel
         )
 
         return f"""PREDICTION:
-Malignancy probability: {round(prob * 100, 1)}%
+Malignancy probability (uncalibrated model output): {round(prob * 100, 1)}%
 Risk category: {risk_cat}
 Predicted class: {prediction.get('predicted_class', 'Unknown')}
 

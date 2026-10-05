@@ -1,8 +1,12 @@
 """
 src/ml/image_model.py — EfficientNet-B0 mammogram image classifier + Grad-CAM.
 
-Model weights (efficientnet_cbis.pth) are trained on CBIS-DDSM via Kaggle GPU
-and placed in models/ folder. Inference runs on CPU locally.
+Model weights (efficientnet_cbis.pth) were trained on CBIS-DDSM on a Kaggle GPU
+and placed in models/. Inference runs on CPU.
+
+Experimental: no evaluation results for this model are stored in this repo,
+so its accuracy is unverified. There is deliberately no fallback — if the
+weights or torch/timm are missing, the API returns HTTP 503 instead of a score.
 
 Usage:
     from src.ml.image_model import predict_image, is_available
@@ -64,7 +68,7 @@ if _TORCH_OK and _TV_OK:
 
 
 def is_available() -> bool:
-    """True if model weights file exists and all dependencies are installed."""
+    """True only if the real weights file exists and torch/torchvision/timm import."""
     return (
         _TORCH_OK and _TIMM_OK and _TV_OK
         and IMG_MODEL_PATH.exists()
@@ -88,6 +92,11 @@ def _load_model():
     return model
 
 
+def ensure_loaded() -> None:
+    """Load (and cache) the weights; raises if they cannot be loaded."""
+    _load_model()
+
+
 def predict_image(pil_image) -> dict:
     """
     Run EfficientNet-B0 on a PIL image and return risk score + Grad-CAM overlay.
@@ -99,7 +108,9 @@ def predict_image(pil_image) -> dict:
     Returns
     -------
     dict:
-        probability       float — P(malignant), 0–1
+        probability       float — model score for P(malignant), 0–1; uncalibrated,
+                                  no uncertainty interval
+        calibrated        bool  — always False
         risk_category     str   — Low / Moderate / Elevated
         gradcam_png_b64   str   — base64-encoded PNG of Grad-CAM overlay
         model_name        str   — "EfficientNet-B0 / CBIS-DDSM"
@@ -173,7 +184,6 @@ def predict_image(pil_image) -> dict:
         except Exception as exc:
             logger.warning("Grad-CAM failed: %s", exc)
 
-    pct = round(prob * 100, 1)
     if prob >= 0.65:
         risk = "Elevated"
     elif prob >= 0.35:
@@ -183,56 +193,9 @@ def predict_image(pil_image) -> dict:
 
     return {
         "probability":     prob,
+        "calibrated":      False,
         "risk_category":   risk,
-        "confidence_band": f"{pct}% ± 7%",
         "gradcam_png_b64": cam_b64,
         "model_name":      "EfficientNet-B0 / CBIS-DDSM",
         "gradcam_available": bool(cam_b64),
     }
-
-
-def predict_image_demo(pil_image) -> dict:
-    """
-    Image analysis using statistical features when PyTorch is not installed.
-    Analyzes image brightness, contrast, texture density to estimate risk.
-    
-    Uses the same clinical intuition: denser, higher-contrast regions in
-    mammograms correlate with tissue density and potential masses.
-    """
-    import numpy as np
-
-    img_rgb = pil_image.convert("RGB")
-    arr = np.array(img_rgb.resize((224, 224))).astype(np.float32) / 255.0
-
-    # Extract statistical features from the image
-    brightness = arr.mean()
-    contrast = arr.std()
-    dark_ratio = (arr < 0.3).mean()
-    
-    # Texture feature: local variance as proxy for tissue heterogeneity
-    gray = arr.mean(axis=2)
-    local_var = np.std([gray[i:i+16, j:j+16].std() 
-                        for i in range(0, 224, 16) for j in range(0, 224, 16)])
-
-    # Risk estimation based on image features
-    # Higher density + higher contrast + more texture variation → higher risk
-    score = 0.35 + (dark_ratio * 0.25) + (contrast * 0.15) - (brightness * 0.12) + (local_var * 0.3)
-    prob = float(np.clip(score, 0.08, 0.92))
-
-    pct = round(prob * 100, 1)
-    if prob >= 0.65:
-        risk = "Elevated"
-    elif prob >= 0.35:
-        risk = "Moderate"
-    else:
-        risk = "Low"
-
-    return {
-        "probability":       prob,
-        "risk_category":     risk,
-        "confidence_band":   f"{pct}% ± 10%",
-        "gradcam_png_b64":   "",
-        "model_name":        "Statistical Image Analysis",
-        "gradcam_available": False,
-    }
-

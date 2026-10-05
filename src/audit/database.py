@@ -71,7 +71,7 @@ class AuditDB:
                     shap_values     TEXT,
                     model_used      TEXT DEFAULT 'lightgbm',
                     pipeline_mode   TEXT DEFAULT 'single',
-                    confidence_band TEXT,
+                    confidence_band TEXT,  -- legacy column, no longer written (the old band was not a real interval)
                     FOREIGN KEY (session_id) REFERENCES sessions(id)
                 );
 
@@ -146,8 +146,8 @@ class AuditDB:
                    (session_id, timestamp, age, shape, margin, density,
                     probability, risk_category, predicted_class,
                     dominant_feature, shap_values, model_used,
-                    pipeline_mode, confidence_band)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    pipeline_mode)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     session_id, now,
                     features["age"], features["shape"],
@@ -157,7 +157,6 @@ class AuditDB:
                     prediction["predicted_class"],
                     dominant, shap_json, model_used,
                     pipeline_mode,
-                    prediction.get("confidence_band", ""),
                 ),
             )
             conn.execute(

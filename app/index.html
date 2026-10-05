@@ -488,7 +488,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
     <div class="hero-left">
       <div class="hero-badge" id="hbadge"><span class="hbd"></span>Research &amp; Educational Prototype</div>
       <h1 class="hero-h1" id="hh1">Breast Cancer<br/>Risk <em>Estimation</em><br/><span class="h1-ai">AI</span> Platform</h1>
-      <p class="hero-sub" id="hsub">LightGBM + XGBoost dual-model architecture with SHAP explainability and Gemini AI grounded explanations via RAG over ACR BI-RADS knowledge.</p>
+      <p class="hero-sub" id="hsub">A LightGBM risk model trained on the real UCI Mammographic Mass data, with SHAP explanations and Gemini answers grounded in a small curated BI-RADS knowledge base. Research and educational prototype — not a diagnostic device.</p>
       <div class="hero-disc" id="hdisc">
         <span style="flex-shrink:0;margin-top:1px">🛡️</span>
         <span><strong>Educational only — not medical advice.</strong> Provides research-grade risk estimates. Always consult a qualified radiologist for clinical decisions.</span>
@@ -563,28 +563,28 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
         </svg>
         <!-- Floating stat badges -->
         <div class="stat-badge sb1">
-          <div class="sb-val">0.9924</div>
-          <div class="sb-lbl">XGBoost AUC</div>
-          <div class="sb-sub">WDBC dataset</div>
+          <div class="sb-val" data-mi="lgbm_auc">—</div>
+          <div class="sb-lbl">LightGBM test AUC</div>
+          <div class="sb-sub">UCI Mammographic Mass</div>
         </div>
         <div class="stat-badge sb2">
           <div class="sb-val">72.4%</div>
-          <div class="sb-lbl">Risk estimate</div>
+          <div class="sb-lbl">Example output</div>
           <div class="sb-sub">LightGBM · SHAP</div>
         </div>
         <div class="stat-badge sb3">
-          <div class="sb-val">60</div>
-          <div class="sb-lbl">RAG chunks</div>
-          <div class="sb-sub">ACR BI-RADS</div>
+          <div class="sb-val" data-mi="kb_chunks">—</div>
+          <div class="sb-lbl">Indexed KB chunks</div>
+          <div class="sb-sub">BI-RADS knowledge base</div>
         </div>
       </div>
     </div>
   </div>
   <div class="hero-stats-row">
     <div class="hsr-inner" id="hstats">
-      <div class="stat-pill rv"><div class="sp-num" data-count="0.9957" data-fixed="4">0</div><div class="sp-lbl">XGBoost AUC — WDBC Research Model</div><div class="sp-sub">30-feature · SMOTE augmented</div></div>
-      <div class="stat-pill rv" style="transition-delay:.12s"><div class="sp-num" data-count="0.7251" data-fixed="4">0</div><div class="sp-lbl">LightGBM AUC — Mammographic Model</div><div class="sp-sub">4-feature · Youden calibrated</div></div>
-      <div class="stat-pill rv" style="transition-delay:.24s"><div class="sp-num" data-count="60" data-fixed="0">0</div><div class="sp-lbl">Curated RAG Knowledge Chunks</div><div class="sp-sub">ACR BI-RADS · 4 documents</div></div>
+      <div class="stat-pill rv"><div class="sp-num" data-mi-count="lgbm_auc" data-fixed="4">—</div><div class="sp-lbl">LightGBM test AUC — the model behind this app</div><div class="sp-sub">Real UCI data · test n=<span data-mi="lgbm_n_test">—</span> · optimistic, see Limitations</div></div>
+      <div class="stat-pill rv" style="transition-delay:.12s"><div class="sp-num" data-mi-count="lgbm_recall" data-fixed="2" data-suffix="%">—</div><div class="sp-lbl">Sensitivity at the operating threshold</div><div class="sp-sub">Specificity <span data-mi="lgbm_specificity">—</span> · uncalibrated probabilities</div></div>
+      <div class="stat-pill rv" style="transition-delay:.24s"><div class="sp-num" data-mi-count="kb_chunks" data-fixed="0">—</div><div class="sp-lbl">Knowledge-base chunks indexed</div><div class="sp-sub">from <span data-mi="kb_indexed_sources">—</span> of <span data-mi="kb_available_sources">—</span> source documents</div></div>
     </div>
   </div>
 </section>
@@ -598,14 +598,14 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
       <p class="slead rv">Enter four standard mammographic descriptors to receive an AI-estimated malignancy probability with SHAP-driven feature attribution.</p>
       <div class="fcard rv tilt" style="margin-top:32px">
         <div class="ft">Clinical Feature Input</div>
-        <div class="fsub">LightGBM model · Mammographic Masses dataset (UCI)</div>
+        <div class="fsub">LightGBM model · UCI Mammographic Mass dataset (real data)</div>
         <div class="fg">
           <label class="fl" for="asl">Patient Age <span>— Continuous (18–96 years)</span></label>
           <input type="range" class="asl" id="asl" min="18" max="96" value="52" aria-label="Patient age"/>
           <div class="adsp"><div><span class="av" id="adsp">52</span><span style="font-size:.77rem;color:var(--tm)"> years</span></div><span style="font-size:.7rem;color:var(--tm)">18 — 96</span></div>
         </div>
         <div class="fg">
-          <label class="fl">Mass Shape <span>— BI-RADS ordinal</span></label>
+          <label class="fl">Mass Shape <span>— BI-RADS descriptor (nominal)</span></label>
           <div class="fbs" id="sg" role="radiogroup" aria-label="Mass shape">
             <button class="fb" data-val="1" onclick="sel('sg',this)">Round</button>
             <button class="fb" data-val="2" onclick="sel('sg',this)">Oval</button>
@@ -664,14 +664,14 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
               </g>
               <circle cx="93" cy="112" r="24" fill="white" opacity="0.95"/>
               <text id="gpct" x="93" y="117" font-size="21" font-weight="700" text-anchor="middle" fill="var(--navy)" font-family="Playfair Display,serif">--</text>
-              <text x="93" y="129" font-size="8" text-anchor="middle" fill="#94a3b8" font-family="DM Sans">probability</text>
+              <text x="93" y="129" font-size="8" text-anchor="middle" fill="#94a3b8" font-family="DM Sans">uncalibrated</text>
             </svg>
           </div>
           <div id="rcat"></div>
           <div class="ri" id="ri"></div>
           <div class="shap-mini-t">Feature Attribution (SHAP)</div>
           <div id="sbars"></div>
-          <div class="cn"><span>🔬</span><span>Research model estimate only. All findings require review by a qualified radiologist. Not for clinical use.</span></div>
+          <div class="cn"><span>🔬</span><span>Uncalibrated model probability with no uncertainty interval. Research estimate only — all findings require review by a qualified radiologist. Not for clinical use.</span></div>
         </div>
       </div>
     </div>
@@ -683,11 +683,11 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
   <div class="ia-wrap">
     <div class="stag rv">Image Analysis</div>
     <h2 class="sh2 rv">Mammogram <em style="font-style:italic;color:var(--r500)">Image</em> Classification</h2>
-    <p class="slead rv">Upload a mammogram image — EfficientNet-B0 (trained on CBIS-DDSM, 10,000+ real mammograms) predicts malignancy risk and overlays a Grad-CAM heatmap showing exactly which regions elevated the score.</p>
+    <p class="slead rv">Experimental: an EfficientNet-B0 trained on CBIS-DDSM returns an uncalibrated malignancy score and a Grad-CAM heatmap of the regions that most raised it. No evaluation results for this model are stored in the project, so its accuracy is unverified. If the model is not installed on this server, no image analysis is performed.</p>
     <div class="ia-badge-row rv">
       <span class="ia-badge ia-badge-cnn">🧠 EfficientNet-B0</span>
       <span class="ia-badge ia-badge-cam">🔥 Grad-CAM XAI</span>
-      <span class="ia-badge ia-badge-free">CBIS-DDSM · 10k+ images</span>
+      <span class="ia-badge ia-badge-free">Experimental · unvalidated</span>
     </div>
 
     <div class="ia-grid">
@@ -697,13 +697,13 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           <input type="file" id="ia-file" accept="image/jpeg,image/jpg,image/png" style="display:none" onchange="handleImageUpload(this.files[0])"/>
           <div class="dz-icon">🩻</div>
           <div class="dz-title">Drop mammogram image here</div>
-          <div class="dz-sub">JPEG or PNG — ROI crop or full view<br/>Model analyzes mass morphology for malignancy risk</div>
+          <div class="dz-sub">JPEG or PNG — ROI crop or full view</div>
           <button class="dz-btn" onclick="event.stopPropagation();document.getElementById('ia-file').click()">Browse Image</button>
         </div>
 
         <div class="ia-model-note rv" style="margin-top:16px" id="ia-model-note">
           <span>ℹ️</span>
-          <span id="ia-note-text">Upload any mammogram image (JPEG/PNG) — the model analyzes mass morphology and returns a malignancy risk estimate with Grad-CAM heatmap.</span>
+          <span id="ia-note-text">Checking whether the image model is installed on this server…</span>
         </div>
       </div>
 
@@ -711,8 +711,8 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
       <div id="ia-right">
         <div class="ia-not-ready rv" id="ia-not-ready">
           <div class="ia-nr-icon">🔬</div>
-          <div class="ia-nr-t" id="ia-nr-title">Ready — Upload a Mammogram</div>
-          <div class="ia-nr-p" id="ia-nr-desc">Upload a mammogram image to get an AI-powered malignancy risk estimate. The model analyzes mass morphology features and produces a risk score with explainability.</div>
+          <div class="ia-nr-t" id="ia-nr-title">Checking image model…</div>
+          <div class="ia-nr-p" id="ia-nr-desc">Results appear here once an image has been analyzed by the real model.</div>
         </div>
         <div class="ia-result" id="ia-result">
           <div class="ia-prob" id="ia-pct">--</div>
@@ -799,7 +799,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
   <div class="aw2">
     <div class="stag rv">AI Assistant</div>
     <h2 class="sh2 rv">Ask the BreastCare AI</h2>
-    <p class="slead rv">Powered by Gemini AI with Retrieval-Augmented Generation over 60 curated ACR BI-RADS knowledge chunks. Grounded in retrieved documents — not parametric memory.</p>
+    <p class="slead rv">Powered by Gemini with retrieval-augmented generation over a small curated BI-RADS knowledge base (<span data-mi="kb_chunks">—</span> chunks). The model is instructed to answer from the retrieved documents, and a safety filter removes diagnostic phrasing.</p>
     <div class="cl">
       <div class="csb rv-l">
         <div class="cst">Suggested Questions</div>
@@ -834,7 +834,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           <div class="cmsg" id="cmsg" aria-live="polite">
             <div class="mb">
               <div class="ma">✨</div>
-              <div class="mbub">Hello! I'm grounded in ACR BI-RADS guidelines via RAG retrieval.<br/><br/>I can explain mammographic terms, discuss risk estimates, or describe typical next steps. I'm not a doctor — always consult a qualified clinician.<div><span class="sp">📚 ACR BI-RADS Atlas · Breast Imaging Glossary</span></div></div>
+              <div class="mbub">Hello! I answer from a small curated BI-RADS knowledge base via RAG retrieval.<br/><br/>I can explain mammographic terms, discuss risk estimates, or describe typical next steps. I'm not a doctor — always consult a qualified clinician.<div><span class="sp">📚 BI-RADS terminology · Breast imaging glossary</span></div></div>
             </div>
           </div>
           <div class="cir">
@@ -852,7 +852,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
   <div class="hiw-inner">
     <div class="stag rv">Architecture</div>
     <h2 class="sh2 rv">How It Works</h2>
-    <p class="slead rv">Six-stage AI pipeline — input flows through dual ML models, exact SHAP attribution, FAISS vector retrieval, Gemini generation, and a deterministic safety filter. Hover any stage for details.</p>
+    <p class="slead rv">Six-stage pipeline — input flows through the LightGBM model, exact SHAP attribution, FAISS vector retrieval, Gemini generation and a deterministic safety filter. Hover any stage for details.</p>
 
     <!-- Animated pipeline -->
     <div class="pipe" style="margin-top:52px">
@@ -884,8 +884,8 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           <div class="pni">🤖</div>
           <div class="pnl">LightGBM</div>
           <div class="pns">Malignancy probability</div>
-          <div class="pn-badge">AUC 0.7251</div>
-          <div class="pn-tip">Trained on 849 real UCI cases. Youden's J threshold calibration replaces the fixed 0.50 cutoff — optimizes sensitivity/specificity tradeoff on held-out validation data.</div>
+          <div class="pn-badge">AUC <span data-mi="lgbm_auc">—</span></div>
+          <div class="pn-tip">Trained on the real UCI Mammographic Mass data (<span data-mi="mammo_clean_rows">—</span> cases after cleaning). The decision threshold is chosen with Youden's J — currently on the test split, so reported metrics are optimistic. Outputs are uncalibrated probabilities.</div>
         </div>
         <div class="pn rv" style="transition-delay:.2s">
           <div class="pni">📐</div>
@@ -898,15 +898,15 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           <div class="pni">🔍</div>
           <div class="pnl">FAISS RAG</div>
           <div class="pns">Dense vector search</div>
-          <div class="pn-badge">384-dim · 60 chunks</div>
-          <div class="pn-tip">all-MiniLM-L6-v2 encodes a SHAP-generated query against 60 curated ACR BI-RADS chunks. SHAP drives the query — not just the user's question — so retrieval is always clinically aligned.</div>
+          <div class="pn-badge"><span data-mi="kb_dim">—</span>-dim · <span data-mi="kb_chunks">—</span> chunks</div>
+          <div class="pn-tip">all-MiniLM-L6-v2 encodes a query built from the SHAP output plus the user's question, and FAISS returns the closest of <span data-mi="kb_chunks">—</span> knowledge-base chunks, so retrieval follows what drove the estimate. Retrieval quality is not yet measured.</div>
         </div>
         <div class="pn rv" style="transition-delay:.4s">
           <div class="pni">✨</div>
           <div class="pnl">Gemini 2.5</div>
           <div class="pns">Grounded response</div>
           <div class="pn-badge">RAG-grounded</div>
-          <div class="pn-tip">Gemini generates explanations using ONLY the retrieved BI-RADS context. It cannot hallucinate features it wasn't given. System prompt enforces educational framing throughout.</div>
+          <div class="pn-tip">Gemini is instructed to answer only from the retrieved context and to avoid diagnostic language. Grounding reduces but does not eliminate hallucination, and answer faithfulness is not yet measured.</div>
         </div>
         <div class="pn rv" style="transition-delay:.5s">
           <div class="pni">🛡️</div>
@@ -992,12 +992,12 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
   <div class="sec">
     <div class="stag rv">Data Foundation</div>
     <h2 class="sh2 rv">Datasets &amp; Models</h2>
-    <p class="slead rv">Three data sources underpin the system: two clinical research datasets and a curated medical knowledge base for RAG retrieval.</p>
+    <p class="slead rv">The app's model is trained on the UCI Mammographic Mass data. WDBC is a separate research benchmark, and a small curated knowledge base grounds the assistant.</p>
     <div class="dgrid">
       <div class="dc rv tilt">
         <div class="dbadge bb">Dataset 1 · WDBC</div>
         <div class="dt">Wisconsin Breast Cancer Diagnostic</div>
-        <div class="dd">30 nuclear characteristics from FNA images. Powers the XGBoost research model with 10-fold CV.</div>
+        <div class="dd">30 nuclear features from fine-needle aspirate images. Research benchmark only (XGBoost + 10-fold CV comparison); the app does not use it.</div>
         <div class="ds">
           <div class="dst"><div class="dsv">569</div><div class="dsk">Total cases</div></div>
           <div class="dst"><div class="dsv">30</div><div class="dsk">Features</div></div>
@@ -1007,40 +1007,34 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
       </div>
       <div class="dc rv tilt" style="transition-delay:.12s">
         <div class="dbadge br">Dataset 2 · Mammographic</div>
-        <div class="dt">UCI Mammographic Masses</div>
-        <div class="dd">Four BI-RADS features from mammogram reports. BI-RADS assessment excluded to prevent data leakage.</div>
+        <div class="dt">UCI Mammographic Mass</div>
+        <div class="dd">Age plus three BI-RADS descriptors (shape, margin, density) for masses on digital mammograms (Erlangen, 2003–2006). The radiologist's BI-RADS assessment is excluded to prevent label leakage; rows with missing values are dropped.</div>
         <div class="ds">
-          <div class="dst"><div class="dsv">860</div><div class="dsk">Cleaned cases</div></div>
+          <div class="dst"><div class="dsv" data-mi="mammo_clean_rows">—</div><div class="dsk">Cleaned cases</div></div>
           <div class="dst"><div class="dsv">4</div><div class="dsk">Features</div></div>
-          <div class="dst"><div class="dsv">397</div><div class="dsk">Malignant</div></div>
-          <div class="dst"><div class="dsv">463</div><div class="dsk">Benign</div></div>
+          <div class="dst"><div class="dsv" data-mi="mammo_malignant">—</div><div class="dsk">Malignant</div></div>
+          <div class="dst"><div class="dsv" data-mi="mammo_benign">—</div><div class="dsk">Benign</div></div>
         </div>
       </div>
       <div class="dc rv tilt" style="transition-delay:.24s">
         <div class="dbadge bg">Knowledge Base · RAG</div>
-        <div class="dt">ACR BI-RADS Corpus</div>
-        <div class="dd">60 curated paragraph-level chunks from 4 authoritative documents. Small and curated by design — distraction degrades LLM quality.</div>
+        <div class="dt">Curated BI-RADS Knowledge Base</div>
+        <div class="dd">Project-written summaries of BI-RADS terminology, follow-up guidance and safety notes. <span data-mi="kb_indexed_sources">—</span> of <span data-mi="kb_available_sources">—</span> source documents are currently indexed.</div>
         <div class="ds">
-          <div class="dst"><div class="dsv">60</div><div class="dsk">Chunks</div></div>
-          <div class="dst"><div class="dsv">4</div><div class="dsk">Source docs</div></div>
+          <div class="dst"><div class="dsv" data-mi="kb_chunks">—</div><div class="dsk">Chunks</div></div>
+          <div class="dst"><div class="dsv" data-mi="kb_indexed_sources">—</div><div class="dsk">Docs indexed</div></div>
           <div class="dst"><div class="dsv">FAISS</div><div class="dsk">Vector index</div></div>
-          <div class="dst"><div class="dsv">384-d</div><div class="dsk">Embedding dim</div></div>
+          <div class="dst"><div class="dsv" data-mi="kb_dim">—</div><div class="dsk">Embedding dim</div></div>
         </div>
       </div>
     </div>
     <div class="mperf rv tilt" style="margin-top:32px">
-      <div class="mpt">5-Model Cross-Validation Comparison</div>
-      <div class="mps">Stratified 10-fold CV on WDBC training split (n=455). Scoring criterion: ROC-AUC.</div>
+      <div class="mpt">5-Model Cross-Validation Comparison (WDBC research benchmark)</div>
+      <div class="mps">Stratified 10-fold CV on the WDBC training split (n=<span data-mi="wdbc_n_train">—</span>), mean across folds. The app does not use these models.</div>
       <div style="overflow-x:auto">
         <table class="ptbl">
-          <thead><tr><th>Model</th><th>AUC</th><th>Accuracy</th><th>Recall</th><th>AUC Bar</th></tr></thead>
-          <tbody>
-            <tr class="br"><td>XGBoost ★</td><td><span class="mv">0.9919</span></td><td><span class="mv">96.49%</span></td><td><span class="mv">94.71%</span></td><td><div class="mbw"><div class="mbar mba" data-w="99.19%"></div></div></td></tr>
-            <tr><td>LightGBM</td><td><span class="mv">0.9909</span></td><td><span class="mv">96.27%</span></td><td><span class="mv">93.53%</span></td><td><div class="mbw"><div class="mbar mba" data-w="99.09%"></div></div></td></tr>
-            <tr><td>Random Forest</td><td><span class="mv">0.9889</span></td><td><span class="mv">96.04%</span></td><td><span class="mv">92.94%</span></td><td><div class="mbw"><div class="mbar mba" data-w="98.89%"></div></div></td></tr>
-            <tr><td>SVM (RBF)</td><td><span class="mv">0.9942</span></td><td><span class="mv">97.14%</span></td><td><span class="mv">94.71%</span></td><td><div class="mbw"><div class="mbar mba" data-w="99.42%"></div></div></td></tr>
-            <tr><td>Logistic Reg.</td><td><span class="mv">0.9952</span></td><td><span class="mv">97.58%</span></td><td><span class="mv">95.88%</span></td><td><div class="mbw"><div class="mbar mba" data-w="99.52%"></div></div></td></tr>
-          </tbody>
+          <thead><tr><th>Model</th><th>AUC (± SD)</th><th>Accuracy</th><th>Recall</th><th>AUC Bar</th></tr></thead>
+          <tbody id="cv-tbody"><tr><td colspan="5" style="color:var(--tm)">Loading saved results…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -1082,11 +1076,11 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           <div class="sci sci-b">⚠️</div>
           <div class="sc-t">Technical Limitations</div>
           <div class="ll">
-            <div class="li"><span class="lix">✗</span><span><strong>Small datasets:</strong> 569 (WDBC) and 860 (Mammographic) cases — wide confidence intervals</span></div>
+            <div class="li"><span class="lix">✗</span><span><strong>Small datasets:</strong> <span data-mi="mammo_clean_rows">—</span> mammographic cases (WDBC: 569) — no confidence intervals are computed yet</span></div>
             <div class="li"><span class="lix">✗</span><span><strong>Four features only:</strong> production systems use 20+ descriptors including calcification</span></div>
-            <div class="li"><span class="lix">✗</span><span><strong>No image processing:</strong> this uses structured tabular features; real systems use pixel-level CNNs</span></div>
+            <div class="li"><span class="lix">✗</span><span><strong>Experimental image model:</strong> no stored evaluation results, so its accuracy is unverified; the risk model itself uses only tabular features</span></div>
             <div class="li"><span class="lix">✗</span><span><strong>Single-institution data:</strong> WDBC (Wisconsin) and Mammographic (Germany) — dataset shift risk</span></div>
-            <div class="li"><span class="lix">✗</span><span><strong>Fixed 0.50 threshold:</strong> not calibrated to any clinical cost-benefit ratio</span></div>
+            <div class="li"><span class="lix">✗</span><span><strong>Optimistic metrics, uncalibrated outputs:</strong> early stopping and the decision threshold use the test split; probabilities are not calibrated and have no uncertainty intervals</span></div>
             <div class="li"><span class="lix">✗</span><span><strong>Temporal validity:</strong> mammographic dataset from 2003–2006; imaging practice has evolved</span></div>
           </div>
         </div>
@@ -1107,7 +1101,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
   <div class="sec">
     <div class="stag rv">Extended Risk Assessment</div>
     <h2 class="sh2 rv">Patient Risk <em style="color:var(--r500);font-style:italic">Profile</em></h2>
-    <p class="slead rv">Compare ML predictions with validated clinical risk models — Gail (NCI) and Tyrer-Cuzick (IBIS) — for a comprehensive risk perspective.</p>
+    <p class="slead rv">Compare the ML estimate with simplified, educational approximations of the Gail (NCI) and Tyrer-Cuzick (IBIS) models. These are not the validated clinical calculators.</p>
     <div class="eg" style="margin-top:40px">
       <div class="ec rv" style="padding:28px">
         <div class="ec-t" style="margin-bottom:20px">Extended Patient History</div>
@@ -1131,7 +1125,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
         <div id="rp-result" style="display:none">
           <div class="ec" style="margin-bottom:14px">
             <div class="ec-t">Risk Model Comparison</div>
-            <div class="ec-s">ML estimate vs. validated clinical models</div>
+            <div class="ec-s">ML estimate vs. simplified clinical-model approximations</div>
             <div id="rp-bars" style="margin-top:16px"></div>
           </div>
           <div class="ec">
@@ -1171,7 +1165,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
       <!-- Model Comparison -->
       <div class="ec rv">
         <div class="ec-t">🔬 A/B Model Comparison</div>
-        <div class="ec-s">Compare all models on the current assessment</div>
+        <div class="ec-s">Compare the trained models available for the current assessment</div>
         <div id="mc-waiting" style="text-align:center;padding:32px;color:var(--tm);font-size:.84rem">Run an assessment first, then compare models side-by-side.</div>
         <div id="mc-result" style="display:none;margin-top:14px">
           <div id="mc-table"></div>
@@ -1220,7 +1214,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
 <footer>
   <div class="ft-brand">BreastCare <em style="color:var(--r400);font-style:italic">AI</em></div>
   <p class="ft-tag">Multi-layer breast cancer risk estimation prototype<br/>XGBoost · LightGBM · SHAP · FAISS · Gemini AI · FastAPI</p>
-  <p class="ft-refs">Elter (2007) · Street et al. (1993) · ACR BI-RADS Atlas 5th Ed · Chen &amp; Guestrin (2016) XGBoost · Ke et al. (2017) LightGBM · Lundberg &amp; Lee (2017) SHAP · JMIR Cancer (2024)</p>
+  <p class="ft-refs">Elter (2007) · Street et al. (1993) · ACR BI-RADS Atlas 5th Ed · Chen &amp; Guestrin (2016) XGBoost · Ke et al. (2017) LightGBM · Lundberg &amp; Lee (2017) SHAP</p>
   <div class="ft-legal"><strong style="color:rgba(255,255,255,.55)">Not for clinical use.</strong> Educational prototype only. Not FDA-cleared. Always consult a qualified clinician.</div>
 </footer>
 
@@ -1436,17 +1430,6 @@ function getVals(){
   };
 }
 
-// ── Simulation fallback ──────────────────────────────────────────────────────
-function sim(v){
-  const ms={1:-.38,2:-.15,3:-.05,4:.18,5:.44};
-  const ss={1:-.22,2:-.12,3:.05,4:.25};
-  const ds={1:.06,2:.02,3:-.04,4:-.18};
-  const ae=Math.max(-.2,Math.min(.3,(v.age-40)/100*.28));
-  const sm=ms[v.margin]||0,ss2=ss[v.shape]||0,sd=ds[v.density]||0;
-  const prob=Math.max(.04,Math.min(.97,.42+sm+ss2+ae+sd));
-  return{probability:prob,shap:{margin:sm,shape:ss2,age:ae,density:sd}};
-}
-
 // ── Assessment ───────────────────────────────────────────────────────────────
 let lastVals=null;
 async function runAssessment(){
@@ -1454,21 +1437,29 @@ async function runAssessment(){
   btn.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.5 2.5"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur=".75s" repeatCount="indefinite"/></circle></svg> Analyzing…';
   btn.disabled=true;
   const v=getVals();lastVals=v;
-  let res;
+  let res=null;
   try{
     const r=await fetch('/api/assess',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
     res={probability:d.prediction.probability,shap:d.explanation.feature_attributions};
   }catch(e){
-    console.warn('Backend offline, using simulation:',e.message);
-    res=sim(v);
+    // No client-side fallback: never show an estimate the model did not produce.
+    console.error('Assessment failed:',e.message);
+    showAssessError();
   }
-  renderResult(res,v);renderExp(res,v);
+  if(res){renderResult(res,v);renderExp(res,v);}
   btn.innerHTML='<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Run Risk Assessment';
   btn.disabled=false;
   document.getElementById('rcard').classList.add('glowing');
   setTimeout(()=>document.getElementById('rcard').classList.remove('glowing'),2100);
+}
+
+function showAssessError(){
+  document.getElementById('rc').style.display='none';
+  const re=document.getElementById('re');
+  re.style.display='block';
+  re.querySelector('.re-t').textContent='⚠️ The risk model could not be reached, so no estimate is shown. Check that the server is running and try again.';
 }
 
 function renderResult(res,v){
@@ -1488,9 +1479,9 @@ function renderResult(res,v){
   else if(prob<.65)gf.setAttribute('stroke','url(#gm)');
   else gf.setAttribute('stroke','url(#gh)');
   let cat,cls,interp;
-  if(prob<.35){cat='Low Risk';cls='r-low';interp=`At ${pct}% estimated probability, this pattern shows features more consistent with benign findings. The ${MN[v.margin].toLowerCase()} margin and ${SN[v.shape].toLowerCase()} shape contribute to a lower-risk profile. Clinical correlation remains important.`;}
-  else if(prob<.65){cat='Moderate Risk';cls='r-mod';interp=`At ${pct}% estimated probability, this pattern warrants careful clinical attention. A ${MN[v.margin].toLowerCase()} margin in a patient aged ${v.age} suggests further diagnostic work-up is appropriate.`;}
-  else{cat='Elevated Risk';cls='r-hi';interp=`At ${pct}% estimated probability, this pattern shows features associated with higher malignancy likelihood. A ${MN[v.margin].toLowerCase()} margin is among the strongest predictors. Prompt radiologist review is strongly recommended — this is not a diagnosis of cancer.`;}
+  if(prob<.35){cat='Low Risk';cls='r-low';interp=`At ${pct}% (uncalibrated model probability), this pattern shows features more consistent with benign findings. The ${MN[v.margin].toLowerCase()} margin and ${SN[v.shape].toLowerCase()} shape contribute to a lower-risk profile. Clinical correlation remains important.`;}
+  else if(prob<.65){cat='Moderate Risk';cls='r-mod';interp=`At ${pct}% (uncalibrated model probability), this pattern warrants careful clinical attention. A ${MN[v.margin].toLowerCase()} margin in a patient aged ${v.age} suggests further diagnostic work-up is appropriate.`;}
+  else{cat='Elevated Risk';cls='r-hi';interp=`At ${pct}% (uncalibrated model probability), this pattern shows features associated with higher malignancy likelihood. A ${MN[v.margin].toLowerCase()} margin is among the strongest predictors. Prompt radiologist review is strongly recommended — this is not a diagnosis of cancer.`;}
   document.getElementById('rcat').innerHTML=`<div class="rc-lbl ${cls}">Risk Category</div><div class="rc-name ${cls}">${cat}</div>`;
   document.getElementById('ri').textContent=interp;
   const feats=[
@@ -1619,25 +1610,74 @@ function animRAG(){
   setTimeout(()=>ids.forEach(id=>document.getElementById(id).classList.remove('act')),ids.length*380+900);
 }
 
-// ── Page-load health check → update image model state ────────────────────────
-(async function checkHealth(){
+// ── Metrics from saved artifacts (/api/model-info) — nothing here is hard-coded ──
+function animateCount(el,target,fixed,suffix){
+  const dur=1400,start=performance.now();
+  (function step(now){
+    const p=Math.min((now-start)/dur,1),ease=1-Math.pow(1-p,4);
+    el.textContent=(p<1?target*ease:target).toFixed(fixed)+suffix;
+    if(p<1)requestAnimationFrame(step);
+  })(start);
+}
+(async function loadModelInfo(){
+  let info;
   try{
-    const d=await fetch('/health').then(r=>r.json());
-    const notReady=document.getElementById('ia-not-ready');
-    const noteText=document.getElementById('ia-note-text');
-    const title=document.getElementById('ia-nr-title');
-    const desc=document.getElementById('ia-nr-desc');
-    if(d.image_model){
-      if(title)title.textContent='EfficientNet-B0 Ready';
-      if(desc)desc.textContent='Full EfficientNet-B0 model loaded with Grad-CAM explainability. Upload a mammogram image to analyze.';
-      if(noteText)noteText.textContent='EfficientNet-B0 model loaded — full Grad-CAM heatmap analysis available.';
-      const sub=document.querySelector('#ia-drop .dz-sub');
-      if(sub)sub.innerHTML='Model loaded — drop a mammogram image to analyze<br/><span style="color:var(--r400);font-size:.72rem">EfficientNet-B0 · Grad-CAM · CBIS-DDSM trained</span>';
-    }else{
-      if(title)title.textContent='Ready — Upload a Mammogram';
-      if(desc)desc.textContent='Upload a mammogram image for AI-powered analysis. The system will analyze image features and return a risk estimate.';
-    }
-  }catch(_){}
+    const r=await fetch('/api/model-info');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    info=await r.json();
+  }catch(e){console.error('model-info unavailable:',e.message);return;}
+  const md=info.metadata||{},kb=info.knowledge_base||{};
+  const lg=md.lgbm_mammographic||{},mm=(md.datasets||{}).mammographic||{},xw=md.xgboost_wdbc||{};
+  const fmt=(v,f)=>v==null?null:v.toFixed(f);
+  const vals={
+    lgbm_auc:fmt(lg.auc,4),
+    lgbm_specificity:lg.specificity==null?null:lg.specificity.toFixed(2)+'%',
+    lgbm_n_test:lg.n_test,
+    mammo_clean_rows:mm.clean_rows,
+    mammo_malignant:mm.malignant,
+    mammo_benign:mm.benign,
+    wdbc_n_train:xw.n_train,
+    kb_chunks:kb.n_chunks,
+    kb_indexed_sources:kb.n_indexed_sources,
+    kb_available_sources:kb.n_available_sources,
+    kb_dim:kb.embedding_dim,
+  };
+  document.querySelectorAll('[data-mi]').forEach(el=>{
+    const v=vals[el.dataset.mi];
+    if(v!=null)el.textContent=v;
+  });
+  const nums={lgbm_auc:lg.auc,lgbm_recall:lg.recall,kb_chunks:kb.n_chunks};
+  document.querySelectorAll('[data-mi-count]').forEach(el=>{
+    const v=nums[el.dataset.miCount];
+    if(v!=null)animateCount(el,v,parseInt(el.dataset.fixed||'0'),el.dataset.suffix||'');
+  });
+  const cv=md.cv_comparison||{},tb=document.getElementById('cv-tbody');
+  if(tb&&Object.keys(cv).length){
+    tb.innerHTML=Object.entries(cv).map(([name,m])=>
+      `<tr><td>${name}</td><td><span class="mv">${m.auc.toFixed(4)}</span> <span style="color:var(--tm);font-size:.75em">± ${m.auc_std.toFixed(4)}</span></td><td><span class="mv">${m.accuracy.toFixed(2)}%</span></td><td><span class="mv">${m.recall.toFixed(2)}%</span></td><td><div class="mbw"><div class="mbar mba" data-w="${(m.auc*100).toFixed(2)}%"></div></div></td></tr>`
+    ).join('');
+    setTimeout(()=>tb.querySelectorAll('.mbar').forEach(b=>{b.style.width=b.dataset.w;}),300);
+  }
+})();
+
+// ── Page-load health check → image model state (never claim a model that is not installed) ──
+(async function checkHealth(){
+  const title=document.getElementById('ia-nr-title');
+  const desc=document.getElementById('ia-nr-desc');
+  const noteText=document.getElementById('ia-note-text');
+  const drop=document.getElementById('ia-drop');
+  let d={};
+  try{d=await fetch('/health').then(r=>r.json());}catch(_){}
+  if(d.image_model){
+    if(title)title.textContent='EfficientNet-B0 loaded (experimental)';
+    if(desc)desc.textContent='Real CBIS-DDSM weights are installed. Scores are uncalibrated and the model is unvalidated, so treat results as a demonstration only.';
+    if(noteText)noteText.textContent='Experimental model: uncalibrated score plus Grad-CAM heatmap. Not validated.';
+  }else{
+    if(title)title.textContent='Image model unavailable';
+    if(desc)desc.textContent='This server does not have the trained CBIS-DDSM weights and/or the PyTorch dependencies, so image analysis is turned off. No substitute estimate is produced.';
+    if(noteText)noteText.textContent='Image analysis is unavailable on this server.';
+    if(drop){drop.style.opacity='.45';drop.style.pointerEvents='none';drop.setAttribute('aria-disabled','true');}
+  }
 })();
 
 // ── Image Analysis ────────────────────────────────────────────────────────────
@@ -1677,7 +1717,8 @@ async function handleImageUpload(file){
       const err=await r.json().catch(()=>({detail:'Server error '+r.status}));
       loading.style.display='none';
       notReady.style.display='block';
-      notReady.querySelector('.ia-nr-t').textContent='⚠️ '+( err.detail||'Server error');
+      notReady.querySelector('.ia-nr-t').textContent='⚠️ '+(r.status===503?'Image model unavailable':'Could not analyze this image');
+      notReady.querySelector('.ia-nr-p').textContent=err.detail||('Server error '+r.status);
       return;
     }
     const d=await r.json();
@@ -1701,8 +1742,9 @@ async function handleImageUpload(file){
     }
 
     document.getElementById('ia-caption').textContent=
-      (d.model_name||'AI')+' prediction: '+pct+'% malignancy probability ('+d.risk_category+' risk). '
-      +(d.gradcam_png_b64?'Grad-CAM overlay highlights regions that elevated the score.':'Based on image feature analysis.');
+      (d.model_name||'Image model')+': '+pct+'% uncalibrated malignancy score ('+d.risk_category+'). '
+      +(d.gradcam_png_b64?'Grad-CAM highlights the regions that most raised the score. ':'')
+      +'Experimental, unvalidated model — not a diagnosis.';
 
     result.style.display='block';
     // Animate probability count-up
@@ -1811,7 +1853,7 @@ async function runModelComparison(){
     const models=Object.values(d.models||{});
     document.getElementById('mc-table').innerHTML='<table class="ptbl" style="width:100%"><tr><th>Model</th><th>Probability</th><th>Class</th><th>Risk</th></tr>'+models.map(m=>`<tr><td style="font-weight:600">${m.model_name}</td><td>${m.probability_pct}%</td><td>${m.predicted_class}</td><td>${m.risk_category}</td></tr>`).join('')+'</table>';
     const ag=d.agreement||{};
-    document.getElementById('mc-agreement').innerHTML=ag.sufficient_models?`<strong>${ag.unanimous_class}</strong> · ${ag.agreement_pct}% agreement · Spread: ${((ag.spread||0)*100).toFixed(1)}pp`:'Models agree on this assessment.';
+    document.getElementById('mc-agreement').innerHTML=ag.sufficient_models?`<strong>${ag.unanimous_class}</strong> · ${ag.agreement_pct}% agreement · Spread: ${((ag.spread||0)*100).toFixed(1)}pp`:(ag.message||'Only one trained model is available, so there is nothing to compare yet.');
   }catch(e){console.error(e)}
 }
 
