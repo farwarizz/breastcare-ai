@@ -239,7 +239,7 @@ def compute_all_risks(profile: Any, ml_probability: float = 0.0) -> dict[str, An
         "gail_model": gail,
         "tyrer_cuzick": tc,
         "ml_estimate": {
-            "model": "BreastCare AI (LightGBM)",
+            "model": "BreastCare AI (calibrated model estimate)",
             "probability": round(ml_probability, 4),
             "probability_pct": round(ml_probability * 100, 2),
             "risk_category": _categorize_ml_risk(ml_probability),

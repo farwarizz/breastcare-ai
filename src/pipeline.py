@@ -217,7 +217,7 @@ def _log_to_audit(
                 features=features,
                 prediction=prediction,
                 explanation=explanation,
-                model_used="lightgbm",
+                model_used=prediction.get("model", "unknown"),
                 pipeline_mode=mode,
             )
     except Exception as exc:

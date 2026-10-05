@@ -8,6 +8,7 @@ Output: structured analysis with key findings and confidence assessment.
 from __future__ import annotations
 from typing import Any
 from src.agents.base_agent import BaseAgent
+from src.rag.prompt_builder import risk_summary_lines
 
 
 class AnalystAgent(BaseAgent):
@@ -53,7 +54,7 @@ CLINICAL ALIGNMENT: [How well the model's reasoning aligns with retrieved guidel
         )
 
         return f"""PREDICTION:
-Malignancy probability (uncalibrated model output): {round(prob * 100, 1)}%
+{risk_summary_lines(prediction)}
 Risk category: {risk_cat}
 Predicted class: {prediction.get('predicted_class', 'Unknown')}
 

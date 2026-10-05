@@ -47,6 +47,22 @@ def build_retrieval_query(explanation: dict, user_question: str | None = None) -
     return base_query
 
 
+def risk_summary_lines(prediction: dict) -> str:
+    """Probability and conformal set, worded the same way in every prompt."""
+    prob = prediction.get("probability", 0)
+    pset = prediction.get("prediction_set") or []
+    coverage = prediction.get("set_coverage", 0.9)
+    if len(pset) == 2:
+        note = "both outcomes remain plausible at this confidence level"
+    elif len(pset) == 1:
+        note = f"only {pset[0].lower()} is consistent with the model at this confidence level"
+    else:
+        note = "no outcome met the criterion; treat the estimate with extra caution"
+    label = "{" + ", ".join(pset) + "}" if pset else "{}"
+    return (f"Malignancy probability (calibrated estimate): {round(prob * 100, 1)}%\n"
+            f"  {coverage:.0%} conformal prediction set: {label} ({note})")
+
+
 def _format_features(features: dict) -> str:
     shape_label   = SHAPE_MAP.get(features.get("shape", 0), str(features.get("shape")))
     margin_label  = MARGIN_MAP.get(features.get("margin", 0), str(features.get("margin")))
@@ -96,7 +112,7 @@ def build_prompt(
 {_format_features(features)}
 
 RISK ESTIMATE:
-  - Malignancy probability (uncalibrated model output, no uncertainty interval): {round(prob * 100, 1)}%
+  - {risk_summary_lines(prediction)}
   - Risk category: {risk_cat}
   - Predicted class: {pred_class}
 

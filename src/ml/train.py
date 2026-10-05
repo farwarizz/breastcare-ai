@@ -1,427 +1,308 @@
 """
-src/ml/train.py — Multi-dataset training pipeline.
-Trains LightGBM on the UCI Mammographic Mass dataset (the model the app serves)
-and XGBoost on WDBC (research benchmark) with a 5-model 10-fold CV comparison.
+src/ml/train.py — Training and evaluation pipeline (UCI Mammographic Mass).
 
-Data: training only runs on the official UCI file, verified by SHA-256
-(see data/README.md). If the file is missing or altered it stops with an
-error; it never substitutes generated data.
-
-Known limitation (scheduled for Phase 1): early stopping and the Youden
-decision thresholds are selected on the test split, so the reported test
-metrics are optimistically biased. EVALUATION_PROTOCOL below records this
-in model_metadata.json.
+Protocol. Every decision is made without the test split.
+ 1. Verify and clean the UCI file (src/ml/data.py).
+ 2. Stratified split (seed 2026): fit 60% · conformal 20% · test 20%.
+ 3. Model selection by 5-fold CV log-loss on the fit split, using a fixed rule
+    (src/ml/models.py).
+ 4. For every candidate family: out-of-fold predictions on the fit split →
+    choose and fit a calibrator → choose the decision threshold (Youden's J)
+    and a high-sensitivity threshold (sensitivity ≥ 95%) → train the final
+    model on the whole fit split.
+ 5. Mondrian split conformal on the conformal split (served model only).
+ 6. Test split, used once: metrics with 95% bootstrap CIs, a paired comparison
+    with the challenger, the radiologists' BI-RADS assessment as a reference,
+    a monotonic-constraint ablation, age subgroups and decision curves.
+ 7. Save model bundles, metadata, split ids and figures; log to MLflow if installed.
 
 Run:  python -m src.ml.train
 """
-import hashlib
+from __future__ import annotations
+
 import json
 import platform
-import warnings
-import numpy as np
-import pandas as pd
-import joblib
-import shap
-from pathlib import Path
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
-from sklearn.metrics import roc_auc_score, accuracy_score, recall_score, precision_score, f1_score, roc_curve
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-import lightgbm as lgb
-import sklearn
-import xgboost as xgb
-
-try:
-    from imblearn.over_sampling import SMOTE
-    _SMOTE_AVAILABLE = True
-except ImportError:
-    _SMOTE_AVAILABLE = False
-    print("  [INFO] imbalanced-learn not installed — skipping SMOTE augmentation")
-
-warnings.filterwarnings("ignore")
-
-# Ensure src is importable when run as module
 import sys
+import warnings
+from pathlib import Path
+
+import joblib
+import lightgbm as lgb
+import numpy as np
+import shap
+import sklearn
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.config import (
-    DATA_RAW_DIR, DATA_PROCESSED_DIR, CLEANED_CSV,
-    MODELS_DIR, LGBM_MODEL_PATH, LGBM_SHAP_PATH,
-    XGBOOST_MODEL_PATH, XGBOOST_SHAP_PATH,
-    MODEL_METADATA_PATH, WDBC_FEATURES_PATH,
-    DECISION_THRESHOLD, FEATURE_NAMES,
-    SHAPE_MAP, MARGIN_MAP, DENSITY_MAP,
-    MAMMO_UCI_ID, MAMMO_RAW_PATH, MAMMO_SOURCE_URL, MAMMO_SHA256,
-    MAMMO_DOI, MAMMO_RAW_COLUMNS,
+    FEATURE_NAMES, MODELS_DIR, MODEL_METADATA_PATH, SERVED_MODEL_PATH,
+    CHALLENGER_MODEL_PATH, SPLITS_PATH, FIGURES_DIR,
+)
+from src.ml import data as D
+from src.ml import models as M
+from src.ml.calibration import select_calibrator
+from src.ml.conformal import fit_mondrian
+from src.ml.evaluation import (
+    Bootstrap, auroc, brier, net_benefit, net_benefit_treat_all, sensitivity_threshold,
+    subgroup_summary, summarize, threshold_metrics, youden_threshold,
+)
+from src.ml.explain import linear_background
+
+ALPHA = 0.10                     # conformal miscoverage → 90% sets
+HIGH_SENSITIVITY = 0.95
+N_BOOTSTRAP = 2000
+BOOT_SEED = 2026
+DCA_TABLE = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50]
+AGE_SPLIT = 50
+
+PROTOCOL = (
+    "Stratified split of the 831 cleaned rows (seed 2026): fit 60%, conformal 20%, "
+    "test 20%. Model selection by 5-fold CV log-loss on the fit split with a "
+    "one-standard-error rule favouring simpler models. Calibration method and decision "
+    "thresholds are chosen on out-of-fold predictions of the fit split; final models "
+    "are trained on the whole fit split. Conformal cut-offs use only the conformal "
+    "split. The test split is used once, for the reported metrics (95% percentile "
+    "bootstrap CIs, 2,000 resamples, paired across models)."
 )
 
-TEST_SIZE    = 0.2
-RANDOM_STATE = 42
 
-# Describes exactly what this script does — written to model_metadata.json.
-EVALUATION_PROTOCOL = (
-    "Single stratified 80/20 train/test split (random_state=42) per dataset. "
-    "LightGBM early stopping and both Youden's-J decision thresholds are selected "
-    "on the test split, so test metrics are optimistically biased (to be fixed in "
-    "Phase 1 with a separate validation split). SMOTE, when imbalanced-learn is "
-    "installed, is applied to the WDBC training split only. The 5-model comparison "
-    "is stratified 10-fold CV on the WDBC training split. No probability calibration "
-    "and no uncertainty intervals."
-)
-
-# ── helpers ──────────────────────────────────────────────────────
-def ensure_dirs():
-    for d in [DATA_RAW_DIR, DATA_PROCESSED_DIR, MODELS_DIR]:
-        d.mkdir(parents=True, exist_ok=True)
-
-
-def _youden_threshold(model, X_val, y_val):
-    """Compute optimal decision threshold via Youden's J statistic on a validation set."""
-    prob = model.predict_proba(X_val)[:, 1]
-    fpr, tpr, thresholds = roc_curve(y_val, prob)
-    j = tpr - fpr
-    idx = int(np.argmax(j))
-    return float(np.clip(thresholds[idx], 0.3, 0.7))
-
-
-def _metrics(model, X_test, y_test, threshold=DECISION_THRESHOLD):
-    prob = model.predict_proba(X_test)[:, 1]
-    pred = (prob >= threshold).astype(int)
+def develop(result: dict, Xf, yf) -> dict:
+    """OOF predictions → calibrator → thresholds → final model on the whole fit split."""
+    oof = M.out_of_fold(result, Xf, yf)
+    calibrator, cal_scores = select_calibrator(oof, yf)
+    oof_cal = calibrator.transform(oof)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        estimator = M.build(result).fit(Xf, yf)
     return {
-        "accuracy":    round(accuracy_score(y_test, pred) * 100, 2),
-        "auc":         round(roc_auc_score(y_test, prob), 4),
-        "recall":      round(recall_score(y_test, pred) * 100, 2),
-        "precision":   round(precision_score(y_test, pred, zero_division=0) * 100, 2),
-        "f1":          round(f1_score(y_test, pred) * 100, 2),
-        "specificity": round(accuracy_score(y_test[y_test == 0], pred[y_test == 0]) * 100, 2)
-                        if (y_test == 0).any() else 0.0,
-        "false_negatives": int(((pred == 0) & (y_test == 1)).sum()),
-        "false_positives": int(((pred == 1) & (y_test == 0)).sum()),
+        "result": result,
+        "estimator": estimator,
+        "calibrator": calibrator,
+        "calibration_cv_brier": {k: round(v, 5) for k, v in cal_scores.items()},
+        "threshold": youden_threshold(yf, oof_cal),
+        "high_sensitivity_threshold": sensitivity_threshold(yf, oof_cal, HIGH_SENSITIVITY),
+        "oof_auroc": round(auroc(yf, oof_cal), 4),
+        "oof_brier": round(brier(yf, oof_cal), 4),
     }
 
 
-# ── Dataset 1: UCI Mammographic Mass (id 161) ────────────────────
-# Documented UCI codes; anything else means the file is not what we expect.
-_VALID_CODES = {
-    "shape":    set(SHAPE_MAP),     # 1–4 (nominal)
-    "margin":   set(MARGIN_MAP),    # 1–5 (nominal)
-    "density":  set(DENSITY_MAP),   # 1–4 (ordinal)
-    "severity": {0, 1},             # 0 = benign, 1 = malignant
-}
+def calibrated(dev: dict, X) -> np.ndarray:
+    return dev["calibrator"].transform(dev["estimator"].predict_proba(X)[:, 1])
 
 
-def verify_raw_file(path: Path = MAMMO_RAW_PATH) -> str:
-    """
-    Return the SHA-256 of the raw file. Raises if the file is missing or is
-    not byte-identical to the official UCI file.
-    """
-    if not path.exists():
-        raise FileNotFoundError(
-            f"Raw dataset not found at {path}. Fetch the real UCI file with "
-            "`python scripts/download_data.py` (training never substitutes generated data)."
-        )
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    if digest != MAMMO_SHA256:
-        raise ValueError(
-            f"{path} is not the official UCI Mammographic Mass file "
-            f"(sha256 {digest}, expected {MAMMO_SHA256}). Refusing to train on it. "
-            "Re-fetch it with `python scripts/download_data.py --force`."
-        )
-    return digest
-
-
-def read_raw_mammographic(path: Path = MAMMO_RAW_PATH) -> pd.DataFrame:
-    """Read the headerless UCI file; '?' marks a missing value."""
-    return pd.read_csv(path, header=None, names=MAMMO_RAW_COLUMNS, na_values=["?"])
-
-
-def clean_mammographic(raw: pd.DataFrame) -> pd.DataFrame:
-    """
-    Features: age (years), shape, margin, density (integer codes).
-    Target: severity (0 = benign, 1 = malignant).
-    BI-RADS is dropped: it is the radiologist's assessment, so using it as a
-    feature would leak the conclusion into the model.
-    Rows with any missing feature are dropped (codes cannot be meaningfully imputed).
-    Raises ValueError if any value falls outside the documented UCI codes.
-    """
-    df = raw.drop(columns=["birads"]).dropna()
-    df = df.astype({"shape": int, "margin": int, "density": int, "severity": int})
-
-    problems = [
-        f"{col}: unexpected values {sorted(df.loc[~df[col].isin(valid), col].unique())}"
-        for col, valid in _VALID_CODES.items()
-        if not df[col].isin(valid).all()
-    ]
-    if not df["age"].between(1, 120).all():
-        problems.append("age: values outside 1-120")
-    if problems:
-        raise ValueError("Mammographic data failed validation — " + "; ".join(problems))
-
-    return df[FEATURE_NAMES + ["severity"]]
-
-
-def load_mammographic(path: Path = MAMMO_RAW_PATH):
-    """
-    Verify, load and clean the UCI Mammographic Mass file; save cleaned.csv.
-    Returns (cleaned DataFrame, provenance dict for model_metadata.json).
-    """
-    digest = verify_raw_file(path)
-    print(f"  Loading mammographic data from {path} (sha256 verified)")
-    raw = read_raw_mammographic(path)
-    df = clean_mammographic(raw)
-
-    print(f"  Raw: {len(raw)} rows  |  Cleaned: {len(df)} rows  |  "
-          f"Malignant: {int(df.severity.sum())}  |  Benign: {int((df.severity == 0).sum())}")
-    df.to_csv(CLEANED_CSV, index=False)
-
-    provenance = {
-        "name":         "UCI Mammographic Mass",
-        "uci_id":       MAMMO_UCI_ID,
-        "doi":          MAMMO_DOI,
-        "license":      "CC BY 4.0",
-        "source_url":   MAMMO_SOURCE_URL,
-        "raw_sha256":   digest,
-        "raw_rows":     int(len(raw)),
-        "raw_missing":  {col: int(n) for col, n in raw.isna().sum().items()},
-        "clean_rows":   int(len(df)),
-        "benign":       int((df.severity == 0).sum()),
-        "malignant":    int(df.severity.sum()),
-        "features":     list(FEATURE_NAMES),
-        "excluded_columns": {"birads": "radiologist's assessment (label leakage)"},
-        "target":       "severity: 0 = benign, 1 = malignant",
+def model_entry(family: str, dev: dict, test_summary: dict, n_fit: int) -> dict:
+    r = dev["result"]
+    entry = {
+        "family": family,
+        "label": M.FAMILIES[family],
+        "params": r["params"],
+        "trained_on": f"fit split (n={n_fit})",
+        "cv": {k: r[k] for k in ("cv_logloss", "cv_logloss_se", "cv_auroc")},
+        "oof": {"auroc": dev["oof_auroc"], "brier": dev["oof_brier"]},
+        "calibration": {**dev["calibrator"].to_dict(),
+                        "cv_brier_by_method": dev["calibration_cv_brier"],
+                        "fitted_on": "out-of-fold predictions, fit split"},
+        "threshold": {"value": round(dev["threshold"], 4),
+                      "method": "Youden's J on out-of-fold calibrated predictions (fit split)"},
+        "high_sensitivity_threshold": {
+            "value": round(dev["high_sensitivity_threshold"], 4),
+            "method": f"highest threshold with out-of-fold sensitivity ≥ {HIGH_SENSITIVITY:.0%}"},
+        "test": test_summary,
     }
-    return df, provenance
+    if "n_estimators" in r:
+        entry["params"] = {**r["params"], "n_estimators": r["n_estimators"]}
+    return entry
 
 
-def train_lightgbm(df):
-    """
-    Train LightGBM on the UCI Mammographic Mass data — the model the app serves.
-    4 features: age, shape, margin, density. No resampling.
-    """
-    print("\n── LightGBM on Mammographic Masses ─────────────────────")
-    X = df[FEATURE_NAMES].values
-    y = df["severity"].values
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
-    )
-
-    n_pos = int(y_train.sum()); n_neg = int((y_train==0).sum())
-    print(f"  Training split: {len(X_train)} samples (benign={n_neg}, malignant={n_pos})")
-
-    model = lgb.LGBMClassifier(
-        n_estimators=200,
-        learning_rate=0.05,
-        num_leaves=15,
-        min_child_samples=5,
-        random_state=42,
-        verbose=-1,
-    )
-    # NOTE (Phase 1): early stopping monitors the test split, which leaks
-    # test information into training. Kept as-is in Phase 0; see EVALUATION_PROTOCOL.
-    model.fit(X_train, y_train,
-              eval_set=[(X_test, y_test)],
-              callbacks=[lgb.early_stopping(30, verbose=False),
-                         lgb.log_evaluation(-1)])
-
-    # Threshold via Youden's J — NOTE (Phase 1): chosen on the test split.
-    optimal_threshold = _youden_threshold(model, X_test, y_test)
-    print(f"  Optimal threshold (Youden's J): {optimal_threshold:.3f}")
-
-    m = _metrics(model, X_test, y_test, threshold=optimal_threshold)
-    m["n_train"], m["n_test"] = int(len(X_train)), int(len(X_test))
-    print(f"  Accuracy: {m['accuracy']}%  |  AUC: {m['auc']}  |  Recall: {m['recall']}%")
-
-    # SHAP TreeExplainer
-    explainer = shap.TreeExplainer(model)
-
-    joblib.dump(model,     LGBM_MODEL_PATH,   compress=3)
-    joblib.dump(explainer, LGBM_SHAP_PATH,    compress=3)
-    print(f"  Saved: {LGBM_MODEL_PATH.name} + {LGBM_SHAP_PATH.name}")
-    return model, m, optimal_threshold
+def save_bundle(path: Path, family: str, dev: dict, Xf) -> None:
+    bundle = {"family": family, "label": M.FAMILIES[family],
+              "estimator": dev["estimator"], "feature_names": list(FEATURE_NAMES)}
+    if family == "logistic_regression":
+        bundle.update(linear_background(dev["estimator"], Xf))
+    joblib.dump(bundle, path, compress=3)
 
 
-# ── Dataset 2: WDBC ──────────────────────────────────────────────
-def load_wdbc():
-    """
-    Load Wisconsin Breast Cancer Diagnostic from sklearn.
-    30 nuclear features from FNA images.
-    """
-    data = load_breast_cancer()
-    X = data.data
-    # sklearn: 0=malignant, 1=benign — flip for clarity
-    y = 1 - data.target
-    features = list(data.feature_names)
-    return X, y, features
+def log_mlflow(metadata: dict) -> str:
+    """Log the run to a local MLflow store (mlflow.db + mlartifacts/). Optional."""
+    try:
+        import mlflow
+    except ImportError:
+        return "skipped (mlflow not installed)"
+    try:
+        return _log_mlflow(mlflow, metadata)
+    except Exception as exc:          # tracking must never break training
+        return f"FAILED ({type(exc).__name__}: {exc})"
 
 
-def train_xgboost(X, y):
-    """
-    Train XGBoost on WDBC — research benchmark (not used by the app).
-    Uses SMOTE on the training split if imbalanced-learn is available.
-    """
-    print("\n── XGBoost on WDBC ─────────────────────────────────────")
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
-    )
-
-    n_train = int(len(X_train))  # before any SMOTE resampling
-
-    # SMOTE augmentation on training split only
-    if _SMOTE_AVAILABLE:
-        sm = SMOTE(random_state=42, k_neighbors=5)
-        X_train, y_train = sm.fit_resample(X_train, y_train)
-        print(f"  SMOTE applied: training set {len(X_train)} samples "
-              f"(benign={int((y_train==0).sum())}, malignant={int((y_train==1).sum())})")
-
-    model = xgb.XGBClassifier(
-        n_estimators=400,
-        learning_rate=0.04,
-        max_depth=5,
-        subsample=0.85,
-        colsample_bytree=0.85,
-        min_child_weight=2,
-        gamma=0.05,
-        reg_alpha=0.05,
-        reg_lambda=1.0,
-        eval_metric="logloss",
-        random_state=42,
-        verbosity=0,
-    )
-    model.fit(X_train, y_train,
-              eval_set=[(X_test, y_test)],
-              verbose=False)
-
-    # Threshold via Youden's J — NOTE (Phase 1): chosen on the test split.
-    optimal_threshold = _youden_threshold(model, X_test, y_test)
-    print(f"  Optimal threshold (Youden's J): {optimal_threshold:.3f}")
-
-    m = _metrics(model, X_test, y_test, threshold=optimal_threshold)
-    m["n_train"], m["n_test"] = n_train, int(len(X_test))
-    print(f"  Accuracy: {m['accuracy']}%  |  AUC: {m['auc']}  |  Recall: {m['recall']}%  "
-          f"|  FP: {m['false_positives']}  |  FN: {m['false_negatives']}")
-
-    explainer = shap.TreeExplainer(model)
-
-    joblib.dump(model,     XGBOOST_MODEL_PATH,  compress=3)
-    joblib.dump(explainer, XGBOOST_SHAP_PATH,   compress=3)
-    print(f"  Saved: {XGBOOST_MODEL_PATH.name} + {XGBOOST_SHAP_PATH.name}")
-    return model, m, optimal_threshold
+def _log_mlflow(mlflow, metadata: dict) -> str:
+    root = MODELS_DIR.parent
+    mlflow.set_tracking_uri(f"sqlite:///{(root / 'mlflow.db').as_posix()}")
+    name = "breastcare-mammographic"
+    if mlflow.get_experiment_by_name(name) is None:
+        mlflow.create_experiment(name, artifact_location=(root / "mlartifacts").resolve().as_uri())
+    mlflow.set_experiment(name)
+    served = metadata["served_model"]
+    with mlflow.start_run(run_name=served["family"]) as run:
+        mlflow.log_params({"served_family": served["family"], **{f"served_{k}": v for k, v in served["params"].items()},
+                           "calibration": served["calibration"]["method"],
+                           "threshold": served["threshold"]["value"], "alpha": ALPHA})
+        for r in metadata["selection"]["cv_results"]:
+            tag = f"{r['family']}_{'_'.join(f'{k}{v}' for k, v in r['params'].items())}"
+            mlflow.log_metric(f"cv_logloss.{tag}", r["cv_logloss"])
+        for key in ("auroc", "auprc", "brier", "ece", "calibration_slope", "calibration_intercept",
+                    "sensitivity", "specificity"):
+            mlflow.log_metric(f"test_{key}", served["test"][key]["value"])
+        mlflow.log_metric("test_conformal_coverage", served["test"]["conformal"]["coverage"]["value"])
+        mlflow.log_artifact(str(MODEL_METADATA_PATH))
+        mlflow.log_artifacts(str(FIGURES_DIR), artifact_path="figures")
+        return f"logged run {run.info.run_id}"
 
 
-# ── 5-Model CV comparison on WDBC ────────────────────────────────
-def run_cv_comparison(X, y):
-    """
-    Stratified 10-fold CV comparison of 5 classifiers on WDBC.
-    Returns results dict for model_metadata.json.
-    """
-    print("\n── 5-Model 10-Fold CV Comparison (WDBC) ───────────────")
-    X_train, _, y_train, _ = train_test_split(
-        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
-    )
-    cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+def main() -> None:
+    print("=" * 64)
+    print("BreastCare AI — training and evaluation")
+    print("=" * 64)
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
-    models = {
-        "XGBoost": xgb.XGBClassifier(
-            n_estimators=300, learning_rate=0.05, max_depth=4,
-            subsample=0.8, colsample_bytree=0.8, min_child_weight=3,
-            gamma=0.1, reg_alpha=0.1,
-            use_label_encoder=False, eval_metric="logloss",
-            random_state=42, verbosity=0),
-        "LightGBM": lgb.LGBMClassifier(
-            n_estimators=200, learning_rate=0.05, num_leaves=31,
-            random_state=42, verbose=-1),
-        "RandomForest": RandomForestClassifier(
-            n_estimators=200, random_state=42, n_jobs=-1),
-        "SVM (RBF)": Pipeline([
-            ("scaler", StandardScaler()),
-            ("svm", SVC(probability=True, random_state=42)),
-        ]),
-        "LogisticRegression": Pipeline([
-            ("scaler", StandardScaler()),
-            ("lr", LogisticRegression(max_iter=1000, random_state=42)),
-        ]),
+    print("\n1. Data")
+    df, provenance = D.load_mammographic()
+    raw = D.read_raw_mammographic()
+    splits = D.split_rows(df)
+    X, y = df[FEATURE_NAMES], df["severity"]
+    Xf, yf = X.loc[splits["fit"]], y.loc[splits["fit"]].to_numpy()
+    Xc, yc = X.loc[splits["conformal"]], y.loc[splits["conformal"]].to_numpy()
+    Xt, yt = X.loc[splits["test"]], y.loc[splits["test"]].to_numpy()
+    print(f"  fit {len(yf)} · conformal {len(yc)} · test {len(yt)}")
+
+    print("\n2. Model selection (5-fold CV on the fit split)")
+    cv_results = [M.cross_validate(fam, params, Xf, yf) for fam in M.FAMILIES for params in M.GRIDS[fam]]
+    sel = M.select(cv_results)
+    for fam, r in sel["best_per_family"].items():
+        print(f"  {M.FAMILIES[fam]:<40} log-loss {r['cv_logloss']:.4f} ± {r['cv_logloss_se']:.4f}"
+              f"  AUROC {r['cv_auroc']:.4f}  {r['params']}")
+    served = sel["selected"]
+    challenger = min((f for f in sel["best_per_family"] if f != served),
+                     key=lambda f: sel["best_per_family"][f]["cv_logloss"])
+    print(f"  → served: {M.FAMILIES[served]} · challenger: {M.FAMILIES[challenger]}")
+
+    print("\n3. Calibration and thresholds (out-of-fold, fit split)")
+    devs = {fam: develop(r, Xf, yf) for fam, r in sel["best_per_family"].items()}
+    for fam, d in devs.items():
+        print(f"  {M.FAMILIES[fam]:<40} calibration {d['calibrator'].method:<8} "
+              f"threshold {d['threshold']:.3f}  high-sens {d['high_sensitivity_threshold']:.3f}")
+
+    print("\n4. Conformal calibration (conformal split)")
+    conformal = fit_mondrian(calibrated(devs[served], Xc), yc, ALPHA)
+    print(f"  Benign in set if p ≤ {conformal.benign_if_p_le:.3f}; "
+          f"Malignant in set if p ≥ {conformal.malignant_if_p_ge:.3f}")
+
+    print("\n5. Test evaluation (used once)")
+    boot = Bootstrap(len(yt), N_BOOTSTRAP, BOOT_SEED)
+    test_p = {fam: calibrated(d, Xt) for fam, d in devs.items()}
+    summaries = {fam: summarize(yt, test_p[fam], devs[fam]["threshold"], boot,
+                                conformal if fam == served else None) for fam in devs}
+    ps, pc = test_p[served], test_p[challenger]
+    t_hs = devs[served]["high_sensitivity_threshold"]
+    high_sens = {"threshold": round(t_hs, 4),
+                 **{k: boot.ci(lambda i, k=k: threshold_metrics(yt[i], ps[i], t_hs)[k])
+                    for k in ("sensitivity", "specificity", "npv")}}
+
+    birads_all = raw.loc[splits["test"], "birads"]
+    valid = birads_all.between(1, 5).to_numpy()
+    yb, sb, pb = yt[valid], birads_all.to_numpy()[valid], ps[valid]
+    bboot = Bootstrap(int(valid.sum()), N_BOOTSTRAP, BOOT_SEED)
+    birads_ref = {
+        "n": int(valid.sum()), "n_excluded": int((~valid).sum()),
+        "excluded_reason": "BI-RADS missing or outside the documented 1–5 range (0, 6, 55)",
+        "auroc_birads": bboot.ci(lambda i: auroc(yb[i], sb[i])),
+        "auroc_model_same_rows": bboot.ci(lambda i: auroc(yb[i], pb[i])),
+        "auroc_difference_model_minus_birads": bboot.paired(lambda i: auroc(yb[i], pb[i]),
+                                                            lambda i: auroc(yb[i], sb[i])),
     }
-
-    scoring = ["roc_auc", "accuracy", "recall"]
-    cv_results = {}
-
-    for name, clf in models.items():
-        res = cross_validate(clf, X_train, y_train, cv=cv, scoring=scoring, n_jobs=-1)
-        cv_results[name] = {
-            "auc":      round(res["test_roc_auc"].mean(), 4),
-            "auc_std":  round(res["test_roc_auc"].std(),  4),
-            "accuracy": round(res["test_accuracy"].mean() * 100, 2),
-            "recall":   round(res["test_recall"].mean() * 100, 2),
-        }
-        print(f"  {name:<22} AUC: {cv_results[name]['auc']} ± {cv_results[name]['auc_std']}  "
-              f"Acc: {cv_results[name]['accuracy']}%  Rec: {cv_results[name]['recall']}%")
-
-    return cv_results
-
-
-# ── Main ─────────────────────────────────────────────────────────
-def main():
-    print("=" * 60)
-    print("BreastCare AI — Model Training Pipeline")
-    print("=" * 60)
-    ensure_dirs()
-
-    # Dataset 1: Mammographic
-    print("\nDataset 1: UCI Mammographic Mass (id 161)")
-    df, mammo_info = load_mammographic()
-    lgbm_model, lgbm_metrics, lgbm_threshold = train_lightgbm(df)
-
-    # Dataset 2: WDBC
-    print("\nDataset 2: Wisconsin Breast Cancer Diagnostic (WDBC)")
-    X, y, wdbc_features = load_wdbc()
-    xgb_model, xgb_metrics, xgb_threshold = train_xgboost(X, y)
-
-    # Save WDBC feature names for the XGBoost explain panel
-    with open(WDBC_FEATURES_PATH, "w") as f:
-        json.dump(wdbc_features, f)
-
-    # 5-model CV comparison
-    cv_results = run_cv_comparison(X, y)
-
-    # Save metadata (metrics, Youden thresholds, provenance, protocol)
-    metadata = {
-        "lgbm_mammographic":      lgbm_metrics,
-        "lgbm_optimal_threshold": lgbm_threshold,
-        "xgboost_wdbc":           xgb_metrics,
-        "xgb_optimal_threshold":  xgb_threshold,
-        "cv_comparison":          cv_results,
-        "augmentation":           "SMOTE" if _SMOTE_AVAILABLE else "none",
-        "evaluation_protocol":    EVALUATION_PROTOCOL,
-        "datasets": {
-            "mammographic": mammo_info,
-            "wdbc": {
-                "name":       "Wisconsin Diagnostic Breast Cancer (WDBC)",
-                "source":     "sklearn.datasets.load_breast_cancer (copy of UCI WDBC)",
-                "rows":       int(len(y)),
-                "benign":     int((y == 0).sum()),
-                "malignant":  int((y == 1).sum()),
-                "n_features": len(wdbc_features),
-            },
-        },
-        "versions": {
-            "python":       platform.python_version(),
-            "lightgbm":     lgb.__version__,
-            "xgboost":      xgb.__version__,
-            "scikit-learn": sklearn.__version__,
-            "shap":         shap.__version__,
+    comparisons = {
+        "auroc_difference_served_minus_challenger": boot.paired(
+            lambda i: auroc(yt[i], ps[i]), lambda i: auroc(yt[i], pc[i])),
+        "brier_difference_served_minus_challenger": boot.paired(
+            lambda i: brier(yt[i], ps[i]), lambda i: brier(yt[i], pc[i])),
+        "birads_reference": birads_ref,
+        "monotone_ablation": {
+            "auroc_difference_monotone_minus_unconstrained": boot.paired(
+                lambda i: auroc(yt[i], test_p["lightgbm_monotone"][i]),
+                lambda i: auroc(yt[i], test_p["lightgbm"][i])),
+            "brier_difference_monotone_minus_unconstrained": boot.paired(
+                lambda i: brier(yt[i], test_p["lightgbm_monotone"][i]),
+                lambda i: brier(yt[i], test_p["lightgbm"][i])),
         },
     }
-    with open(MODEL_METADATA_PATH, "w", encoding="utf-8") as f:
-        json.dump(metadata, f, indent=2)
+    age_groups = np.where(Xt["age"].to_numpy() < AGE_SPLIT, f"age < {AGE_SPLIT}", f"age ≥ {AGE_SPLIT}")
+    subgroups = subgroup_summary(yt, ps, age_groups, devs[served]["threshold"], N_BOOTSTRAP, BOOT_SEED)
+    thresholds = np.round(np.arange(0.01, 0.61, 0.01), 2)
+    nb = {fam: net_benefit(yt, test_p[fam], thresholds) for fam in (served, challenger)}
+    nb_all = net_benefit_treat_all(yt, thresholds)
+    pick = lambda arr, t: round(float(arr[int(np.argmin(np.abs(thresholds - t)))]), 4)
+    dca = {"thresholds": DCA_TABLE,
+           "net_benefit": {M.FAMILIES[f]: [pick(nb[f], t) for t in DCA_TABLE] for f in nb},
+           "treat_all": [pick(nb_all, t) for t in DCA_TABLE], "treat_none": [0.0] * len(DCA_TABLE)}
+    s = summaries[served]
+    print(f"  served AUROC {s['auroc']['value']:.3f} {s['auroc']['ci']} · Brier {s['brier']['value']:.3f}"
+          f" · conformal coverage {s['conformal']['coverage']['value']:.3f}")
+    print(f"  BI-RADS AUROC {birads_ref['auroc_birads']['value']:.3f} on {birads_ref['n']} rows")
+
+    print("\n6. Figures")
+    from src.ml.figures import render_all
+    figure_models = [{"label": M.FAMILIES[f], "p": test_p[f], "auroc": summaries[f]["auroc"],
+                      "auprc": summaries[f]["auprc"], "slope": summaries[f]["calibration_slope"],
+                      "intercept": summaries[f]["calibration_intercept"]} for f in (served, challenger)]
+    figures = render_all(FIGURES_DIR, y=yt, models=figure_models,
+                         birads={"y": yb, "score": sb, "auroc": birads_ref["auroc_birads"]},
+                         dca_thresholds=thresholds,
+                         dca_curves=[{"label": M.FAMILIES[f], "nb": nb[f]} for f in (served, challenger)],
+                         dca_treat_all=nb_all, conformal=conformal)
+    print(f"  wrote {len(figures)} files to {FIGURES_DIR}")
+
+    print("\n7. Save")
+    save_bundle(SERVED_MODEL_PATH, served, devs[served], Xf)
+    save_bundle(CHALLENGER_MODEL_PATH, challenger, devs[challenger], Xf)
+    with open(SPLITS_PATH, "w", encoding="utf-8") as f:
+        json.dump({k: [int(i) for i in v] for k, v in splits.items()}, f)
         f.write("\n")
 
-    print("\n" + "=" * 60)
-    print("Training complete. Models saved to models/")
-    print("=" * 60)
+    served_entry = model_entry(served, devs[served], summaries[served], len(yf))
+    served_entry["conformal"] = {**conformal.to_dict(), "fitted_on": f"conformal split (n={len(yc)})"}
+    served_entry["test"]["high_sensitivity_operating_point"] = high_sens
+    metadata = {
+        "schema_version": 2,
+        "protocol": {
+            "description": PROTOCOL,
+            "split_seed": D.SPLIT_SEED,
+            "n": {"fit": len(yf), "conformal": len(yc), "test": len(yt)},
+            "bootstrap": {"resamples": N_BOOTSTRAP, "seed": BOOT_SEED, "interval": "95% percentile"},
+            "risk_categories": "Low < 0.35 ≤ Moderate < 0.65 ≤ Elevated (calibrated probability)",
+        },
+        "datasets": {"mammographic": provenance},
+        "selection": {
+            "rule": sel["rule"], "selected": served, "challenger": challenger,
+            "best_overall_by_cv": sel["best_overall"], "one_se_bound": sel["one_se_bound"],
+            "cv_results": cv_results,
+        },
+        "served_model": served_entry,
+        "challenger_model": model_entry(challenger, devs[challenger], summaries[challenger], len(yf)),
+        "ablation_models": {f: model_entry(f, devs[f], summaries[f], len(yf))
+                            for f in devs if f not in (served, challenger)},
+        "comparisons": comparisons,
+        "subgroups": {"by": f"age, split at {AGE_SPLIT}", "groups": subgroups},
+        "decision_curve": dca,
+        "figures": sorted(figures),
+        "versions": {"python": platform.python_version(), "scikit-learn": sklearn.__version__,
+                     "lightgbm": lgb.__version__, "shap": shap.__version__,
+                     "numpy": np.__version__},
+    }
+    with open(MODEL_METADATA_PATH, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    print(f"  saved {SERVED_MODEL_PATH.name}, {CHALLENGER_MODEL_PATH.name}, "
+          f"{MODEL_METADATA_PATH.name}, {SPLITS_PATH.name}")
+    print(f"  MLflow: {log_mlflow(metadata)}")
+    print("\nDone. Next: python scripts/update_readme_metrics.py")
 
 
 if __name__ == "__main__":

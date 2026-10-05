@@ -8,6 +8,7 @@ Output: approved (possibly edited) response + safety audit log.
 from __future__ import annotations
 from typing import Any
 from src.agents.base_agent import BaseAgent
+from src.rag.prompt_builder import risk_summary_lines
 
 
 class SafetyAgent(BaseAgent):
@@ -42,7 +43,7 @@ AUDIT_NOTES: [brief safety audit summary]"""
 ---
 
 CONTEXT:
-Malignancy probability (uncalibrated model output): {round(prob * 100, 1)}%
+{risk_summary_lines(prediction)}
 Risk category: {risk_cat}
 
 Review this response for safety violations. Check all 5 categories."""

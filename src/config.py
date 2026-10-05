@@ -27,20 +27,16 @@ MAMMO_SHA256     = "072051c896fb14f8f25c64eed30ba1333290af41e6c9ffad4e1ca573daa8
 MAMMO_DOI        = "https://doi.org/10.24432/C53K6Z"
 MAMMO_RAW_COLUMNS = ["birads", "age", "shape", "margin", "density", "severity"]
 
-# ── Model paths ─────────────────────────────────────────────────
-MODELS_DIR           = ROOT / "models"
-LGBM_MODEL_PATH      = MODELS_DIR / "mammographic_lgbm.pkl"
-LGBM_SHAP_PATH       = MODELS_DIR / "mammographic_shap.pkl"
-XGBOOST_MODEL_PATH   = MODELS_DIR / "wdbc_xgboost.pkl"
-XGBOOST_SHAP_PATH    = MODELS_DIR / "wdbc_shap.pkl"
-MODEL_METADATA_PATH  = MODELS_DIR / "model_metadata.json"
-WDBC_FEATURES_PATH   = MODELS_DIR / "wdbc_features.json"
+# ── Model artifacts (written by `python -m src.ml.train`) ────────
+MODELS_DIR             = ROOT / "models"
+SERVED_MODEL_PATH      = MODELS_DIR / "served_model.joblib"      # selected model
+CHALLENGER_MODEL_PATH  = MODELS_DIR / "challenger_model.joblib"  # runner-up, for comparison
+MODEL_METADATA_PATH    = MODELS_DIR / "model_metadata.json"      # metrics, calibration, conformal
+SPLITS_PATH            = MODELS_DIR / "splits.json"              # raw-row ids of each split
 
-# ── Ensemble & calibration paths ─────────────────────────────────
-ENSEMBLE_MODEL_PATH  = MODELS_DIR / "stacking_ensemble.pkl"
-ENSEMBLE_SHAP_PATH   = MODELS_DIR / "ensemble_shap.pkl"
-OPTUNA_RESULTS_PATH  = MODELS_DIR / "optuna_results.json"
-CALIBRATION_PATH     = MODELS_DIR / "calibration_results.json"
+# ── Evaluation reports (README/report figures; not the audit PDFs) ─
+EVAL_REPORTS_DIR = ROOT / "reports"
+FIGURES_DIR      = EVAL_REPORTS_DIR / "figures"
 
 # ── Image model paths ────────────────────────────────────────────
 IMG_MODEL_PATH       = MODELS_DIR / "efficientnet_cbis.pth"
@@ -69,9 +65,10 @@ REPORTS_DIR          = DATA_DIR / "reports"
 AUDIT_ENABLED        = True
 
 # ── Risk thresholds ──────────────────────────────────────────────
+# Categories apply to the calibrated probability. The binary decision threshold
+# is chosen during training and stored in models/model_metadata.json.
 LOW_RISK_THRESHOLD      = 0.35   # below = Low
-HIGH_RISK_THRESHOLD     = 0.65   # above = Elevated
-DECISION_THRESHOLD      = 0.50   # binary classification
+HIGH_RISK_THRESHOLD     = 0.65   # at or above = Elevated
 CHUNK_TOP_K             = 3      # retrieved chunks per query
 
 # ── Mammographic feature mappings ────────────────────────────────

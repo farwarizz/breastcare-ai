@@ -1,0 +1,10 @@
+# BreastCare AI — training, evaluation and test dependencies
+# Install: pip install -r requirements-dev.txt
+-r requirements.txt
+
+pytest>=8.0
+httpx>=0.27          # FastAPI TestClient
+matplotlib>=3.8      # evaluation figures (src/ml/figures.py)
+sentence-transformers>=2.2   # dense retrieval, as used when building the index
+xgboost>=2.0.0       # experiments/wdbc_benchmark.py only
+mlflow>=2.10         # optional experiment tracking (logged when installed)

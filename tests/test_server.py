@@ -1,4 +1,4 @@
-"""API checks: the single supported frontend, honest image endpoint, no fake outputs."""
+"""API checks: the single supported frontend, honest image endpoint, real model outputs."""
 import io
 import json
 
@@ -45,24 +45,44 @@ def test_assess_image_returns_503_when_weights_fail_to_load(monkeypatch):
     assert "probability" not in r.json()
 
 
-def test_health_does_not_claim_a_missing_image_model(monkeypatch):
+def test_health_reports_models_truthfully(monkeypatch):
     monkeypatch.setattr(image_model, "is_available", lambda: False)
-    assert client.get("/health").json()["image_model"] is False
+    body = client.get("/health").json()
+    assert body["image_model"] is False
+    assert body["served_model"] == json.loads(
+        config.MODEL_METADATA_PATH.read_text(encoding="utf-8"))["served_model"]["label"]
 
 
-def test_assess_returns_prediction_without_fabricated_band():
+def test_assess_returns_calibrated_probability_and_prediction_set():
     r = client.post("/api/assess", json=FEATURES)
     assert r.status_code == 200
     pred = r.json()["prediction"]
     assert "confidence_band" not in pred
-    assert pred["calibrated"] is False
+    assert pred["calibrated"] is True
+    assert set(pred["prediction_set"]) <= {"Benign", "Malignant"}
 
 
-def test_compare_models_only_lists_trained_models():
+def test_compare_models_shows_served_and_challenger():
     r = client.post("/api/compare-models", json=FEATURES)
     assert r.status_code == 200
-    names = [m["model_name"] for m in r.json()["models"].values()]
-    assert not any("Logistic" in n for n in names)   # the hand-set "baseline" is gone
+    body = r.json()
+    md = json.loads(config.MODEL_METADATA_PATH.read_text(encoding="utf-8"))
+    names = [m["model_name"] for m in body["models"].values()]
+    assert names == [md["served_model"]["label"] + " (served)",
+                     md["challenger_model"]["label"] + " (challenger)"]
+    assert body["agreement"]["test_auroc_difference"] == \
+        md["comparisons"]["auroc_difference_served_minus_challenger"]
+
+
+def test_batch_predict_validates_and_predicts():
+    csv = "age,shape,margin,density\n45,1,1,3\n70,4,5,3\n"
+    r = client.post("/api/batch-predict", files={"file": ("b.csv", csv.encode(), "text/csv")})
+    assert r.status_code == 200
+    rows = r.json()["results"]
+    assert len(rows) == 2 and all("prediction_set" in row for row in rows)
+    bad = "age,shape,margin,density\n45,9,1,3\n"
+    r = client.post("/api/batch-predict", files={"file": ("b.csv", bad.encode(), "text/csv")})
+    assert r.status_code == 400
 
 
 def test_model_info_serves_saved_metadata():
@@ -72,3 +92,10 @@ def test_model_info_serves_saved_metadata():
     assert body["metadata"] == json.loads(config.MODEL_METADATA_PATH.read_text(encoding="utf-8"))
     chunks = json.loads(config.CHUNK_METADATA_PATH.read_text(encoding="utf-8"))
     assert body["knowledge_base"]["n_chunks"] == len(chunks)
+
+
+def test_evaluation_figures_are_served():
+    md = json.loads(config.MODEL_METADATA_PATH.read_text(encoding="utf-8"))
+    for name in md["figures"]:
+        r = client.get(f"/figures/{name}")
+        assert r.status_code == 200 and r.headers["content-type"] == "image/png", name

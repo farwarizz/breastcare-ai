@@ -71,7 +71,7 @@ COT_USER_TEMPLATE = """PATIENT FEATURES:
   Density: {density_label} (code {density})
 
 RISK ESTIMATE:
-  Malignancy probability (uncalibrated model output, no uncertainty interval): {probability_pct}%
+  {risk_summary}
   Risk category: {risk_category}
   Predicted class: {predicted_class}
 
@@ -215,6 +215,7 @@ class MultiAgentPipeline:
         """Single LLM call with structured step-by-step reasoning."""
         from src.safety import filter_response
         from src.config import SHAPE_MAP, MARGIN_MAP, DENSITY_MAP
+        from src.rag.prompt_builder import risk_summary_lines
 
         prediction = context.get("prediction", {})
         explanation = context.get("explanation", {})
@@ -241,7 +242,7 @@ class MultiAgentPipeline:
             margin_label=MARGIN_MAP.get(features.get("margin", 0), "?"),
             density=features.get("density", "?"),
             density_label=DENSITY_MAP.get(features.get("density", 0), "?"),
-            probability_pct=round(prediction.get("probability", 0) * 100, 1),
+            risk_summary=risk_summary_lines(prediction),
             risk_category=prediction.get("risk_category", "?"),
             predicted_class=prediction.get("predicted_class", "?"),
             shap_text=explanation.get("shap_text", ""),

@@ -128,10 +128,16 @@ def generate_pdf_report(
     pdf.cell(0, 16, f"{risk_cat} Risk", align="R")
     pdf.ln(22)
 
+    pset = prediction.get("prediction_set") or []
+    coverage = prediction.get("set_coverage", 0.9)
     risk_data = [
         ["Metric", "Value"],
-        ["Predicted Class", prediction["predicted_class"]],
-        ["Probability Type", "Uncalibrated model output (no uncertainty interval)"],
+        ["Model", prediction.get("model", "N/A")],
+        ["Probability Type", f"Calibrated estimate (calibration step: "
+                             f"{prediction.get('calibration_method', 'n/a')})"],
+        [f"{coverage:.0%} Prediction Set", "{" + ", ".join(pset) + "}"],
+        ["Predicted Class", f"{prediction['predicted_class']} "
+                            f"(threshold {prediction.get('decision_threshold', 0.5):.2f})"],
         ["Dominant Feature", explanation.get("dominant_feature", "N/A").title()],
         ["Risk Direction", explanation.get("risk_direction", "N/A")],
     ]

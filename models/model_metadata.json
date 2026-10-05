@@ -1,64 +1,20 @@
 {
-  "lgbm_mammographic": {
-    "accuracy": 79.04,
-    "auc": 0.8403,
-    "recall": 87.65,
-    "precision": 73.96,
-    "f1": 80.23,
-    "specificity": 70.93,
-    "false_negatives": 10,
-    "false_positives": 25,
-    "n_train": 664,
-    "n_test": 167
+  "schema_version": 2,
+  "protocol": {
+    "description": "Stratified split of the 831 cleaned rows (seed 2026): fit 60%, conformal 20%, test 20%. Model selection by 5-fold CV log-loss on the fit split with a one-standard-error rule favouring simpler models. Calibration method and decision thresholds are chosen on out-of-fold predictions of the fit split; final models are trained on the whole fit split. Conformal cut-offs use only the conformal split. The test split is used once, for the reported metrics (95% percentile bootstrap CIs, 2,000 resamples, paired across models).",
+    "split_seed": 2026,
+    "n": {
+      "fit": 498,
+      "conformal": 166,
+      "test": 167
+    },
+    "bootstrap": {
+      "resamples": 2000,
+      "seed": 2026,
+      "interval": "95% percentile"
+    },
+    "risk_categories": "Low < 0.35 ≤ Moderate < 0.65 ≤ Elevated (calibrated probability)"
   },
-  "lgbm_optimal_threshold": 0.36762324864356993,
-  "xgboost_wdbc": {
-    "accuracy": 97.37,
-    "auc": 0.9957,
-    "recall": 95.24,
-    "precision": 97.56,
-    "f1": 96.39,
-    "specificity": 98.61,
-    "false_negatives": 2,
-    "false_positives": 1,
-    "n_train": 455,
-    "n_test": 114
-  },
-  "xgb_optimal_threshold": 0.30000001192092896,
-  "cv_comparison": {
-    "XGBoost": {
-      "auc": 0.9919,
-      "auc_std": 0.0101,
-      "accuracy": 96.49,
-      "recall": 94.71
-    },
-    "LightGBM": {
-      "auc": 0.9909,
-      "auc_std": 0.0127,
-      "accuracy": 96.27,
-      "recall": 93.53
-    },
-    "RandomForest": {
-      "auc": 0.9889,
-      "auc_std": 0.015,
-      "accuracy": 96.04,
-      "recall": 92.94
-    },
-    "SVM (RBF)": {
-      "auc": 0.9942,
-      "auc_std": 0.0096,
-      "accuracy": 97.14,
-      "recall": 94.71
-    },
-    "LogisticRegression": {
-      "auc": 0.9952,
-      "auc_std": 0.0084,
-      "accuracy": 97.58,
-      "recall": 95.88
-    }
-  },
-  "augmentation": "SMOTE",
-  "evaluation_protocol": "Single stratified 80/20 train/test split (random_state=42) per dataset. LightGBM early stopping and both Youden's-J decision thresholds are selected on the test split, so test metrics are optimistically biased (to be fixed in Phase 1 with a separate validation split). SMOTE, when imbalanced-learn is installed, is applied to the WDBC training split only. The 5-model comparison is stratified 10-fold CV on the WDBC training split. No probability calibration and no uncertainty intervals.",
   "datasets": {
     "mammographic": {
       "name": "UCI Mammographic Mass",
@@ -89,21 +45,897 @@
         "birads": "radiologist's assessment (label leakage)"
       },
       "target": "severity: 0 = benign, 1 = malignant"
-    },
-    "wdbc": {
-      "name": "Wisconsin Diagnostic Breast Cancer (WDBC)",
-      "source": "sklearn.datasets.load_breast_cancer (copy of UCI WDBC)",
-      "rows": 569,
-      "benign": 357,
-      "malignant": 212,
-      "n_features": 30
     }
   },
+  "selection": {
+    "rule": "Lowest mean 5-fold CV log-loss on the fit split; a simpler family within one standard error of the best is preferred (logistic regression < monotone LightGBM < LightGBM).",
+    "selected": "logistic_regression",
+    "challenger": "lightgbm_monotone",
+    "best_overall_by_cv": "lightgbm_monotone",
+    "one_se_bound": 0.5222,
+    "cv_results": [
+      {
+        "family": "logistic_regression",
+        "params": {
+          "C": 0.01
+        },
+        "cv_logloss": 0.5534,
+        "cv_logloss_se": 0.0125,
+        "cv_auroc": 0.8403
+      },
+      {
+        "family": "logistic_regression",
+        "params": {
+          "C": 0.1
+        },
+        "cv_logloss": 0.4925,
+        "cv_logloss_se": 0.0264,
+        "cv_auroc": 0.8435
+      },
+      {
+        "family": "logistic_regression",
+        "params": {
+          "C": 1.0
+        },
+        "cv_logloss": 0.4967,
+        "cv_logloss_se": 0.0354,
+        "cv_auroc": 0.8404
+      },
+      {
+        "family": "logistic_regression",
+        "params": {
+          "C": 10.0
+        },
+        "cv_logloss": 0.5046,
+        "cv_logloss_se": 0.0385,
+        "cv_auroc": 0.8379
+      },
+      {
+        "family": "lightgbm_monotone",
+        "params": {
+          "num_leaves": 4,
+          "min_child_samples": 10
+        },
+        "cv_logloss": 0.4987,
+        "cv_logloss_se": 0.0307,
+        "cv_auroc": 0.8375,
+        "n_estimators": 93
+      },
+      {
+        "family": "lightgbm_monotone",
+        "params": {
+          "num_leaves": 4,
+          "min_child_samples": 20
+        },
+        "cv_logloss": 0.4941,
+        "cv_logloss_se": 0.0322,
+        "cv_auroc": 0.8381,
+        "n_estimators": 121
+      },
+      {
+        "family": "lightgbm_monotone",
+        "params": {
+          "num_leaves": 4,
+          "min_child_samples": 40
+        },
+        "cv_logloss": 0.4906,
+        "cv_logloss_se": 0.0334,
+        "cv_auroc": 0.8392,
+        "n_estimators": 115
+      },
+      {
+        "family": "lightgbm_monotone",
+        "params": {
+          "num_leaves": 8,
+          "min_child_samples": 10
+        },
+        "cv_logloss": 0.4982,
+        "cv_logloss_se": 0.0318,
+        "cv_auroc": 0.8321,
+        "n_estimators": 64
+      },
+      {
+        "family": "lightgbm_monotone",
+        "params": {
+          "num_leaves": 8,
+          "min_child_samples": 20
+        },
+        "cv_logloss": 0.4954,
+        "cv_logloss_se": 0.0324,
+        "cv_auroc": 0.8365,
+        "n_estimators": 76
+      },
+      {
+        "family": "lightgbm_monotone",
+        "params": {
+          "num_leaves": 8,
+          "min_child_samples": 40
+        },
+        "cv_logloss": 0.4891,
+        "cv_logloss_se": 0.0331,
+        "cv_auroc": 0.8399,
+        "n_estimators": 114
+      },
+      {
+        "family": "lightgbm_monotone",
+        "params": {
+          "num_leaves": 16,
+          "min_child_samples": 10
+        },
+        "cv_logloss": 0.4945,
+        "cv_logloss_se": 0.0329,
+        "cv_auroc": 0.8343,
+        "n_estimators": 59
+      },
+      {
+        "family": "lightgbm_monotone",
+        "params": {
+          "num_leaves": 16,
+          "min_child_samples": 20
+        },
+        "cv_logloss": 0.4922,
+        "cv_logloss_se": 0.0327,
+        "cv_auroc": 0.8344,
+        "n_estimators": 67
+      },
+      {
+        "family": "lightgbm_monotone",
+        "params": {
+          "num_leaves": 16,
+          "min_child_samples": 40
+        },
+        "cv_logloss": 0.4891,
+        "cv_logloss_se": 0.0331,
+        "cv_auroc": 0.8399,
+        "n_estimators": 114
+      },
+      {
+        "family": "lightgbm",
+        "params": {
+          "num_leaves": 4,
+          "min_child_samples": 10
+        },
+        "cv_logloss": 0.5061,
+        "cv_logloss_se": 0.0281,
+        "cv_auroc": 0.8319,
+        "n_estimators": 78
+      },
+      {
+        "family": "lightgbm",
+        "params": {
+          "num_leaves": 4,
+          "min_child_samples": 20
+        },
+        "cv_logloss": 0.5019,
+        "cv_logloss_se": 0.0287,
+        "cv_auroc": 0.8316,
+        "n_estimators": 121
+      },
+      {
+        "family": "lightgbm",
+        "params": {
+          "num_leaves": 4,
+          "min_child_samples": 40
+        },
+        "cv_logloss": 0.4946,
+        "cv_logloss_se": 0.0308,
+        "cv_auroc": 0.8397,
+        "n_estimators": 123
+      },
+      {
+        "family": "lightgbm",
+        "params": {
+          "num_leaves": 8,
+          "min_child_samples": 10
+        },
+        "cv_logloss": 0.5127,
+        "cv_logloss_se": 0.0267,
+        "cv_auroc": 0.8211,
+        "n_estimators": 68
+      },
+      {
+        "family": "lightgbm",
+        "params": {
+          "num_leaves": 8,
+          "min_child_samples": 20
+        },
+        "cv_logloss": 0.5114,
+        "cv_logloss_se": 0.0249,
+        "cv_auroc": 0.8222,
+        "n_estimators": 70
+      },
+      {
+        "family": "lightgbm",
+        "params": {
+          "num_leaves": 8,
+          "min_child_samples": 40
+        },
+        "cv_logloss": 0.5,
+        "cv_logloss_se": 0.0286,
+        "cv_auroc": 0.8343,
+        "n_estimators": 103
+      },
+      {
+        "family": "lightgbm",
+        "params": {
+          "num_leaves": 16,
+          "min_child_samples": 10
+        },
+        "cv_logloss": 0.5228,
+        "cv_logloss_se": 0.023,
+        "cv_auroc": 0.8136,
+        "n_estimators": 46
+      },
+      {
+        "family": "lightgbm",
+        "params": {
+          "num_leaves": 16,
+          "min_child_samples": 20
+        },
+        "cv_logloss": 0.5154,
+        "cv_logloss_se": 0.024,
+        "cv_auroc": 0.818,
+        "n_estimators": 54
+      },
+      {
+        "family": "lightgbm",
+        "params": {
+          "num_leaves": 16,
+          "min_child_samples": 40
+        },
+        "cv_logloss": 0.5002,
+        "cv_logloss_se": 0.0285,
+        "cv_auroc": 0.8343,
+        "n_estimators": 102
+      }
+    ]
+  },
+  "served_model": {
+    "family": "logistic_regression",
+    "label": "Logistic regression",
+    "params": {
+      "C": 0.1
+    },
+    "trained_on": "fit split (n=498)",
+    "cv": {
+      "cv_logloss": 0.4925,
+      "cv_logloss_se": 0.0264,
+      "cv_auroc": 0.8435
+    },
+    "oof": {
+      "auroc": 0.8433,
+      "brier": 0.1604
+    },
+    "calibration": {
+      "method": "none",
+      "params": {},
+      "cv_brier_by_method": {
+        "none": 0.16036,
+        "sigmoid": 0.16095,
+        "isotonic": 0.16694
+      },
+      "fitted_on": "out-of-fold predictions, fit split"
+    },
+    "threshold": {
+      "value": 0.5143,
+      "method": "Youden's J on out-of-fold calibrated predictions (fit split)"
+    },
+    "high_sensitivity_threshold": {
+      "value": 0.2033,
+      "method": "highest threshold with out-of-fold sensitivity ≥ 95%"
+    },
+    "test": {
+      "n": 167,
+      "n_malignant": 81,
+      "auroc": {
+        "value": 0.8965,
+        "ci": [
+          0.8407,
+          0.9379
+        ]
+      },
+      "auprc": {
+        "value": 0.8726,
+        "ci": [
+          0.7939,
+          0.9334
+        ]
+      },
+      "brier": {
+        "value": 0.1319,
+        "ci": [
+          0.1102,
+          0.1596
+        ]
+      },
+      "ece": {
+        "value": 0.1155,
+        "ci": [
+          0.0962,
+          0.1811
+        ]
+      },
+      "calibration_intercept": {
+        "value": -0.023,
+        "ci": [
+          -0.3542,
+          0.2725
+        ]
+      },
+      "calibration_slope": {
+        "value": 1.6289,
+        "ci": [
+          1.2459,
+          2.2142
+        ]
+      },
+      "threshold": 0.5143,
+      "sensitivity": {
+        "value": 0.9012,
+        "ci": [
+          0.8313,
+          0.961
+        ]
+      },
+      "specificity": {
+        "value": 0.814,
+        "ci": [
+          0.7209,
+          0.8861
+        ]
+      },
+      "ppv": {
+        "value": 0.8202,
+        "ci": [
+          0.7368,
+          0.8913
+        ]
+      },
+      "npv": {
+        "value": 0.8974,
+        "ci": [
+          0.8235,
+          0.9595
+        ]
+      },
+      "accuracy": {
+        "value": 0.8563,
+        "ci": [
+          0.8022,
+          0.9042
+        ]
+      },
+      "counts": {
+        "tp": 73,
+        "fp": 16,
+        "tn": 70,
+        "fn": 8
+      },
+      "conformal": {
+        "coverage": {
+          "value": 0.8683,
+          "ci": [
+            0.8144,
+            0.9162
+          ]
+        },
+        "coverage_benign": {
+          "value": 0.8256,
+          "ci": [
+            0.7368,
+            0.8987
+          ]
+        },
+        "coverage_malignant": {
+          "value": 0.9136,
+          "ci": [
+            0.85,
+            0.9678
+          ]
+        },
+        "share_single_label": {
+          "value": 0.8922,
+          "ci": [
+            0.8443,
+            0.9341
+          ]
+        },
+        "share_both_labels": {
+          "value": 0.1078,
+          "ci": [
+            0.0659,
+            0.1557
+          ]
+        },
+        "share_empty": {
+          "value": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "high_sensitivity_operating_point": {
+        "threshold": 0.2033,
+        "sensitivity": {
+          "value": 0.9877,
+          "ci": [
+            0.9605,
+            1.0
+          ]
+        },
+        "specificity": {
+          "value": 0.4186,
+          "ci": [
+            0.3117,
+            0.5227
+          ]
+        },
+        "npv": {
+          "value": 0.973,
+          "ci": [
+            0.9047,
+            1.0
+          ]
+        }
+      }
+    },
+    "conformal": {
+      "method": "Mondrian (class-conditional) split conformal, LAC score",
+      "alpha": 0.1,
+      "coverage_target": 0.9,
+      "benign_if_p_le": 0.5771271441118739,
+      "malignant_if_p_ge": 0.4148754178163546,
+      "n_calibration": {
+        "benign": 85,
+        "malignant": 81
+      },
+      "fitted_on": "conformal split (n=166)"
+    }
+  },
+  "challenger_model": {
+    "family": "lightgbm_monotone",
+    "label": "LightGBM (monotone in age and shape)",
+    "params": {
+      "num_leaves": 8,
+      "min_child_samples": 40,
+      "n_estimators": 114
+    },
+    "trained_on": "fit split (n=498)",
+    "cv": {
+      "cv_logloss": 0.4891,
+      "cv_logloss_se": 0.0331,
+      "cv_auroc": 0.8399
+    },
+    "oof": {
+      "auroc": 0.8326,
+      "brier": 0.1622
+    },
+    "calibration": {
+      "method": "none",
+      "params": {},
+      "cv_brier_by_method": {
+        "none": 0.16216,
+        "sigmoid": 0.16413,
+        "isotonic": 0.16519
+      },
+      "fitted_on": "out-of-fold predictions, fit split"
+    },
+    "threshold": {
+      "value": 0.4743,
+      "method": "Youden's J on out-of-fold calibrated predictions (fit split)"
+    },
+    "high_sensitivity_threshold": {
+      "value": 0.154,
+      "method": "highest threshold with out-of-fold sensitivity ≥ 95%"
+    },
+    "test": {
+      "n": 167,
+      "n_malignant": 81,
+      "auroc": {
+        "value": 0.8953,
+        "ci": [
+          0.8412,
+          0.9372
+        ]
+      },
+      "auprc": {
+        "value": 0.8652,
+        "ci": [
+          0.7832,
+          0.9287
+        ]
+      },
+      "brier": {
+        "value": 0.1285,
+        "ci": [
+          0.1044,
+          0.1587
+        ]
+      },
+      "ece": {
+        "value": 0.0922,
+        "ci": [
+          0.0783,
+          0.1596
+        ]
+      },
+      "calibration_intercept": {
+        "value": -0.0437,
+        "ci": [
+          -0.4037,
+          0.2809
+        ]
+      },
+      "calibration_slope": {
+        "value": 1.3481,
+        "ci": [
+          1.0195,
+          1.8559
+        ]
+      },
+      "threshold": 0.4743,
+      "sensitivity": {
+        "value": 0.9136,
+        "ci": [
+          0.8462,
+          0.9643
+        ]
+      },
+      "specificity": {
+        "value": 0.7674,
+        "ci": [
+          0.6702,
+          0.8488
+        ]
+      },
+      "ppv": {
+        "value": 0.7872,
+        "ci": [
+          0.7008,
+          0.8614
+        ]
+      },
+      "npv": {
+        "value": 0.9041,
+        "ci": [
+          0.8312,
+          0.961
+        ]
+      },
+      "accuracy": {
+        "value": 0.8383,
+        "ci": [
+          0.7844,
+          0.8862
+        ]
+      },
+      "counts": {
+        "tp": 74,
+        "fp": 20,
+        "tn": 66,
+        "fn": 7
+      }
+    }
+  },
+  "ablation_models": {
+    "lightgbm": {
+      "family": "lightgbm",
+      "label": "LightGBM",
+      "params": {
+        "num_leaves": 4,
+        "min_child_samples": 40,
+        "n_estimators": 123
+      },
+      "trained_on": "fit split (n=498)",
+      "cv": {
+        "cv_logloss": 0.4946,
+        "cv_logloss_se": 0.0308,
+        "cv_auroc": 0.8397
+      },
+      "oof": {
+        "auroc": 0.8295,
+        "brier": 0.162
+      },
+      "calibration": {
+        "method": "none",
+        "params": {},
+        "cv_brier_by_method": {
+          "none": 0.16202,
+          "sigmoid": 0.16419,
+          "isotonic": 0.16839
+        },
+        "fitted_on": "out-of-fold predictions, fit split"
+      },
+      "threshold": {
+        "value": 0.4516,
+        "method": "Youden's J on out-of-fold calibrated predictions (fit split)"
+      },
+      "high_sensitivity_threshold": {
+        "value": 0.1496,
+        "method": "highest threshold with out-of-fold sensitivity ≥ 95%"
+      },
+      "test": {
+        "n": 167,
+        "n_malignant": 81,
+        "auroc": {
+          "value": 0.8912,
+          "ci": [
+            0.8358,
+            0.9331
+          ]
+        },
+        "auprc": {
+          "value": 0.8588,
+          "ci": [
+            0.7726,
+            0.923
+          ]
+        },
+        "brier": {
+          "value": 0.1291,
+          "ci": [
+            0.1044,
+            0.1598
+          ]
+        },
+        "ece": {
+          "value": 0.0984,
+          "ci": [
+            0.0829,
+            0.164
+          ]
+        },
+        "calibration_intercept": {
+          "value": -0.0439,
+          "ci": [
+            -0.39,
+            0.2768
+          ]
+        },
+        "calibration_slope": {
+          "value": 1.3685,
+          "ci": [
+            1.0521,
+            1.8178
+          ]
+        },
+        "threshold": 0.4516,
+        "sensitivity": {
+          "value": 0.9136,
+          "ci": [
+            0.8462,
+            0.9643
+          ]
+        },
+        "specificity": {
+          "value": 0.7674,
+          "ci": [
+            0.6702,
+            0.8488
+          ]
+        },
+        "ppv": {
+          "value": 0.7872,
+          "ci": [
+            0.7008,
+            0.8614
+          ]
+        },
+        "npv": {
+          "value": 0.9041,
+          "ci": [
+            0.8312,
+            0.961
+          ]
+        },
+        "accuracy": {
+          "value": 0.8383,
+          "ci": [
+            0.7844,
+            0.8862
+          ]
+        },
+        "counts": {
+          "tp": 74,
+          "fp": 20,
+          "tn": 66,
+          "fn": 7
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "auroc_difference_served_minus_challenger": {
+      "value": 0.0012,
+      "ci": [
+        -0.0113,
+        0.0147
+      ]
+    },
+    "brier_difference_served_minus_challenger": {
+      "value": 0.0034,
+      "ci": [
+        -0.0035,
+        0.0104
+      ]
+    },
+    "birads_reference": {
+      "n": 164,
+      "n_excluded": 3,
+      "excluded_reason": "BI-RADS missing or outside the documented 1–5 range (0, 6, 55)",
+      "auroc_birads": {
+        "value": 0.8294,
+        "ci": [
+          0.7771,
+          0.8815
+        ]
+      },
+      "auroc_model_same_rows": {
+        "value": 0.8935,
+        "ci": [
+          0.8392,
+          0.9393
+        ]
+      },
+      "auroc_difference_model_minus_birads": {
+        "value": 0.0641,
+        "ci": [
+          -0.0005,
+          0.1206
+        ]
+      }
+    },
+    "monotone_ablation": {
+      "auroc_difference_monotone_minus_unconstrained": {
+        "value": 0.0041,
+        "ci": [
+          -0.0043,
+          0.0142
+        ]
+      },
+      "brier_difference_monotone_minus_unconstrained": {
+        "value": -0.0007,
+        "ci": [
+          -0.0043,
+          0.0026
+        ]
+      }
+    }
+  },
+  "subgroups": {
+    "by": "age, split at 50",
+    "groups": {
+      "age < 50": {
+        "n": 56,
+        "n_malignant": 14,
+        "auroc": {
+          "value": 0.8997,
+          "ci": [
+            0.7704,
+            0.9825
+          ]
+        },
+        "sensitivity": {
+          "value": 0.7143,
+          "ci": [
+            0.4615,
+            0.9286
+          ]
+        },
+        "specificity": {
+          "value": 0.9048,
+          "ci": [
+            0.8095,
+            0.9783
+          ]
+        },
+        "calibration_intercept": {
+          "value": -0.1849,
+          "ci": [
+            -0.8647,
+            0.3543
+          ]
+        }
+      },
+      "age ≥ 50": {
+        "n": 111,
+        "n_malignant": 67,
+        "auroc": {
+          "value": 0.8684,
+          "ci": [
+            0.7878,
+            0.9335
+          ]
+        },
+        "sensitivity": {
+          "value": 0.9403,
+          "ci": [
+            0.875,
+            0.9861
+          ]
+        },
+        "specificity": {
+          "value": 0.7273,
+          "ci": [
+            0.5893,
+            0.8572
+          ]
+        },
+        "calibration_intercept": {
+          "value": 0.0422,
+          "ci": [
+            -0.3429,
+            0.4302
+          ]
+        }
+      }
+    }
+  },
+  "decision_curve": {
+    "thresholds": [
+      0.02,
+      0.05,
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5
+    ],
+    "net_benefit": {
+      "Logistic regression": [
+        0.4745,
+        0.4582,
+        0.4311,
+        0.4042,
+        0.3901,
+        0.3473,
+        0.3413
+      ],
+      "LightGBM (monotone in age and shape)": [
+        0.4745,
+        0.4567,
+        0.4318,
+        0.4266,
+        0.3918,
+        0.3513,
+        0.3174
+      ]
+    },
+    "treat_all": [
+      0.4745,
+      0.4579,
+      0.4278,
+      0.3563,
+      0.2643,
+      0.1417,
+      -0.0299
+    ],
+    "treat_none": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "figures": [
+    "calibration_dark.png",
+    "calibration_light.png",
+    "conformal_sets_dark.png",
+    "conformal_sets_light.png",
+    "decision_curve_dark.png",
+    "decision_curve_light.png",
+    "roc_pr_dark.png",
+    "roc_pr_light.png"
+  ],
   "versions": {
     "python": "3.13.7",
-    "lightgbm": "4.6.0",
-    "xgboost": "3.1.2",
     "scikit-learn": "1.7.2",
-    "shap": "0.52.0"
+    "lightgbm": "4.6.0",
+    "shap": "0.52.0",
+    "numpy": "2.3.4"
   }
 }

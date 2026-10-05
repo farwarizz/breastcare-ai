@@ -40,14 +40,6 @@ try:
 except ImportError:
     pass
 
-_CAM_OK = False
-try:
-    from pytorch_grad_cam import GradCAM
-    from pytorch_grad_cam.utils.image import show_cam_on_image
-    _CAM_OK = True
-except ImportError:
-    pass
-
 try:
     from torchvision import transforms as T
     _TV_OK = True
