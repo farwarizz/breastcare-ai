@@ -1,15 +1,17 @@
 {
   "lgbm_mammographic": {
-    "accuracy": 71.76,
-    "auc": 0.7251,
-    "recall": 67.21,
-    "precision": 59.42,
-    "f1": 63.08,
-    "specificity": 74.31,
-    "false_negatives": 20,
-    "false_positives": 28
+    "accuracy": 79.04,
+    "auc": 0.8403,
+    "recall": 87.65,
+    "precision": 73.96,
+    "f1": 80.23,
+    "specificity": 70.93,
+    "false_negatives": 10,
+    "false_positives": 25,
+    "n_train": 664,
+    "n_test": 167
   },
-  "lgbm_optimal_threshold": 0.368874030453603,
+  "lgbm_optimal_threshold": 0.36762324864356993,
   "xgboost_wdbc": {
     "accuracy": 97.37,
     "auc": 0.9957,
@@ -18,7 +20,9 @@
     "f1": 96.39,
     "specificity": 98.61,
     "false_negatives": 2,
-    "false_positives": 1
+    "false_positives": 1,
+    "n_train": 455,
+    "n_test": 114
   },
   "xgb_optimal_threshold": 0.30000001192092896,
   "cv_comparison": {
@@ -53,5 +57,53 @@
       "recall": 95.88
     }
   },
-  "augmentation": "SMOTE"
+  "augmentation": "SMOTE",
+  "evaluation_protocol": "Single stratified 80/20 train/test split (random_state=42) per dataset. LightGBM early stopping and both Youden's-J decision thresholds are selected on the test split, so test metrics are optimistically biased (to be fixed in Phase 1 with a separate validation split). SMOTE, when imbalanced-learn is installed, is applied to the WDBC training split only. The 5-model comparison is stratified 10-fold CV on the WDBC training split. No probability calibration and no uncertainty intervals.",
+  "datasets": {
+    "mammographic": {
+      "name": "UCI Mammographic Mass",
+      "uci_id": 161,
+      "doi": "https://doi.org/10.24432/C53K6Z",
+      "license": "CC BY 4.0",
+      "source_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/mammographic-masses/mammographic_masses.data",
+      "raw_sha256": "072051c896fb14f8f25c64eed30ba1333290af41e6c9ffad4e1ca573daa865a8",
+      "raw_rows": 961,
+      "raw_missing": {
+        "birads": 2,
+        "age": 5,
+        "shape": 31,
+        "margin": 48,
+        "density": 76,
+        "severity": 0
+      },
+      "clean_rows": 831,
+      "benign": 428,
+      "malignant": 403,
+      "features": [
+        "age",
+        "shape",
+        "margin",
+        "density"
+      ],
+      "excluded_columns": {
+        "birads": "radiologist's assessment (label leakage)"
+      },
+      "target": "severity: 0 = benign, 1 = malignant"
+    },
+    "wdbc": {
+      "name": "Wisconsin Diagnostic Breast Cancer (WDBC)",
+      "source": "sklearn.datasets.load_breast_cancer (copy of UCI WDBC)",
+      "rows": 569,
+      "benign": 357,
+      "malignant": 212,
+      "n_features": 30
+    }
+  },
+  "versions": {
+    "python": "3.13.7",
+    "lightgbm": "4.6.0",
+    "xgboost": "3.1.2",
+    "scikit-learn": "1.7.2",
+    "shap": "0.52.0"
+  }
 }

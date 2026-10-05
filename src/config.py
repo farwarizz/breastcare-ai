@@ -14,6 +14,19 @@ DATA_RAW_DIR       = DATA_DIR / "raw"
 DATA_PROCESSED_DIR = DATA_DIR / "processed"
 CLEANED_CSV        = DATA_PROCESSED_DIR / "cleaned.csv"
 
+# ── UCI Mammographic Mass dataset (UCI id 161, CC BY 4.0) ────────
+# The raw file is the original UCI file, pinned by SHA-256. Training refuses
+# to run on any other file. Provenance: data/README.md
+MAMMO_UCI_ID     = 161
+MAMMO_RAW_PATH   = DATA_RAW_DIR / "mammographic_masses.data"
+MAMMO_SOURCE_URL = (
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/"
+    "mammographic-masses/mammographic_masses.data"
+)
+MAMMO_SHA256     = "072051c896fb14f8f25c64eed30ba1333290af41e6c9ffad4e1ca573daa865a8"
+MAMMO_DOI        = "https://doi.org/10.24432/C53K6Z"
+MAMMO_RAW_COLUMNS = ["birads", "age", "shape", "margin", "density", "severity"]
+
 # ── Model paths ─────────────────────────────────────────────────
 MODELS_DIR           = ROOT / "models"
 LGBM_MODEL_PATH      = MODELS_DIR / "mammographic_lgbm.pkl"
@@ -86,9 +99,9 @@ DENSITY_MAP = {
 
 FEATURE_NAMES = ["age", "shape", "margin", "density"]
 
-# ── LLM ─────────────────────────────────────────────────────────
-GEMINI_MODEL      = "gemini-2.5-flash"   # free tier: 1,500 req/day
-CLAUDE_MAX_TOKENS = 900
+# ── LLM (Google Gemini via its OpenAI-compatible endpoint) ───────
+GEMINI_MODEL   = "gemini-2.5-flash"   # free-tier key from Google AI Studio
+LLM_MAX_TOKENS = 900
 
 # ── Multi-agent pipeline ─────────────────────────────────────────
 MULTI_AGENT_ENABLED  = False   # opt-in via UI toggle

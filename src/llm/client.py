@@ -1,13 +1,13 @@
 """
 src/llm/client.py — Google Gemini API wrapper (via OpenAI-compatible endpoint).
-Free tier: 1,500 requests/day. Get a key at https://aistudio.google.com
+Get a free-tier key at https://aistudio.google.com
 """
 from __future__ import annotations
 from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from src.config import GEMINI_MODEL, CLAUDE_MAX_TOKENS, get_api_key
+from src.config import GEMINI_MODEL, LLM_MAX_TOKENS, get_api_key
 
 # Ordered list of models to try — each has its own free-tier quota pool
 _MODEL_FALLBACK_ORDER = [
@@ -49,7 +49,7 @@ def call_llm(messages: list[dict], system: str | None = None) -> str:
     api_key = get_api_key()
     if not api_key:
         raise ValueError(
-            "GEMINI_API_KEY not set. Add it to your farwa_env activate script.\n"
+            "GEMINI_API_KEY not set. Add it to a .env file (see .env.example).\n"
             "Get a free key (no credit card) at: https://aistudio.google.com"
         )
 
@@ -69,7 +69,7 @@ def call_llm(messages: list[dict], system: str | None = None) -> str:
         try:
             response = client.chat.completions.create(
                 model=model,
-                max_tokens=CLAUDE_MAX_TOKENS,
+                max_tokens=LLM_MAX_TOKENS,
                 messages=full_messages,
             )
             return response.choices[0].message.content

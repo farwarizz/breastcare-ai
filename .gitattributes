@@ -1,0 +1,3 @@
+# Store the raw dataset byte-for-byte (no line-ending conversion), so its
+# SHA-256 matches the official UCI file on every OS. See data/README.md.
+data/raw/** -text

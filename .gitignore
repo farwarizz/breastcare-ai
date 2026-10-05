@@ -1,10 +1,15 @@
 __pycache__/
 *.pyc
+.pytest_cache/
 .env
 farwa_env/
 .venv/
 venv/
-data/audit.db
+
+# Runtime state (SQLite audit log + its WAL/SHM side files, generated reports)
+data/audit.db*
 data/reports/
+
+# Local scratch scripts
 test_trace.py
 test_api.py
