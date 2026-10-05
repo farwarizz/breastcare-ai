@@ -45,6 +45,17 @@ def test_assess_image_returns_503_when_weights_fail_to_load(monkeypatch):
     assert "probability" not in r.json()
 
 
+def test_health_check_does_not_import_torch():
+    """The image model's torch stack loads only when an image is analysed."""
+    import subprocess, sys
+    code = ("import sys, server; from fastapi.testclient import TestClient; "
+            "c = TestClient(server.app); c.get('/health'); "
+            "print('torch' in sys.modules)")
+    out = subprocess.run([sys.executable, "-c", code], cwd=config.ROOT, capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr[-2000:]
+    assert out.stdout.strip().splitlines()[-1] == "False"
+
+
 def test_health_reports_models_truthfully(monkeypatch):
     monkeypatch.setattr(image_model, "is_available", lambda: False)
     body = client.get("/health").json()

@@ -23,59 +23,45 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 logger = logging.getLogger(__name__)
 
-# Deferred imports — torch/timm not required if model weights aren't present
-_TORCH_OK = False
-try:
-    import torch
-    import numpy as np
-    from PIL import Image as PILImage
-    _TORCH_OK = True
-except ImportError:
-    pass
-
-_TIMM_OK = False
-try:
-    import timm
-    _TIMM_OK = True
-except ImportError:
-    pass
-
-try:
-    from torchvision import transforms as T
-    _TV_OK = True
-except ImportError:
-    _TV_OK = False
-
 from src.config import MODELS_DIR
 
 IMG_MODEL_PATH = MODELS_DIR / "efficientnet_cbis.pth"
+_DEPENDENCIES = ("torch", "torchvision", "timm")   # optional: requirements-image.txt
 
-_TRANSFORM = None
-if _TORCH_OK and _TV_OK:
-    _TRANSFORM = T.Compose([
+
+def _dependencies_installed() -> bool:
+    """Checked without importing torch, so /health stays cheap."""
+    import importlib.util
+    return all(importlib.util.find_spec(m) is not None for m in _DEPENDENCIES)
+
+
+def is_available() -> bool:
+    """True only if the real weights file exists and torch/torchvision/timm are installed."""
+    return IMG_MODEL_PATH.exists() and _dependencies_installed()
+
+
+@lru_cache(maxsize=1)
+def _transform():
+    from torchvision import transforms as T
+    return T.Compose([
         T.Resize((224, 224)),
         T.ToTensor(),
         T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
 
 
-def is_available() -> bool:
-    """True only if the real weights file exists and torch/torchvision/timm import."""
-    return (
-        _TORCH_OK and _TIMM_OK and _TV_OK
-        and IMG_MODEL_PATH.exists()
-    )
-
-
 @lru_cache(maxsize=1)
 def _load_model():
-    if not _TORCH_OK or not _TIMM_OK:
-        raise RuntimeError("torch and timm required — install with: pip install torch torchvision timm")
+    if not _dependencies_installed():
+        raise RuntimeError("torch, torchvision and timm are required: "
+                           "pip install -r requirements-image.txt")
     if not IMG_MODEL_PATH.exists():
         raise FileNotFoundError(
             f"Image model weights not found at {IMG_MODEL_PATH}. "
             "Train on Kaggle and place efficientnet_cbis.pth in models/"
         )
+    import timm
+    import torch
     model = timm.create_model("efficientnet_b0", pretrained=False, num_classes=2)
     state = torch.load(str(IMG_MODEL_PATH), map_location="cpu", weights_only=True)
     model.load_state_dict(state)
@@ -110,9 +96,12 @@ def predict_image(pil_image) -> dict:
     if not is_available():
         raise RuntimeError("Image model not available — weights missing or torch not installed")
 
+    import numpy as np
+    import torch
+
     model = _load_model()
     img_rgb = pil_image.convert("RGB")
-    tensor = _TRANSFORM(img_rgb).unsqueeze(0)  # (1, 3, 224, 224)
+    tensor = _transform()(img_rgb).unsqueeze(0)  # (1, 3, 224, 224)
 
     with torch.no_grad():
         logits = model(tensor)
@@ -120,61 +109,60 @@ def predict_image(pil_image) -> dict:
 
     # Grad-CAM — manual implementation using PyTorch hooks
     cam_b64 = ""
-    if _TORCH_OK:
-        try:
-            # Hook into conv_head to capture activations and gradients
-            activations = {}
-            gradients = {}
+    try:
+        # Hook into conv_head to capture activations and gradients
+        activations = {}
+        gradients = {}
 
-            def fwd_hook(module, inp, out):
-                activations['value'] = out.detach()
+        def fwd_hook(module, inp, out):
+            activations['value'] = out.detach()
 
-            def bwd_hook(module, grad_in, grad_out):
-                gradients['value'] = grad_out[0].detach()
+        def bwd_hook(module, grad_in, grad_out):
+            gradients['value'] = grad_out[0].detach()
 
-            target_layer = model.conv_head
-            fh = target_layer.register_forward_hook(fwd_hook)
-            bh = target_layer.register_full_backward_hook(bwd_hook)
+        target_layer = model.conv_head
+        fh = target_layer.register_forward_hook(fwd_hook)
+        bh = target_layer.register_full_backward_hook(bwd_hook)
 
-            # Forward + backward for malignant class
-            tensor_cam = tensor.clone().requires_grad_(True)
-            output = model(tensor_cam)
-            model.zero_grad()
-            output[0, 1].backward()  # class 1 = malignant
+        # Forward + backward for malignant class
+        tensor_cam = tensor.clone().requires_grad_(True)
+        output = model(tensor_cam)
+        model.zero_grad()
+        output[0, 1].backward()  # class 1 = malignant
 
-            fh.remove()
-            bh.remove()
+        fh.remove()
+        bh.remove()
 
-            # Compute Grad-CAM
-            grads = gradients['value']        # (1, C, H, W)
-            acts = activations['value']       # (1, C, H, W)
-            weights = grads.mean(dim=[2, 3], keepdim=True)  # GAP over spatial dims
-            cam_map = torch.relu((weights * acts).sum(dim=1, keepdim=True))
-            cam_map = cam_map.squeeze().numpy()
-            cam_map = (cam_map - cam_map.min()) / (cam_map.max() - cam_map.min() + 1e-8)
+        # Compute Grad-CAM
+        grads = gradients['value']        # (1, C, H, W)
+        acts = activations['value']       # (1, C, H, W)
+        weights = grads.mean(dim=[2, 3], keepdim=True)  # GAP over spatial dims
+        cam_map = torch.relu((weights * acts).sum(dim=1, keepdim=True))
+        cam_map = cam_map.squeeze().numpy()
+        cam_map = (cam_map - cam_map.min()) / (cam_map.max() - cam_map.min() + 1e-8)
 
-            # Resize to 224×224 and overlay on original image
-            from PIL import Image as PILImg
-            cam_resized = np.array(PILImg.fromarray((cam_map * 255).astype(np.uint8)).resize((224, 224))) / 255.0
-            rgb_arr = np.array(img_rgb.resize((224, 224))).astype(np.float32) / 255.0
+        # Resize to 224×224 and overlay on original image
+        from PIL import Image as PILImg
+        cam_resized = np.array(PILImg.fromarray((cam_map * 255).astype(np.uint8)).resize((224, 224))) / 255.0
+        rgb_arr = np.array(img_rgb.resize((224, 224))).astype(np.float32) / 255.0
 
-            # Create heatmap overlay
-            import colorsys
-            heatmap = np.zeros((*cam_resized.shape, 3), dtype=np.float32)
-            for i in range(cam_resized.shape[0]):
-                for j in range(cam_resized.shape[1]):
-                    v = cam_resized[i, j]
-                    r, g, b = colorsys.hsv_to_rgb(max(0, (1 - v) * 0.6), 1.0, 1.0)
-                    heatmap[i, j] = [r, g, b]
+        # Create heatmap overlay
+        import colorsys
+        heatmap = np.zeros((*cam_resized.shape, 3), dtype=np.float32)
+        for i in range(cam_resized.shape[0]):
+            for j in range(cam_resized.shape[1]):
+                v = cam_resized[i, j]
+                r, g, b = colorsys.hsv_to_rgb(max(0, (1 - v) * 0.6), 1.0, 1.0)
+                heatmap[i, j] = [r, g, b]
 
-            overlay = np.clip(rgb_arr * 0.5 + heatmap * 0.5, 0, 1)
-            overlay_img = PILImg.fromarray((overlay * 255).astype(np.uint8))
+        overlay = np.clip(rgb_arr * 0.5 + heatmap * 0.5, 0, 1)
+        overlay_img = PILImg.fromarray((overlay * 255).astype(np.uint8))
 
-            buf = io.BytesIO()
-            overlay_img.save(buf, format="PNG")
-            cam_b64 = base64.b64encode(buf.getvalue()).decode()
-        except Exception as exc:
-            logger.warning("Grad-CAM failed: %s", exc)
+        buf = io.BytesIO()
+        overlay_img.save(buf, format="PNG")
+        cam_b64 = base64.b64encode(buf.getvalue()).decode()
+    except Exception as exc:
+        logger.warning("Grad-CAM failed: %s", exc)
 
     if prob >= 0.65:
         risk = "Elevated"

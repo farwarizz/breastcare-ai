@@ -104,7 +104,7 @@ src/pipeline.py
 | Gemini answers + regex safety filter | Active in `/api/chat` when `GEMINI_API_KEY` is set |
 | Chain-of-thought / multi-agent chat modes | Optional (mode selector in the chat); not evaluated |
 | Audit log (SQLite), PDF report, batch CSV prediction | Active |
-| EfficientNet-B0 image model (CBIS-DDSM) | Experimental: served only when its weights and torch/timm are installed, otherwise HTTP 503. No stored evaluation |
+| EfficientNet-B0 image model (CBIS-DDSM) | Experimental, optional install (`requirements-image.txt`); otherwise HTTP 503. No stored evaluation |
 | Gail / Tyrer-Cuzick (`/api/risk-profile`) | Simplified educational approximations, not the validated calculators |
 | Drift report (`/api/drift-report`) | Placeholder baselines, illustrative only |
 | GraphRAG hybrid retrieval | Not active: the knowledge graph has never been built, and the UI never requests it |
@@ -118,6 +118,7 @@ python -m venv .venv
 .venv\Scripts\activate                 # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 pip install sentence-transformers      # recommended: dense retrieval for the chat
+pip install -r requirements-image.txt  # optional: experimental image model (PyTorch)
 copy .env.example .env                 # macOS/Linux: cp .env.example .env
 uvicorn server:app --reload            # then open http://localhost:8000
 ```

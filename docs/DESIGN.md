@@ -77,7 +77,7 @@ Browser: app/index.html  ──fetch──►  FastAPI: server.py
 | Chain-of-thought / multi-agent modes | `src/agents/` | Optional (chat mode selector); not evaluated |
 | Audit log, PDF report, batch CSV | `src/audit/`, `src/analytics/batch_predict.py` | Active |
 | Dataset-wide SHAP | `src/analytics/global_shap.py` | Active in `/api/global-shap` |
-| EfficientNet-B0 image model | `src/ml/image_model.py` | Experimental; HTTP 503 unless the real weights and torch/timm are present |
+| EfficientNet-B0 image model | `src/ml/image_model.py` | Experimental, optional install (`requirements-image.txt`); HTTP 503 unless the real weights and torch/timm are present |
 | Simplified Gail / Tyrer-Cuzick | `src/risk/` | Active in `/api/risk-profile`; approximations, not the validated calculators |
 | Drift monitor | `src/analytics/model_monitor.py` | Placeholder baselines, illustrative only |
 | GraphRAG | `src/rag/graph_builder.py`, `graph_retriever.py` | Not active: no graph has been built |
@@ -215,7 +215,8 @@ suite is planned for Phase 2.
   Kaggle. The training and evaluation run is not stored in this repo; earlier project notes reported a
   validation AUC of about 0.62, which cannot be reproduced from the repo. `/api/assess-image` returns
   **HTTP 503** when the weights or dependencies are missing or fail to load. It never substitutes a
-  heuristic score.
+  heuristic score. PyTorch is an optional install and is imported only when an image is analysed,
+  so the deployed app stays small.
 - **Chain-of-thought / multi-agent:** CoT is one LLM call with a fixed six-step structure. Multi-agent
   runs Analyst → Clinician → Safety reviewer as three calls. Either one falls back to the single
   pipeline on error. Neither has been evaluated.
@@ -260,7 +261,7 @@ breastcare_ai/
 ├── server.py                 FastAPI app (serves app/index.html, API, /figures)
 ├── app/index.html            single-page frontend (the only frontend)
 ├── Procfile                  uvicorn server:app
-├── requirements.txt          runtime · requirements-dev.txt: training, tests, figures, MLflow
+├── requirements.txt          runtime · -image.txt: optional PyTorch image model · -dev.txt: training, tests, MLflow
 ├── data/                     README (provenance) · raw/ (checksum-pinned UCI file) · processed/
 ├── models/                   served_model.joblib · challenger_model.joblib · model_metadata.json ·
 │                             splits.json · efficientnet_cbis.pth (experimental image model)

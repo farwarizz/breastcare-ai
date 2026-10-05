@@ -37,10 +37,8 @@ fpdf2>=2.7.0
 # ── Config ───────────────────────────────────────────────────────
 python-dotenv>=1.0.0
 
-# ── Deep Learning (Image Classification) ─────────────────────────
-# CPU-only PyTorch. Grad-CAM is implemented with plain torch hooks (no extra package).
---extra-index-url https://download.pytorch.org/whl/cpu
-torch
-torchvision
-timm
+# ── Images (PDF reports, upload decoding) ────────────────────────
 Pillow>=10.0.0
+# The experimental image model (PyTorch) is an optional extra kept out of the
+# deployment: pip install -r requirements-image.txt. Without it,
+# /api/assess-image returns HTTP 503.
