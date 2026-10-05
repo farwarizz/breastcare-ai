@@ -32,4 +32,4 @@ This tool does not collect, store, or transmit personal health information. The 
 
 ## Contact and Research Context
 
-BreastCare AI was developed as an academic research prototype demonstrating the integration of gradient boosted tree models, SHAP explainability, FAISS retrieval-augmented generation, and Claude AI for educational purposes in the context of breast cancer screening research.
+BreastCare AI was developed as an academic research prototype demonstrating the integration of gradient boosted tree models, SHAP explainability, FAISS retrieval-augmented generation, and Google Gemini for educational purposes in the context of breast cancer screening research.

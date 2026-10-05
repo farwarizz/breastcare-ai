@@ -80,9 +80,10 @@ def build_prompt(
     user_question: str | None = None,
 ) -> list[dict]:
     """
-    Assemble the complete message list for the Claude API call.
+    Assemble the complete message list for the LLM call.
 
-    Returns list[dict] in Anthropic messages format:
+    Returns list[dict] in chat-messages format (the system prompt is added
+    by the LLM client):
         [{"role": "user", "content": "..."}]
     """
     prob      = prediction["probability"]
@@ -95,10 +96,9 @@ def build_prompt(
 {_format_features(features)}
 
 RISK ESTIMATE:
-  - Malignancy probability: {round(prob * 100, 1)}%
+  - Malignancy probability (uncalibrated model output, no uncertainty interval): {round(prob * 100, 1)}%
   - Risk category: {risk_cat}
   - Predicted class: {pred_class}
-  - Confidence band: {prediction.get('confidence_band', 'N/A')}
 
 SHAP EXPLANATION:
   {shap_text}

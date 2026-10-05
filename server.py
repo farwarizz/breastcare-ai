@@ -15,16 +15,18 @@ Core Endpoints:
     POST /api/chat             → full pipeline (ML + SHAP + RAG + Gemini)
 
 Extended Endpoints:
-    POST /api/assess-image     → EfficientNet image analysis + Grad-CAM
-    POST /api/risk-profile     → extended patient risk scoring
-    POST /api/compare-models   → A/B model comparison
+    POST /api/assess-image     → EfficientNet-B0 + Grad-CAM (experimental; 503 if the
+                                 real weights/dependencies are missing)
+    POST /api/risk-profile     → simplified Gail / Tyrer-Cuzick approximations
+    POST /api/compare-models   → compare the trained models that are available
     POST /api/batch-predict    → CSV batch prediction
     GET  /api/audit/history    → prediction audit trail
     GET  /api/audit/stats      → aggregate statistics
-    GET  /api/report/{id}      → download PDF report
+    POST /api/report           → download PDF report
     GET  /api/graph-status     → knowledge graph stats
-    GET  /api/drift-report     → model drift analysis
+    GET  /api/drift-report     → drift report (placeholder baselines, illustrative)
     GET  /api/global-shap      → dataset-wide SHAP analysis
+    GET  /api/model-info       → saved metrics + knowledge-base facts for the UI
     GET  /health               → system health check
 """
 from __future__ import annotations
@@ -201,32 +203,44 @@ def chat(req: ChatRequest):
 
 # ── Image Analysis ────────────────────────────────────────────────────────────
 
+IMAGE_MODEL_UNAVAILABLE = (
+    "Image model unavailable: this server does not have the trained CBIS-DDSM "
+    "weights (models/efficientnet_cbis.pth) and/or the inference dependencies "
+    "(torch, torchvision, timm). No image-based estimate was produced."
+)
+
+
 @app.post("/api/assess-image")
 async def assess_image(file: UploadFile = File(...)):
-    """Upload mammogram → EfficientNet risk score + Grad-CAM heatmap."""
-    from src.ml.image_model import is_available, predict_image, IMG_MODEL_PATH
-    if not is_available():
-        # Return demo mode response
-        try:
-            from PIL import Image as PILImage
-            data = await file.read()
-            img = PILImage.open(io.BytesIO(data))
-            from src.ml.image_model import predict_image_demo
-            return JSONResponse(predict_image_demo(img))
-        except Exception:
-            raise HTTPException(
-                status_code=503,
-                detail=f"Image model not ready. Train on Kaggle and place at {IMG_MODEL_PATH}",
-            )
+    """
+    Upload mammogram → EfficientNet-B0 score + Grad-CAM heatmap.
+    Returns 503 when the real model cannot run; never substitutes a heuristic score.
+    """
+    from src.ml import image_model
+
+    if not image_model.is_available():
+        raise HTTPException(status_code=503, detail=IMAGE_MODEL_UNAVAILABLE)
+    try:
+        image_model.ensure_loaded()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Image model unavailable: the weights failed to load ({exc}).",
+        )
 
     allowed = {"image/jpeg", "image/png", "image/jpg"}
     if file.content_type not in allowed:
         raise HTTPException(status_code=400, detail="Upload a JPEG or PNG mammogram image")
+
+    from PIL import Image as PILImage, UnidentifiedImageError
+    data = await file.read()
     try:
-        from PIL import Image as PILImage
-        data = await file.read()
         img = PILImage.open(io.BytesIO(data))
-        return JSONResponse(predict_image(img))
+    except UnidentifiedImageError:
+        raise HTTPException(status_code=400, detail="The uploaded file is not a readable image")
+
+    try:
+        return JSONResponse(image_model.predict_image(img))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -415,6 +429,18 @@ def global_shap():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── Model Info (source of truth for numbers shown in the UI) ─────────────────
+
+@app.get("/api/model-info")
+def model_info():
+    """Saved model metrics, dataset provenance and knowledge-base contents."""
+    try:
+        from src.model_info import get_model_info
+        return JSONResponse(get_model_info())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── Health Check ──────────────────────────────────────────────────────────────
 
 @app.get("/health")
@@ -438,6 +464,7 @@ def health():
                 "/api/audit/history", "/api/audit/stats",
                 "/api/report", "/api/graph-status",
                 "/api/drift-report", "/api/global-shap",
+                "/api/model-info",
             ],
         },
     }

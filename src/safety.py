@@ -63,7 +63,7 @@ def filter_response(raw_response: str, probability: float) -> dict:
 
     Parameters
     ----------
-    raw_response : str — raw text from Claude
+    raw_response : str — raw text from the LLM (Gemini)
     probability  : float — malignancy probability from the ML model
 
     Returns

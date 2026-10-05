@@ -1,11 +1,22 @@
 """
 src/ml/train.py — Multi-dataset training pipeline.
-Trains LightGBM on Mammographic Masses (UI-facing clinical tool)
-and XGBoost on WDBC (research model) with 5-model 10-fold CV comparison.
+Trains LightGBM on the UCI Mammographic Mass dataset (the model the app serves)
+and XGBoost on WDBC (research benchmark) with a 5-model 10-fold CV comparison.
+
+Data: training only runs on the official UCI file, verified by SHA-256
+(see data/README.md). If the file is missing or altered it stops with an
+error; it never substitutes generated data.
+
+Known limitation (scheduled for Phase 1): early stopping and the Youden
+decision thresholds are selected on the test split, so the reported test
+metrics are optimistically biased. EVALUATION_PROTOCOL below records this
+in model_metadata.json.
 
 Run:  python -m src.ml.train
 """
+import hashlib
 import json
+import platform
 import warnings
 import numpy as np
 import pandas as pd
@@ -21,6 +32,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 import lightgbm as lgb
+import sklearn
 import xgboost as xgb
 
 try:
@@ -41,6 +53,23 @@ from src.config import (
     XGBOOST_MODEL_PATH, XGBOOST_SHAP_PATH,
     MODEL_METADATA_PATH, WDBC_FEATURES_PATH,
     DECISION_THRESHOLD, FEATURE_NAMES,
+    SHAPE_MAP, MARGIN_MAP, DENSITY_MAP,
+    MAMMO_UCI_ID, MAMMO_RAW_PATH, MAMMO_SOURCE_URL, MAMMO_SHA256,
+    MAMMO_DOI, MAMMO_RAW_COLUMNS,
+)
+
+TEST_SIZE    = 0.2
+RANDOM_STATE = 42
+
+# Describes exactly what this script does — written to model_metadata.json.
+EVALUATION_PROTOCOL = (
+    "Single stratified 80/20 train/test split (random_state=42) per dataset. "
+    "LightGBM early stopping and both Youden's-J decision thresholds are selected "
+    "on the test split, so test metrics are optimistically biased (to be fixed in "
+    "Phase 1 with a separate validation split). SMOTE, when imbalanced-learn is "
+    "installed, is applied to the WDBC training split only. The 5-model comparison "
+    "is stratified 10-fold CV on the WDBC training split. No probability calibration "
+    "and no uncertainty intervals."
 )
 
 # ── helpers ──────────────────────────────────────────────────────
@@ -74,72 +103,110 @@ def _metrics(model, X_test, y_test, threshold=DECISION_THRESHOLD):
     }
 
 
-# ── Dataset 1: UCI Mammographic Masses ───────────────────────────
-def load_mammographic():
-    """
-    Load and clean UCI Mammographic Masses dataset.
-    Features: age (continuous), shape, margin, density (ordinal ints)
-    Target: severity (0=benign, 1=malignant)
-    BI-RADS excluded: data leakage — it IS the radiologist's conclusion.
-    Missing values coded as '?' — drop rows (< 4% missingness, ordinals).
-    """
-    raw_path = DATA_RAW_DIR / "mammographic_masses.data"
+# ── Dataset 1: UCI Mammographic Mass (id 161) ────────────────────
+# Documented UCI codes; anything else means the file is not what we expect.
+_VALID_CODES = {
+    "shape":    set(SHAPE_MAP),     # 1–4 (nominal)
+    "margin":   set(MARGIN_MAP),    # 1–5 (nominal)
+    "density":  set(DENSITY_MAP),   # 1–4 (ordinal)
+    "severity": {0, 1},             # 0 = benign, 1 = malignant
+}
 
-    if raw_path.exists():
-        print(f"  Loading mammographic data from {raw_path}")
-        df = pd.read_csv(raw_path, header=None,
-                         names=["birads", "age", "shape", "margin", "density", "severity"],
-                         na_values=["?"])
-    else:
-        print("  Raw file not found — generating synthetic replica (matches UCI statistics)")
-        rng = np.random.default_rng(42)
-        n = 961
-        # Simulate realistic UCI-like distributions
-        birads  = rng.integers(1, 6, n)
-        age     = rng.integers(18, 96, n).astype(float)
-        shape   = rng.integers(1, 5, n).astype(float)
-        margin  = rng.integers(1, 6, n).astype(float)
-        density = rng.integers(1, 5, n).astype(float)
-        # Severity: spiculated margin & irregular shape → higher malignancy prob
-        logit = (
-            -2.5
-            + 0.04 * (age - 50)
-            + 0.3  * (shape - 2.5)
-            + 0.7  * (margin - 3.0)
-            - 0.2  * (density - 2.5)
+
+def verify_raw_file(path: Path = MAMMO_RAW_PATH) -> str:
+    """
+    Return the SHA-256 of the raw file. Raises if the file is missing or is
+    not byte-identical to the official UCI file.
+    """
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Raw dataset not found at {path}. Fetch the real UCI file with "
+            "`python scripts/download_data.py` (training never substitutes generated data)."
         )
-        prob   = 1 / (1 + np.exp(-logit))
-        severity = (rng.uniform(size=n) < prob).astype(int)
-        df = pd.DataFrame({"birads": birads, "age": age, "shape": shape,
-                           "margin": margin, "density": density, "severity": severity})
-        # Inject ~3% missing values
-        for col in ["age", "shape", "margin", "density"]:
-            mask = rng.uniform(size=n) < 0.03
-            df.loc[mask, col] = np.nan
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != MAMMO_SHA256:
+        raise ValueError(
+            f"{path} is not the official UCI Mammographic Mass file "
+            f"(sha256 {digest}, expected {MAMMO_SHA256}). Refusing to train on it. "
+            "Re-fetch it with `python scripts/download_data.py --force`."
+        )
+    return digest
 
-    # Drop BI-RADS (data leakage) and rows with any NaN
-    df = df.drop(columns=["birads"]).dropna()
+
+def read_raw_mammographic(path: Path = MAMMO_RAW_PATH) -> pd.DataFrame:
+    """Read the headerless UCI file; '?' marks a missing value."""
+    return pd.read_csv(path, header=None, names=MAMMO_RAW_COLUMNS, na_values=["?"])
+
+
+def clean_mammographic(raw: pd.DataFrame) -> pd.DataFrame:
+    """
+    Features: age (years), shape, margin, density (integer codes).
+    Target: severity (0 = benign, 1 = malignant).
+    BI-RADS is dropped: it is the radiologist's assessment, so using it as a
+    feature would leak the conclusion into the model.
+    Rows with any missing feature are dropped (codes cannot be meaningfully imputed).
+    Raises ValueError if any value falls outside the documented UCI codes.
+    """
+    df = raw.drop(columns=["birads"]).dropna()
     df = df.astype({"shape": int, "margin": int, "density": int, "severity": int})
-    df = df[(df.severity.isin([0, 1]))]
 
-    print(f"  Cleaned: {len(df)} rows  |  Malignant: {df.severity.sum()}  "
-          f"|  Benign: {(df.severity == 0).sum()}")
+    problems = [
+        f"{col}: unexpected values {sorted(df.loc[~df[col].isin(valid), col].unique())}"
+        for col, valid in _VALID_CODES.items()
+        if not df[col].isin(valid).all()
+    ]
+    if not df["age"].between(1, 120).all():
+        problems.append("age: values outside 1-120")
+    if problems:
+        raise ValueError("Mammographic data failed validation — " + "; ".join(problems))
+
+    return df[FEATURE_NAMES + ["severity"]]
+
+
+def load_mammographic(path: Path = MAMMO_RAW_PATH):
+    """
+    Verify, load and clean the UCI Mammographic Mass file; save cleaned.csv.
+    Returns (cleaned DataFrame, provenance dict for model_metadata.json).
+    """
+    digest = verify_raw_file(path)
+    print(f"  Loading mammographic data from {path} (sha256 verified)")
+    raw = read_raw_mammographic(path)
+    df = clean_mammographic(raw)
+
+    print(f"  Raw: {len(raw)} rows  |  Cleaned: {len(df)} rows  |  "
+          f"Malignant: {int(df.severity.sum())}  |  Benign: {int((df.severity == 0).sum())}")
     df.to_csv(CLEANED_CSV, index=False)
-    return df
+
+    provenance = {
+        "name":         "UCI Mammographic Mass",
+        "uci_id":       MAMMO_UCI_ID,
+        "doi":          MAMMO_DOI,
+        "license":      "CC BY 4.0",
+        "source_url":   MAMMO_SOURCE_URL,
+        "raw_sha256":   digest,
+        "raw_rows":     int(len(raw)),
+        "raw_missing":  {col: int(n) for col, n in raw.isna().sum().items()},
+        "clean_rows":   int(len(df)),
+        "benign":       int((df.severity == 0).sum()),
+        "malignant":    int(df.severity.sum()),
+        "features":     list(FEATURE_NAMES),
+        "excluded_columns": {"birads": "radiologist's assessment (label leakage)"},
+        "target":       "severity: 0 = benign, 1 = malignant",
+    }
+    return df, provenance
 
 
 def train_lightgbm(df):
     """
-    Train LightGBM on Mammographic Masses — the UI-facing clinical tool.
-    4 features: age, shape, margin, density.
-    Uses SMOTE augmentation if imbalanced-learn is available.
+    Train LightGBM on the UCI Mammographic Mass data — the model the app serves.
+    4 features: age, shape, margin, density. No resampling.
     """
     print("\n── LightGBM on Mammographic Masses ─────────────────────")
     X = df[FEATURE_NAMES].values
     y = df["severity"].values
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
     )
 
     n_pos = int(y_train.sum()); n_neg = int((y_train==0).sum())
@@ -153,16 +220,19 @@ def train_lightgbm(df):
         random_state=42,
         verbose=-1,
     )
+    # NOTE (Phase 1): early stopping monitors the test split, which leaks
+    # test information into training. Kept as-is in Phase 0; see EVALUATION_PROTOCOL.
     model.fit(X_train, y_train,
               eval_set=[(X_test, y_test)],
               callbacks=[lgb.early_stopping(30, verbose=False),
                          lgb.log_evaluation(-1)])
 
-    # Optimal threshold via Youden's J
+    # Threshold via Youden's J — NOTE (Phase 1): chosen on the test split.
     optimal_threshold = _youden_threshold(model, X_test, y_test)
     print(f"  Optimal threshold (Youden's J): {optimal_threshold:.3f}")
 
     m = _metrics(model, X_test, y_test, threshold=optimal_threshold)
+    m["n_train"], m["n_test"] = int(len(X_train)), int(len(X_test))
     print(f"  Accuracy: {m['accuracy']}%  |  AUC: {m['auc']}  |  Recall: {m['recall']}%")
 
     # SHAP TreeExplainer
@@ -190,13 +260,15 @@ def load_wdbc():
 
 def train_xgboost(X, y):
     """
-    Train XGBoost on WDBC — research model demonstrating 30-feature ceiling.
-    Uses SMOTE augmentation if imbalanced-learn is available.
+    Train XGBoost on WDBC — research benchmark (not used by the app).
+    Uses SMOTE on the training split if imbalanced-learn is available.
     """
     print("\n── XGBoost on WDBC ─────────────────────────────────────")
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
     )
+
+    n_train = int(len(X_train))  # before any SMOTE resampling
 
     # SMOTE augmentation on training split only
     if _SMOTE_AVAILABLE:
@@ -223,10 +295,12 @@ def train_xgboost(X, y):
               eval_set=[(X_test, y_test)],
               verbose=False)
 
+    # Threshold via Youden's J — NOTE (Phase 1): chosen on the test split.
     optimal_threshold = _youden_threshold(model, X_test, y_test)
     print(f"  Optimal threshold (Youden's J): {optimal_threshold:.3f}")
 
     m = _metrics(model, X_test, y_test, threshold=optimal_threshold)
+    m["n_train"], m["n_test"] = n_train, int(len(X_test))
     print(f"  Accuracy: {m['accuracy']}%  |  AUC: {m['auc']}  |  Recall: {m['recall']}%  "
           f"|  FP: {m['false_positives']}  |  FN: {m['false_negatives']}")
 
@@ -246,7 +320,7 @@ def run_cv_comparison(X, y):
     """
     print("\n── 5-Model 10-Fold CV Comparison (WDBC) ───────────────")
     X_train, _, y_train, _ = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
     )
     cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
 
@@ -297,8 +371,8 @@ def main():
     ensure_dirs()
 
     # Dataset 1: Mammographic
-    print("\nDataset 1: UCI Mammographic Masses")
-    df = load_mammographic()
+    print("\nDataset 1: UCI Mammographic Mass (id 161)")
+    df, mammo_info = load_mammographic()
     lgbm_model, lgbm_metrics, lgbm_threshold = train_lightgbm(df)
 
     # Dataset 2: WDBC
@@ -313,7 +387,7 @@ def main():
     # 5-model CV comparison
     cv_results = run_cv_comparison(X, y)
 
-    # Save metadata (includes calibrated thresholds)
+    # Save metadata (metrics, Youden thresholds, provenance, protocol)
     metadata = {
         "lgbm_mammographic":      lgbm_metrics,
         "lgbm_optimal_threshold": lgbm_threshold,
@@ -321,9 +395,29 @@ def main():
         "xgb_optimal_threshold":  xgb_threshold,
         "cv_comparison":          cv_results,
         "augmentation":           "SMOTE" if _SMOTE_AVAILABLE else "none",
+        "evaluation_protocol":    EVALUATION_PROTOCOL,
+        "datasets": {
+            "mammographic": mammo_info,
+            "wdbc": {
+                "name":       "Wisconsin Diagnostic Breast Cancer (WDBC)",
+                "source":     "sklearn.datasets.load_breast_cancer (copy of UCI WDBC)",
+                "rows":       int(len(y)),
+                "benign":     int((y == 0).sum()),
+                "malignant":  int((y == 1).sum()),
+                "n_features": len(wdbc_features),
+            },
+        },
+        "versions": {
+            "python":       platform.python_version(),
+            "lightgbm":     lgb.__version__,
+            "xgboost":      xgb.__version__,
+            "scikit-learn": sklearn.__version__,
+            "shap":         shap.__version__,
+        },
     }
-    with open(MODEL_METADATA_PATH, "w") as f:
+    with open(MODEL_METADATA_PATH, "w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2)
+        f.write("\n")
 
     print("\n" + "=" * 60)
     print("Training complete. Models saved to models/")

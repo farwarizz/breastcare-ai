@@ -14,8 +14,14 @@ scipy>=1.12.0
 # ── Ensemble & Optimization ─────────────────────────────────────
 optuna>=3.0.0
 
+# ── Data verification (scripts/download_data.py) ────────────────
+ucimlrepo>=0.0.7
+
 # ── RAG & Embeddings ────────────────────────────────────────────
 faiss-cpu>=1.7.4
+# Dense query embeddings need sentence-transformers, which is left out here to
+# keep the deployment slim. Without it retrieval quality degrades badly — see
+# README "Known issues". Install locally with: pip install sentence-transformers
 
 # ── GraphRAG ─────────────────────────────────────────────────────
 networkx>=3.0
@@ -34,6 +40,11 @@ fpdf2>=2.7.0
 # ── Config ───────────────────────────────────────────────────────
 python-dotenv>=1.0.0
 
-# ── Deep Learning (for image model — requires GPU for training) ──
-# Install separately if using image analysis:
-#   pip install torch torchvision timm pytorch-grad-cam
+# ── Deep Learning (Image Classification) ─────────────────────────
+# CPU-only PyTorch — ~125MB instead of ~2GB GPU version
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+timm
+pytorch-grad-cam
+Pillow>=10.0.0

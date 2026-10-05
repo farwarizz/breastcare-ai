@@ -23,7 +23,11 @@ from scipy import stats
 
 logger = logging.getLogger(__name__)
 
-# Training distribution baselines (from UCI Mammographic Masses dataset)
+# Reference distributions for the drift checks.
+# NOTE: these are hand-entered PLACEHOLDER values. They were NOT computed from
+# the training data (the real UCI data is very different, e.g. ~90% of masses
+# have density 3), so drift reports are illustrative only until baselines are
+# derived from the training split.
 TRAINING_BASELINES = {
     "age": {"mean": 55.5, "std": 14.5, "min": 18, "max": 96},
     "shape": {"distribution": {1: 0.15, 2: 0.25, 3: 0.30, 4: 0.30}},
@@ -75,6 +79,7 @@ class PredictionMonitor:
 
         report = {
             "status": "ok",
+            "baseline_source": "placeholder values, not derived from the training data",
             "sample_size": n,
             "total_predictions": self.total_predictions,
             "alerts": [],

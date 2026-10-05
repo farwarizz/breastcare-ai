@@ -1,8 +1,10 @@
 """
-src/analytics/model_comparison.py — A/B model comparison across all available models.
+src/analytics/model_comparison.py — Compare the trained models that are available.
 
-Runs the same input through LightGBM, XGBoost, Ensemble, and (optionally)
-the image model, then produces a comparison table and agreement metrics.
+Runs the same input through LightGBM and, if one has been trained and saved,
+the stacking ensemble, then produces a comparison table and agreement metrics.
+With a single available model there is nothing to compare, and the agreement
+block says so.
 
 Usage:
     from src.analytics.model_comparison import compare_models
@@ -49,24 +51,11 @@ def compare_models(features: dict) -> dict[str, Any]:
         except Exception as e:
             logger.warning("LightGBM comparison failed: %s", e)
 
-    # Logistic Regression baseline (fast, interpretable)
-    try:
-        from sklearn.linear_model import LogisticRegression
-        from sklearn.preprocessing import StandardScaler
-        # Quick logistic regression on standardized features
-        # Uses domain knowledge: higher shape/margin/density and older age → higher risk
-        X_std = (X - np.array([[50, 2.5, 3, 2.5]])) / np.array([[15, 1, 1.2, 1]])
-        lr = LogisticRegression()
-        # Set coefficients based on clinical domain knowledge
-        lr.classes_ = np.array([0, 1])
-        lr.coef_ = np.array([[0.3, 0.4, 0.7, 0.2]])
-        lr.intercept_ = np.array([-0.5])
-        prob_lr = float(lr.predict_proba(X_std)[:, 1][0])
-        results["logistic"] = _format_result("Logistic Regression (Baseline)", prob_lr)
-    except Exception as e:
-        logger.warning("Logistic regression baseline failed: %s", e)
+    # Only trained models are compared. (An earlier "logistic regression
+    # baseline" here used hand-set coefficients and was never fitted to data,
+    # so it was removed.)
 
-    # Stacking Ensemble
+    # Stacking Ensemble — only if it has been trained and saved
     if ENSEMBLE_MODEL_PATH.exists():
         try:
             from src.ml.ensemble import StackingEnsemble
@@ -120,7 +109,10 @@ def _risk_category(prob: float) -> str:
 def _compute_agreement(probabilities: list[float]) -> dict[str, Any]:
     """Compute agreement metrics across model predictions."""
     if len(probabilities) < 2:
-        return {"sufficient_models": False}
+        return {
+            "sufficient_models": False,
+            "message": "Only one trained model is available, so there is nothing to compare yet.",
+        }
 
     probs = np.array(probabilities)
     classes = (probs >= DECISION_THRESHOLD).astype(int)

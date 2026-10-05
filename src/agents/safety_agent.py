@@ -42,7 +42,7 @@ AUDIT_NOTES: [brief safety audit summary]"""
 ---
 
 CONTEXT:
-Malignancy probability: {round(prob * 100, 1)}%
+Malignancy probability (uncalibrated model output): {round(prob * 100, 1)}%
 Risk category: {risk_cat}
 
 Review this response for safety violations. Check all 5 categories."""
