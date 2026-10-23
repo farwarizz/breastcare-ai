@@ -10,6 +10,11 @@
 *.gz binary
 *.db binary
 
+# Evaluation archives and the judge sheet are evidence: store them byte-for-byte so
+# their SHA256SUMS and report_as_run_sha256 values verify in any clone.
+evals/runs/** -text
+evals/*.csv -text
+
 # Store the raw dataset byte-for-byte (no line-ending conversion), so its
 # SHA-256 matches the official UCI file on every OS. See data/README.md.
 # (Kept last: later lines override the text=auto rule above.)
