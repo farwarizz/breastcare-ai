@@ -1,27 +1,22 @@
 # BreastCare AI — runtime dependencies (what the deployed app needs)
 # Install: pip install -r requirements.txt
-# Training, evaluation, tests and the WDBC appendix: pip install -r requirements-dev.txt
+# Training, evaluation, index building, tests and the WDBC appendix: pip install -r requirements-dev.txt
 
 # ── Core ML ──────────────────────────────────────────────────────
 lightgbm==4.6.0          # must match the version that trained models/*.joblib
-shap>=0.46.0
 scikit-learn==1.7.2      # must match the version that trained models/*.joblib
 pandas>=2.0.0
 numpy>=1.26.0
 joblib>=1.3.0
 scipy>=1.12.0
+# SHAP values are computed in closed form (linear model) or with LightGBM's native
+# TreeSHAP (pred_contrib=True), so the shap package is not needed.
 
-# ── Data verification (scripts/download_data.py) ────────────────
-ucimlrepo>=0.0.7
-
-# ── RAG & Embeddings ────────────────────────────────────────────
-faiss-cpu>=1.7.4
-# Dense query embeddings need sentence-transformers, which is left out here to
-# keep the deployment slim. Without it retrieval quality degrades badly — see
-# README "Known issues". Install locally with: pip install sentence-transformers
-
-# ── GraphRAG ─────────────────────────────────────────────────────
-networkx>=3.0
+# ── Retrieval ────────────────────────────────────────────────────
+# The served mode (RETRIEVAL_MODE in src/config.py, chosen by src/evals/retrieval.py)
+# is BM25, implemented in src/rag/bm25.py with no extra dependency. The dense and
+# hybrid modes need the embedders in requirements-dev.txt; without them the
+# retriever falls back to BM25 and logs a warning.
 
 # ── LLM ──────────────────────────────────────────────────────────
 openai>=1.0.0

@@ -1,4 +1,4 @@
-# BreastCare AI — training, evaluation and test dependencies
+# BreastCare AI — training, evaluation, index-building and test dependencies
 # Install: pip install -r requirements-dev.txt
 -r requirements.txt
 -r requirements-image.txt
@@ -6,6 +6,8 @@
 pytest>=8.0
 httpx>=0.27          # FastAPI TestClient
 matplotlib>=3.8      # evaluation figures (src/ml/figures.py)
-sentence-transformers>=2.2   # dense retrieval, as used when building the index
+ucimlrepo>=0.0.7     # scripts/download_data.py cross-checks the raw UCI file
+fastembed>=0.3       # dense retrieval: all-MiniLM-L6-v2 (ONNX) and the ms-marco cross-encoder
+model2vec>=0.3       # dense retrieval: potion-base-8M static embeddings
 xgboost>=2.0.0       # experiments/wdbc_benchmark.py only
 mlflow>=2.10         # optional experiment tracking (logged when installed)

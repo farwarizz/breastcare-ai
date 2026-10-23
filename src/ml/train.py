@@ -29,7 +29,6 @@ from pathlib import Path
 import joblib
 import lightgbm as lgb
 import numpy as np
-import shap
 import sklearn
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -293,7 +292,7 @@ def main() -> None:
         "decision_curve": dca,
         "figures": sorted(figures),
         "versions": {"python": platform.python_version(), "scikit-learn": sklearn.__version__,
-                     "lightgbm": lgb.__version__, "shap": shap.__version__,
+                     "lightgbm": lgb.__version__,
                      "numpy": np.__version__},
     }
     with open(MODEL_METADATA_PATH, "w", encoding="utf-8") as f:

@@ -935,7 +935,6 @@
     "python": "3.13.7",
     "scikit-learn": "1.7.2",
     "lightgbm": "4.6.0",
-    "shap": "0.52.0",
     "numpy": "2.3.4"
   }
 }

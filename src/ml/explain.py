@@ -6,7 +6,8 @@ src/ml/explain.py — Per-feature contributions (SHAP values) for a trained mode
   of an input column is coef · (x − mean over the training data); one-hot
   columns are summed back into their original feature. shap.LinearExplainer
   computes the same quantity.
-- LightGBM: TreeSHAP (shap.TreeExplainer), also in log-odds space.
+- LightGBM: exact TreeSHAP computed by LightGBM itself (pred_contrib=True), also
+  in log-odds space, so the shap package is not needed at runtime.
 
 In both cases base_value + sum(contributions) equals the model's log-odds
 before calibration. Calibration is a monotone map, so the signs and ranking of
@@ -48,12 +49,6 @@ def linear_background(pipeline, X_train: pd.DataFrame) -> dict:
     return {"background_mean": Z.mean(axis=0), "column_groups": groups}
 
 
-@lru_cache(maxsize=2)
-def _tree_explainer(which: str):
-    import shap
-    return shap.TreeExplainer(load_bundle(which)["estimator"])
-
-
 def contributions(df: pd.DataFrame, which: str = "served") -> tuple[float, np.ndarray]:
     """(base value, contributions [n_rows × 4]) in log-odds space."""
     bundle = load_bundle(which)
@@ -69,12 +64,10 @@ def contributions(df: pd.DataFrame, which: str = "served") -> tuple[float, np.nd
             out[:, g] += cols[:, j]
         base = float(lr.intercept_[0] + coef @ mu)
         return base, out
-    explainer = _tree_explainer(which)
-    sv = explainer.shap_values(X)
-    sv = sv[1] if isinstance(sv, list) else sv
-    ev = explainer.expected_value
-    base = float(ev[1] if np.ndim(ev) else ev)
-    return base, np.asarray(sv, dtype=float)
+    # LightGBM computes exact TreeSHAP itself: one column per feature plus the
+    # expected value (base) in the last column, in raw log-odds.
+    contrib = np.asarray(bundle["estimator"].predict_proba(X, pred_contrib=True), dtype=float)
+    return float(contrib[0, -1]), contrib[:, :-1]
 
 
 def method_name(which: str = "served") -> str:
