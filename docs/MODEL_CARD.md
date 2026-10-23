@@ -72,9 +72,11 @@ excluded from the inputs because it would leak the label; it is used only as a r
   mass. The decision curve in the evaluation report shows whether the model adds value at the low
   thresholds clinicians use for recommending biopsy (about 2%).
 - **Over-reliance:** outputs are labelled as research estimates, carry a conformal set that says when
-  the model cannot separate outcomes, and every LLM answer passes a diagnostic-language filter.
-- **Privacy:** the dataset is de-identified public research data; the app stores entered features in a
-  local SQLite audit log.
+  the model cannot separate outcomes, and in the default chat mode every LLM answer passes input guardrails and a
+  diagnostic-language filter. The assistant is evaluated separately (retrieval, faithfulness, red team) in
+  [reports/rag_evaluation.md](../reports/rag_evaluation.md); its numbers do not describe the risk model.
+- **Privacy:** the dataset is de-identified public research data; the app can store entered features in a
+  local SQLite audit log when an API client starts an audit session; the web UI does not start one.
 
 ## Caveats and recommendations
 

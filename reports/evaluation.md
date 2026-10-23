@@ -121,4 +121,4 @@ On 164 test rows (3 excluded: BI-RADS missing or outside the documented 1–5 ra
 
 ## Environment
 
-python 3.13.7, scikit-learn 1.7.2, lightgbm 4.6.0, shap 0.52.0, numpy 2.3.4. Knowledge base: 32 chunks from 4 documents.
+python 3.13.7, scikit-learn 1.7.2, lightgbm 4.6.0, numpy 2.3.4. Knowledge base: 103 chunks from 10 documents.
