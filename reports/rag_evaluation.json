@@ -1,0 +1,583 @@
+{
+  "n_questions": 177,
+  "n_answerable": 161,
+  "n_unanswerable": 16,
+  "kinds": {
+    "category": 18,
+    "communication": 8,
+    "descriptor": 28,
+    "glossary": 14,
+    "imaging": 22,
+    "risk": 18,
+    "screening": 18,
+    "tool": 11,
+    "treatment": 14,
+    "who": 10
+  },
+  "n_chunks": 103,
+  "chunks_sha256": "56cffbd56e68b49c055ecbda99a6e622886ec124dcc3903d301e082ba1a1c66c",
+  "modes": {
+    "bm25": {
+      "metrics": {
+        "hit@1": {
+          "value": 0.7267,
+          "ci": [
+            0.6522,
+            0.795
+          ]
+        },
+        "hit@3": {
+          "value": 0.9441,
+          "ci": [
+            0.9068,
+            0.9752
+          ]
+        },
+        "hit@5": {
+          "value": 0.9627,
+          "ci": [
+            0.9317,
+            0.9876
+          ]
+        },
+        "mrr@10": {
+          "value": 0.8288,
+          "ci": [
+            0.7806,
+            0.8725
+          ]
+        },
+        "ndcg@5": {
+          "value": 0.7899,
+          "ci": [
+            0.7456,
+            0.8305
+          ]
+        }
+      },
+      "latency_ms": 0.2
+    },
+    "dense:potion": {
+      "metrics": {
+        "hit@1": {
+          "value": 0.5839,
+          "ci": [
+            0.5093,
+            0.6584
+          ]
+        },
+        "hit@3": {
+          "value": 0.8199,
+          "ci": [
+            0.764,
+            0.8758
+          ]
+        },
+        "hit@5": {
+          "value": 0.8758,
+          "ci": [
+            0.8261,
+            0.9255
+          ]
+        },
+        "mrr@10": {
+          "value": 0.716,
+          "ci": [
+            0.6613,
+            0.7697
+          ]
+        },
+        "ndcg@5": {
+          "value": 0.6862,
+          "ci": [
+            0.6345,
+            0.7382
+          ]
+        }
+      },
+      "latency_ms": 0.4
+    },
+    "hybrid:potion": {
+      "metrics": {
+        "hit@1": {
+          "value": 0.7578,
+          "ci": [
+            0.6894,
+            0.8261
+          ]
+        },
+        "hit@3": {
+          "value": 0.913,
+          "ci": [
+            0.8634,
+            0.9503
+          ]
+        },
+        "hit@5": {
+          "value": 0.9689,
+          "ci": [
+            0.9379,
+            0.9938
+          ]
+        },
+        "mrr@10": {
+          "value": 0.8409,
+          "ci": [
+            0.7956,
+            0.8853
+          ]
+        },
+        "ndcg@5": {
+          "value": 0.8035,
+          "ci": [
+            0.7628,
+            0.843
+          ]
+        }
+      },
+      "latency_ms": 0.6
+    },
+    "dense:minilm": {
+      "metrics": {
+        "hit@1": {
+          "value": 0.7578,
+          "ci": [
+            0.6957,
+            0.8199
+          ]
+        },
+        "hit@3": {
+          "value": 0.882,
+          "ci": [
+            0.8323,
+            0.9317
+          ]
+        },
+        "hit@5": {
+          "value": 0.9379,
+          "ci": [
+            0.9006,
+            0.9752
+          ]
+        },
+        "mrr@10": {
+          "value": 0.8317,
+          "ci": [
+            0.7844,
+            0.8775
+          ]
+        },
+        "ndcg@5": {
+          "value": 0.7925,
+          "ci": [
+            0.7466,
+            0.8373
+          ]
+        }
+      },
+      "latency_ms": 4.8
+    },
+    "hybrid:minilm": {
+      "metrics": {
+        "hit@1": {
+          "value": 0.8012,
+          "ci": [
+            0.7391,
+            0.8634
+          ]
+        },
+        "hit@3": {
+          "value": 0.9441,
+          "ci": [
+            0.9068,
+            0.9752
+          ]
+        },
+        "hit@5": {
+          "value": 0.9814,
+          "ci": [
+            0.9565,
+            1.0
+          ]
+        },
+        "mrr@10": {
+          "value": 0.8774,
+          "ci": [
+            0.8378,
+            0.9153
+          ]
+        },
+        "ndcg@5": {
+          "value": 0.8456,
+          "ci": [
+            0.8095,
+            0.8793
+          ]
+        }
+      },
+      "latency_ms": 5.0
+    },
+    "bm25+rerank": {
+      "metrics": {
+        "hit@1": {
+          "value": 0.8944,
+          "ci": [
+            0.8447,
+            0.9379
+          ]
+        },
+        "hit@3": {
+          "value": 0.9565,
+          "ci": [
+            0.9253,
+            0.9876
+          ]
+        },
+        "hit@5": {
+          "value": 0.9876,
+          "ci": [
+            0.9689,
+            1.0
+          ]
+        },
+        "mrr@10": {
+          "value": 0.9319,
+          "ci": [
+            0.8987,
+            0.9616
+          ]
+        },
+        "ndcg@5": {
+          "value": 0.8848,
+          "ci": [
+            0.8515,
+            0.9144
+          ]
+        }
+      },
+      "latency_ms": 1507.6
+    },
+    "hybrid:potion+rerank": {
+      "metrics": {
+        "hit@1": {
+          "value": 0.8882,
+          "ci": [
+            0.8385,
+            0.9317
+          ]
+        },
+        "hit@3": {
+          "value": 0.9503,
+          "ci": [
+            0.913,
+            0.9814
+          ]
+        },
+        "hit@5": {
+          "value": 0.9752,
+          "ci": [
+            0.9503,
+            1.0
+          ]
+        },
+        "mrr@10": {
+          "value": 0.9252,
+          "ci": [
+            0.8894,
+            0.957
+          ]
+        },
+        "ndcg@5": {
+          "value": 0.8747,
+          "ci": [
+            0.8377,
+            0.9093
+          ]
+        }
+      },
+      "latency_ms": 1173.3
+    },
+    "hybrid:minilm+rerank": {
+      "metrics": {
+        "hit@1": {
+          "value": 0.8944,
+          "ci": [
+            0.8447,
+            0.9379
+          ]
+        },
+        "hit@3": {
+          "value": 0.9565,
+          "ci": [
+            0.9253,
+            0.9876
+          ]
+        },
+        "hit@5": {
+          "value": 0.9814,
+          "ci": [
+            0.9565,
+            1.0
+          ]
+        },
+        "mrr@10": {
+          "value": 0.9314,
+          "ci": [
+            0.8978,
+            0.9614
+          ]
+        },
+        "ndcg@5": {
+          "value": 0.8809,
+          "ci": [
+            0.8469,
+            0.9128
+          ]
+        }
+      },
+      "latency_ms": 1101.2
+    }
+  },
+  "selection": {
+    "rule": "highest Hit@3; a cheaper mode wins if within 0.02 of the best (cost order: bm25, dense:potion, hybrid:potion, dense:minilm, hybrid:minilm, bm25+rerank, hybrid:potion+rerank, hybrid:minilm+rerank)",
+    "best": "bm25+rerank",
+    "chosen": "bm25"
+  },
+  "paired_hit3_vs_bm25": {
+    "dense:potion": {
+      "value": -0.1242,
+      "ci": [
+        -0.1863,
+        -0.0683
+      ]
+    },
+    "hybrid:potion": {
+      "value": -0.0311,
+      "ci": [
+        -0.0621,
+        0.0
+      ]
+    },
+    "dense:minilm": {
+      "value": -0.0621,
+      "ci": [
+        -0.118,
+        -0.0062
+      ]
+    },
+    "hybrid:minilm": {
+      "value": 0.0,
+      "ci": [
+        -0.0311,
+        0.0311
+      ]
+    },
+    "bm25+rerank": {
+      "value": 0.0124,
+      "ci": [
+        -0.0186,
+        0.0435
+      ]
+    },
+    "hybrid:potion+rerank": {
+      "value": 0.0062,
+      "ci": [
+        -0.0248,
+        0.0373
+      ]
+    },
+    "hybrid:minilm+rerank": {
+      "value": 0.0124,
+      "ci": [
+        -0.0186,
+        0.0435
+      ]
+    }
+  },
+  "hit3_by_kind": {
+    "bm25": {
+      "category": 0.889,
+      "communication": 0.875,
+      "descriptor": 1.0,
+      "glossary": 0.929,
+      "imaging": 0.909,
+      "risk": 1.0,
+      "screening": 0.944,
+      "tool": 1.0,
+      "treatment": 0.929,
+      "who": 0.9
+    },
+    "dense:potion": {
+      "category": 0.667,
+      "communication": 1.0,
+      "descriptor": 0.929,
+      "glossary": 0.857,
+      "imaging": 0.818,
+      "risk": 0.833,
+      "screening": 0.556,
+      "tool": 0.909,
+      "treatment": 0.786,
+      "who": 1.0
+    },
+    "hybrid:potion": {
+      "category": 0.778,
+      "communication": 0.875,
+      "descriptor": 1.0,
+      "glossary": 0.929,
+      "imaging": 0.909,
+      "risk": 0.944,
+      "screening": 0.833,
+      "tool": 1.0,
+      "treatment": 0.929,
+      "who": 0.9
+    },
+    "dense:minilm": {
+      "category": 0.722,
+      "communication": 0.875,
+      "descriptor": 0.929,
+      "glossary": 0.857,
+      "imaging": 0.955,
+      "risk": 0.944,
+      "screening": 0.833,
+      "tool": 0.727,
+      "treatment": 0.929,
+      "who": 1.0
+    },
+    "hybrid:minilm": {
+      "category": 0.889,
+      "communication": 0.875,
+      "descriptor": 1.0,
+      "glossary": 0.929,
+      "imaging": 0.955,
+      "risk": 1.0,
+      "screening": 0.889,
+      "tool": 0.909,
+      "treatment": 1.0,
+      "who": 0.9
+    },
+    "bm25+rerank": {
+      "category": 0.944,
+      "communication": 1.0,
+      "descriptor": 1.0,
+      "glossary": 1.0,
+      "imaging": 0.955,
+      "risk": 1.0,
+      "screening": 0.778,
+      "tool": 1.0,
+      "treatment": 1.0,
+      "who": 0.9
+    },
+    "hybrid:potion+rerank": {
+      "category": 0.944,
+      "communication": 1.0,
+      "descriptor": 1.0,
+      "glossary": 0.929,
+      "imaging": 0.955,
+      "risk": 1.0,
+      "screening": 0.778,
+      "tool": 1.0,
+      "treatment": 1.0,
+      "who": 0.9
+    },
+    "hybrid:minilm+rerank": {
+      "category": 0.944,
+      "communication": 1.0,
+      "descriptor": 1.0,
+      "glossary": 1.0,
+      "imaging": 0.955,
+      "risk": 1.0,
+      "screening": 0.778,
+      "tool": 1.0,
+      "treatment": 1.0,
+      "who": 0.9
+    }
+  },
+  "query_construction": {
+    "bare_question": {
+      "hit@1": {
+        "value": 0.7267,
+        "ci": [
+          0.6522,
+          0.795
+        ]
+      },
+      "hit@3": {
+        "value": 0.9441,
+        "ci": [
+          0.9068,
+          0.9752
+        ]
+      },
+      "hit@5": {
+        "value": 0.9627,
+        "ci": [
+          0.9317,
+          0.9876
+        ]
+      },
+      "mrr@10": {
+        "value": 0.8288,
+        "ci": [
+          0.7806,
+          0.8725
+        ]
+      },
+      "ndcg@5": {
+        "value": 0.7899,
+        "ci": [
+          0.7456,
+          0.8305
+        ]
+      }
+    },
+    "shap_prefix_plus_question": {
+      "hit@1": {
+        "value": 0.2671,
+        "ci": [
+          0.1988,
+          0.3354
+        ]
+      },
+      "hit@3": {
+        "value": 0.5963,
+        "ci": [
+          0.5217,
+          0.6708
+        ]
+      },
+      "hit@5": {
+        "value": 0.6832,
+        "ci": [
+          0.6087,
+          0.7516
+        ]
+      },
+      "mrr@10": {
+        "value": 0.4529,
+        "ci": [
+          0.3973,
+          0.5107
+        ]
+      },
+      "ndcg@5": {
+        "value": 0.4358,
+        "ci": [
+          0.3777,
+          0.4936
+        ]
+      }
+    },
+    "hit3_difference_bare_minus_prefixed": {
+      "value": 0.3478,
+      "ci": [
+        0.2671,
+        0.4286
+      ]
+    }
+  },
+  "explanation_queries": {
+    "n_cases": 6,
+    "hit@3": 1.0,
+    "mrr@10": 1.0
+  }
+}

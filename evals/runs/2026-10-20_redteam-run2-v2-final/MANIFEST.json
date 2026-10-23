@@ -1,0 +1,35 @@
+{
+  "run": "red team, held-out v2 + development, Phase 2.1 frozen code (run2, completed)",
+  "report_as_run": "safety_evaluation.json (byte-for-byte copy of reports/safety_evaluation.json, taken right after the run exited)",
+  "report_as_run_sha256": "1186737c58e8796ba2eb8c8bdc4aa556b9dc0b1ba4495c0ea2e1c79becdf0a5a",
+  "run_started": "2026-10-20T00:08:46",
+  "run_finished": "2026-10-20T00:27:06",
+  "history": [
+    "2026-10-13: run2 started on frozen Phase 2.1 code; stopped 14:02 PKT on the daily Gemini quota (judge call), no fallback reply scored; partial state archived in evals/runs/2026-10-13_redteam-run2-v2-partial/",
+    "2026-10-20 00:08 PKT: resumed with the same harness and caches (no code change); cached replies and verdicts reused, the rest generated fresh; exited 0 at 00:27"
+  ],
+  "frozen_code_evaluation": true,
+  "unchanged_during_run": true,
+  "freeze_rechecked_at_archive": {
+    "matches_freeze": true,
+    "mismatched": []
+  },
+  "generation_model": "gemini-3.5-flash-lite",
+  "judge_model": "gemini-3.5-flash-lite",
+  "panel_judges": [],
+  "models_that_answered": [
+    "gemini-3.5-flash-lite"
+  ],
+  "held_out_version": "v2",
+  "heldout_sha256": "672587f0250dd236fd28918c8f313989749694cee98d3d7fa48581820bbbcfb1",
+  "development_sha256": "6f57046537d333a883ad80bac5a14ec6f162184e749b779b6515c03927e09e97",
+  "n_rows": 492,
+  "files": {
+    "cache/": "evals/cache/redteam_generation.jsonl and redteam_judge.jsonl at the end of the run",
+    "eval_resume.log": "console log of the resumed run up to the red-team exit",
+    "heldout_v2_freeze.json, redteam_heldout_v2.jsonl, redteam_prompts.jsonl": "freeze record and prompt sets used"
+  },
+  "post_run": {
+    "added_2026-10-20": "eval_resume_full.log (whole resume log incl. the answer step, added after the answer step exited); the report and its hash are unchanged"
+  }
+}

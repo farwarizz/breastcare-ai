@@ -1,0 +1,15 @@
+{
+  "frozen_at": "2026-10-13 (before evals/redteam_heldout_v2.jsonl was written)",
+  "rule": "src/guardrails.py, the system prompts and the output filter must not change because of held-out v2 results",
+  "sha256": {
+    "src/guardrails.py": "c674cb61b62d35711ea4bd57dd7d8d8b803bcb6ca83163fe03958ace54ad0ace",
+    "src/safety.py": "59dd14f6f38a5b4e5f97825d492d02bf4ae6111129db8ce2b240abac3ef28e54",
+    "src/pipeline.py": "dbc487acbaadbc12f861204eb1ff338636fbc0e1015855c6b2d76a3975b47cfb",
+    "src/rag/prompt_builder.py": "c82e3fb129d804e96728dfb34dd59e647fcdeb7f206a01693f24aad4296f7483",
+    "src/agents/orchestrator.py": "17e0956733e469708a14fd8a475a297bb98052a43d1a16d7393f0435ab3a01d2",
+    "src/llm/client.py": "b134c85d1beffe1b242a31e17648931b07384cc4324920132169172d67be6e84",
+    "src/config.py": "85a3b4e1ecf25137e17c41018f4ec88123b94da54bf17626d0eb975eea276a86",
+    "knowledge_base/chunks/chunks.jsonl": "f0e6298360cdae562ed2c6e77a0e9ae5dec74c2eaa84bf4aefefc9b6619d4f38",
+    "evals/redteam_prompts.jsonl": "6f57046537d333a883ad80bac5a14ec6f162184e749b779b6515c03927e09e97"
+  }
+}

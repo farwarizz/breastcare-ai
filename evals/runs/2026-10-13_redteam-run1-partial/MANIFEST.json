@@ -1,0 +1,37 @@
+{
+  "run": "red-team run 1 (development + held-out), started 2026-10-13 ~10:50 PKT, stopped 11:3x PKT",
+  "status": "INCOMPLETE: stopped at item 221/332 (held_out baseline htx05) by QuotaExhausted on the judge model",
+  "items_completed": 220,
+  "items_total": 332,
+  "git_head": "94f31a21f6e6b7365156780e1a4df9d2b28493e1",
+  "working_tree": "uncommitted Phase 2 changes; exact diff in working_tree.diff",
+  "safety_code_sha256": "31fd993c52397c6f9710768faae30b068fbb130fb2530af3db779d33099dec3f",
+  "config": {
+    "GEMINI_MODEL": "gemini-3.5-flash-lite",
+    "LLM_FALLBACK_MODELS": [
+      "gemini-2.5-flash",
+      "gemini-3.5-flash"
+    ],
+    "LLM_MODEL_PARAMS": {
+      "gemini-2.5-flash": {
+        "reasoning_effort": "none"
+      },
+      "gemini-3.5-flash-lite": {
+        "reasoning_effort": "minimal"
+      },
+      "gemini-3.5-flash": {
+        "reasoning_effort": "minimal"
+      }
+    },
+    "JUDGE_MODEL": "gemini-3.5-flash-lite",
+    "LLM_MAX_TOKENS": 1500,
+    "RETRIEVAL_MODE": "bm25",
+    "RETRIEVAL_QUERY": "question",
+    "CHUNK_TOP_K": 3
+  },
+  "index": {
+    "n_chunks": 101,
+    "chunks_sha256": "a6f320da7f53559a2027b92345d1fcacc2d8a8ac4181699b2603ccb4f9753cf8"
+  },
+  "note": "reports/safety_evaluation.json in this folder is the STALE previous report (the run writes it only at the end); the run's partial results live in cache/ and eval.log"
+}

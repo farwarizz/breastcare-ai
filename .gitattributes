@@ -1,3 +1,16 @@
+# Check text files out with LF on every OS (Git for Windows defaults to CRLF), so the
+# byte hashes in evals/*_freeze.json and the evaluation provenance match a fresh clone.
+* text=auto eol=lf
+*.npy binary
+*.joblib binary
+*.pkl binary
+*.pth binary
+*.png binary
+*.pdf binary
+*.gz binary
+*.db binary
+
 # Store the raw dataset byte-for-byte (no line-ending conversion), so its
 # SHA-256 matches the official UCI file on every OS. See data/README.md.
+# (Kept last: later lines override the text=auto rule above.)
 data/raw/** -text

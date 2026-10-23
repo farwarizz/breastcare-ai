@@ -1,0 +1,24 @@
+{
+  "description": "answer-quality evaluation on the Phase 2.1 frozen code and the 103-chunk index (completed)",
+  "run": "2026-10-20 00:27-00:33 PKT, same resume loop as the red team (evals/runs/2026-10-20_redteam-run2-v2-final/), exit 0",
+  "report_as_run": "answer_evaluation.json (byte-for-byte copy of reports/answer_evaluation.json, taken right after the run exited)",
+  "report_as_run_sha256": "b1c81f505151fa1d368f52e62f00813d048fcb924727f9b2167c323cf6ca5460",
+  "provenance": {
+    "chunks_sha256": "56cffbd56e68b49c055ecbda99a6e622886ec124dcc3903d301e082ba1a1c66c",
+    "system_prompt_sha256": "10d5d32c624aa98b9820d250fe1b9bce59067e11dda8bb53f191e1be81993e3f"
+  },
+  "provenance_matches_code_at_archive": true,
+  "freeze_rechecked_at_archive": {
+    "matches_freeze": true,
+    "mismatched": []
+  },
+  "generation_models_used": {
+    "gemini-3.5-flash-lite": 52
+  },
+  "judge_model": "gemini-3.5-flash-lite",
+  "files": {
+    "cache/": "evals/cache/answers_generation.jsonl and answers_judge.jsonl at the end of the run",
+    "judge_agreement_sheet.csv": "the 30-item sheet the run wrote (human column empty)",
+    "eval_answers.log": "console log of this step"
+  }
+}

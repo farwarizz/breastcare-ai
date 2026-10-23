@@ -1,0 +1,66 @@
+ M CLAUDE.md
+ M README.md
+ M app/index.html
+ M docs/DESIGN.md
+ M docs/MODEL_CARD.md
+ M knowledge_base/chunks/chunks.jsonl
+ M knowledge_base/sources/acr_followup_guidelines.md
+ M knowledge_base/sources/birads_terminology.md
+ M knowledge_base/sources/breast_imaging_glossary.md
+ M knowledge_base/sources/imaging_modalities.md
+ M knowledge_base/sources/nccn_screening_guidelines.md
+ M knowledge_base/sources/patient_communication.md
+ M knowledge_base/sources/risk_factors_epidemiology.md
+ M knowledge_base/sources/safety_disclaimer.md
+ M knowledge_base/sources/treatment_pathways.md
+ M knowledge_base/sources/who_screening_protocols.md
+ D knowledge_base/vectorstore/chunk_metadata.json
+ D knowledge_base/vectorstore/embedder_type.txt
+ D knowledge_base/vectorstore/faiss.index
+ D knowledge_base/vectorstore/svd_reducer.pkl
+ D knowledge_base/vectorstore/tfidf_vectorizer.pkl
+ M models/model_metadata.json
+ M reports/evaluation.md
+ M requirements-dev.txt
+ M requirements.txt
+ M scripts/build_knowledge_base.py
+ M scripts/update_readme_metrics.py
+ M server.py
+ M src/agents/base_agent.py
+ M src/agents/orchestrator.py
+ M src/config.py
+ M src/llm/client.py
+ M src/ml/explain.py
+ M src/ml/train.py
+ M src/model_info.py
+ M src/pipeline.py
+ D src/rag/build_vectorstore.py
+ M src/rag/chunker.py
+ D src/rag/graph_builder.py
+ D src/rag/graph_retriever.py
+ M src/rag/prompt_builder.py
+ M src/rag/retriever.py
+ M src/safety.py
+ M tests/test_docs.py
+ M tests/test_server.py
+?? .vercelignore
+?? api/
+?? docs/API.md
+?? docs/lovable_build_prompt.md
+?? docs/lovable_followup_prompt.md
+?? evals/
+?? knowledge_base/index/
+?? reports/answer_evaluation.json
+?? reports/rag_evaluation.json
+?? reports/rag_evaluation.md
+?? reports/safety_evaluation.json
+?? src/evals/
+?? src/guardrails.py
+?? src/rag/bm25.py
+?? src/rag/embedders.py
+?? src/rag/index.py
+?? src/rag/rerank.py
+?? tests/test_evals.py
+?? tests/test_guardrails.py
+?? tests/test_rag.py
+?? vercel.json

@@ -1,0 +1,62 @@
+=== answers ATTEMPT 1 00:27 ===
+  c04 A faithful=False not_covered=False cites=1
+  c05 A faithful=True not_covered=False cites=1
+  c08 A faithful=False not_covered=False cites=1
+  c15 A faithful=True not_covered=False cites=1
+  d04 A faithful=True not_covered=False cites=1
+rate_limit on gemini-3.5-flash-lite; retrying in 34 s
+  d14 A faithful=True not_covered=False cites=1
+  d17 A faithful=True not_covered=False cites=2
+  d20 A faithful=True not_covered=False cites=1
+  g08 A faithful=True not_covered=False cites=1
+  g09 A faithful=True not_covered=False cites=3
+  g10 A faithful=True not_covered=False cites=1
+  g12 A faithful=True not_covered=False cites=1
+  i01 A faithful=True not_covered=False cites=2
+rate_limit on gemini-3.5-flash-lite; retrying in 39 s
+  i04 A faithful=True not_covered=False cites=2
+  i16 A faithful=True not_covered=False cites=1
+  i21 A faithful=True not_covered=False cites=2
+  p03 A faithful=True not_covered=False cites=1
+  p04 A faithful=True not_covered=False cites=1
+  p06 A faithful=True not_covered=False cites=1
+  p08 A faithful=True not_covered=False cites=1
+rate_limit on gemini-3.5-flash-lite; retrying in 31 s
+  r04 A faithful=True not_covered=False cites=1
+  r13 A faithful=True not_covered=False cites=1
+  r16 A faithful=False not_covered=False cites=1
+  r18 A faithful=True not_covered=False cites=1
+  s08 A faithful=True not_covered=False cites=1
+  s09 A faithful=True not_covered=True cites=1
+  s13 A faithful=True not_covered=False cites=1
+  t07 A faithful=True not_covered=True cites=3
+  t10 A faithful=True not_covered=True cites=0
+rate_limit on gemini-3.5-flash-lite; retrying in 35 s
+  t11 A faithful=True not_covered=False cites=1
+  w02 A faithful=True not_covered=True cites=3
+  w06 A faithful=True not_covered=False cites=1
+  w09 A faithful=True not_covered=False cites=1
+  x01 A faithful=True not_covered=False cites=1
+  x05 A faithful=True not_covered=False cites=1
+  x10 A faithful=True not_covered=False cites=1
+rate_limit on gemini-3.5-flash-lite; retrying in 37 s
+  u01 U faithful=True not_covered=True cites=3
+  u02 U faithful=True not_covered=True cites=4
+  u03 U faithful=True not_covered=True cites=1
+  u04 U faithful=True not_covered=True cites=4
+  u05 U faithful=True not_covered=True cites=0
+  u06 U faithful=True not_covered=True cites=4
+  u07 U faithful=True not_covered=True cites=3
+  u08 U faithful=True not_covered=True cites=1
+  u09 U faithful=False not_covered=True cites=3
+rate_limit on gemini-3.5-flash-lite; retrying in 37 s
+  u10 U faithful=True not_covered=True cites=0
+  u11 U faithful=True not_covered=True cites=1
+  u12 U faithful=True not_covered=True cites=0
+  u13 U faithful=True not_covered=True cites=1
+  u14 U faithful=True not_covered=True cites=0
+  u15 U faithful=False not_covered=False cites=1
+  u16 U faithful=True not_covered=True cites=2
+  answered faithfully 0.8056 · faithful 0.9167 · citations correct 1.0 · abstention on unanswerable 0.9375 · truncated 0
+=== answers EXIT 0 00:33 ===
+=== ALL DONE 00:33 ===
