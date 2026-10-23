@@ -30,18 +30,22 @@ logger = logging.getLogger(__name__)
 _VALID = {"shape": set(SHAPE_MAP), "margin": set(MARGIN_MAP), "density": set(DENSITY_MAP)}
 
 
+
+class BatchInputError(ValueError):
+    """A problem with the uploaded rows; its message is safe to show to the user."""
+
 def _validate(df: pd.DataFrame) -> None:
     missing = set(FEATURE_NAMES) - set(df.columns)
     if missing:
-        raise ValueError(f"Missing required columns: {sorted(missing)}")
+        raise BatchInputError(f"Missing required columns: {sorted(missing)}")
     if df[FEATURE_NAMES].isna().any().any():
-        raise ValueError("Missing values in age/shape/margin/density are not allowed")
+        raise BatchInputError("Missing values in age/shape/margin/density are not allowed")
     for col, valid in _VALID.items():
         bad = sorted(set(df[col].astype(int)) - valid)
         if bad:
-            raise ValueError(f"Column {col!r} has undocumented codes {bad}; valid: {sorted(valid)}")
+            raise BatchInputError(f"Column {col!r} has undocumented codes {bad}; valid: {sorted(valid)}")
     if not df["age"].between(18, 96).all():
-        raise ValueError("Column 'age' must be between 18 and 96")
+        raise BatchInputError("Column 'age' must be between 18 and 96")
 
 
 def batch_predict(df: pd.DataFrame) -> pd.DataFrame:

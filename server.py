@@ -49,7 +49,7 @@ except ImportError:
 
 os.environ.setdefault("PYTHONUTF8", "1")
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Query
+from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile, File, Query
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -68,17 +68,106 @@ def _server_error(exc: Exception) -> HTTPException:
 
 app = FastAPI(
     title="BreastCare AI",
-    version="2.2.0",
-    description="Research prototype: calibrated breast-mass risk estimate with conformal "
+    version="2.3.0",
+    description="Research prototype: breast-mass risk estimate with conformal "
                 "prediction sets, SHAP explanations and a retrieval-grounded assistant",
 )
 
+# ── Deployment limits (Phase 2.2; each one closes a blocker from the 2026-10-20 audit) ──
+# CORS: the built-in UI is served by this app (same origin) and needs no CORS. A separate
+# frontend must be listed in ALLOWED_ORIGINS (comma-separated); the default allows only local
+# development servers. "*" is honoured only when set explicitly.
+_DEFAULT_ORIGINS = ("http://localhost:5199,http://127.0.0.1:5199,http://localhost:5173,http://127.0.0.1:5173,"
+                    "http://localhost:8080,http://127.0.0.1:8080")
+ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", _DEFAULT_ORIGINS).split(",") if o.strip()]
+# /api/chat calls Gemini on a shared key: a per-client limit and a daily cap per server process.
+CHAT_LIMIT_PER_MINUTE = int(os.environ.get("CHAT_RATE_LIMIT_PER_MINUTE", "10"))
+CHAT_LIMIT_PER_DAY = int(os.environ.get("CHAT_DAILY_LIMIT", "300"))
+# Uploads are read in chunks and refused past these sizes (HTTP 413).
+MAX_IMAGE_BYTES = int(os.environ.get("MAX_IMAGE_BYTES", str(10 * 1024 * 1024)))
+MAX_CSV_BYTES = int(os.environ.get("MAX_CSV_BYTES", str(2 * 1024 * 1024)))
+MAX_BATCH_ROWS = int(os.environ.get("MAX_BATCH_ROWS", "5000"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization"],
 )
+
+
+class _RateLimiter:
+    """In-memory sliding-window limit per client plus a daily total. It is per process: on a
+    multi-instance or serverless deployment each instance counts separately, so a shared store
+    (or the host's own rate limiting) is still needed there."""
+
+    def __init__(self, per_minute: int, per_day: int):
+        import threading
+        self.per_minute, self.per_day = per_minute, per_day
+        self._hits: dict[str, list[float]] = {}
+        self._day, self._day_count = None, 0
+        self._lock = threading.Lock()
+
+    def check(self, client: str) -> int | None:
+        """None if allowed (and counted), else seconds to wait."""
+        import datetime
+        import time
+        now = time.time()
+        with self._lock:
+            today = datetime.date.today()
+            if today != self._day:
+                self._day, self._day_count = today, 0
+            if self._day_count >= self.per_day:
+                tomorrow = datetime.datetime.combine(today + datetime.timedelta(days=1), datetime.time())
+                return max(1, int(tomorrow.timestamp() - now))
+            hits = [h for h in self._hits.get(client, []) if now - h < 60]
+            if len(hits) >= self.per_minute:
+                self._hits[client] = hits
+                return max(1, int(60 - (now - hits[0])) + 1)
+            hits.append(now)
+            self._hits[client] = hits
+            self._day_count += 1
+            return None
+
+
+chat_limiter = _RateLimiter(CHAT_LIMIT_PER_MINUTE, CHAT_LIMIT_PER_DAY)
+
+
+def _client_id(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def limit_chat(request: Request) -> None:
+    wait = chat_limiter.check(_client_id(request))
+    if wait is not None:
+        raise HTTPException(status_code=429, detail="Too many questions; please wait and try again.",
+                            headers={"Retry-After": str(wait)})
+
+
+def require_audit_token(request: Request) -> None:
+    """Audit endpoints expose logged assessments and chat questions. They are disabled unless
+    AUDIT_API_TOKEN is set, and then need `Authorization: Bearer <token>`."""
+    import hmac
+    token = os.environ.get("AUDIT_API_TOKEN", "")
+    if not token:
+        raise HTTPException(status_code=403, detail="Audit endpoints are disabled on this server.")
+    sent = request.headers.get("authorization", "")
+    if not hmac.compare_digest(sent.encode(), f"Bearer {token}".encode()):
+        raise HTTPException(status_code=401, detail="Audit endpoints need a valid token.",
+                            headers={"WWW-Authenticate": "Bearer"})
+
+
+async def _read_limited(file: UploadFile, max_bytes: int) -> bytes:
+    """Read an upload in chunks; refuse it (413) as soon as it exceeds max_bytes."""
+    chunks, size = [], 0
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            return b"".join(chunks)
+        size += len(chunk)
+        if size > max_bytes:
+            raise HTTPException(status_code=413, detail=f"File too large (limit {max_bytes // (1024 * 1024)} MB).")
+        chunks.append(chunk)
 
 # Evaluation figures (generated by `python -m src.ml.train`), shown in the UI
 _FIGURES = Path(__file__).parent / "reports" / "figures"
@@ -169,7 +258,7 @@ def assess(req: AssessRequest):
         raise _server_error(e)
 
 
-@app.post("/api/chat")
+@app.post("/api/chat", dependencies=[Depends(limit_chat)])
 def chat(req: ChatRequest):
     """Run full pipeline: ML + SHAP + RAG + Gemini. Supports single/multi_agent/cot modes."""
     features = {"age": req.age, "shape": req.shape, "margin": req.margin, "density": req.density}
@@ -242,17 +331,15 @@ async def assess_image(file: UploadFile = File(...)):
     try:
         image_model.ensure_loaded()
     except Exception as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Image model unavailable: the weights failed to load ({exc}).",
-        )
+        logger.exception("image model failed to load: %s", exc)
+        raise HTTPException(status_code=503, detail="Image model unavailable: the weights failed to load.")
 
     allowed = {"image/jpeg", "image/png", "image/jpg"}
     if file.content_type not in allowed:
         raise HTTPException(status_code=400, detail="Upload a JPEG or PNG mammogram image")
 
     from PIL import Image as PILImage, UnidentifiedImageError
-    data = await file.read()
+    data = await _read_limited(file, MAX_IMAGE_BYTES)
     try:
         img = PILImage.open(io.BytesIO(data))
     except UnidentifiedImageError:
@@ -261,7 +348,7 @@ async def assess_image(file: UploadFile = File(...)):
     try:
         return JSONResponse(image_model.predict_image(img))
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise _server_error(exc)
 
 
 # ── Risk Profile ──────────────────────────────────────────────────────────────
@@ -307,12 +394,19 @@ async def batch_predict_endpoint(file: UploadFile = File(...)):
     """Upload CSV → batch predictions. Returns JSON with results + summary."""
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Upload a CSV file")
-    try:
-        import pandas as pd
-        from src.analytics.batch_predict import batch_predict, batch_summary
+    import pandas as pd
+    from src.analytics.batch_predict import BatchInputError, batch_predict, batch_summary
 
-        data = await file.read()
+    data = await _read_limited(file, MAX_CSV_BYTES)
+    try:
         df = pd.read_csv(io.BytesIO(data))
+    except Exception as exc:                      # parser messages are not shown to clients
+        logger.info("unreadable CSV upload: %s", exc)
+        raise HTTPException(status_code=400, detail="The file could not be read as a CSV with columns "
+                                                    "age, shape, margin and density.")
+    if len(df) > MAX_BATCH_ROWS:
+        raise HTTPException(status_code=413, detail=f"Too many rows (limit {MAX_BATCH_ROWS}).")
+    try:
         result_df = batch_predict(df)
         summary = batch_summary(result_df)
 
@@ -321,7 +415,7 @@ async def batch_predict_endpoint(file: UploadFile = File(...)):
             "summary": summary,
             "total_rows": len(result_df),
         })
-    except ValueError as e:
+    except BatchInputError as e:                  # our own validation messages (columns, codes, ranges)
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise _server_error(e)
@@ -329,7 +423,7 @@ async def batch_predict_endpoint(file: UploadFile = File(...)):
 
 # ── Audit Trail ───────────────────────────────────────────────────────────────
 
-@app.get("/api/audit/history")
+@app.get("/api/audit/history", dependencies=[Depends(require_audit_token)])
 def audit_history(limit: int = 50, offset: int = 0):
     """Get paginated prediction history."""
     try:
@@ -341,7 +435,7 @@ def audit_history(limit: int = 50, offset: int = 0):
         raise _server_error(e)
 
 
-@app.get("/api/audit/stats")
+@app.get("/api/audit/stats", dependencies=[Depends(require_audit_token)])
 def audit_stats():
     """Get aggregate audit statistics."""
     try:
@@ -352,7 +446,7 @@ def audit_stats():
         raise _server_error(e)
 
 
-@app.post("/api/audit/session")
+@app.post("/api/audit/session", dependencies=[Depends(require_audit_token)])
 def create_session():
     """Create a new audit session. Returns session_id."""
     try:
@@ -364,7 +458,7 @@ def create_session():
         raise _server_error(e)
 
 
-@app.get("/api/audit/export")
+@app.get("/api/audit/export", dependencies=[Depends(require_audit_token)])
 def export_audit():
     """Export all predictions as CSV."""
     try:
@@ -476,7 +570,7 @@ def health():
         # "degraded": the risk model or the knowledge-base index is missing, so /api/assess
         # or /api/chat will fail.
         "status": "ok" if served and retrieval else "degraded",
-        "version": "2.2.0",
+        "version": "2.3.0",
         "served_model": served,
         "served_model_file": SERVED_MODEL_PATH.exists(),
         "gemini_key_set": bool(os.environ.get("GEMINI_API_KEY")),
