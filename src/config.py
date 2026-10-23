@@ -63,7 +63,8 @@ REPORTS_DIR          = DATA_DIR / "reports"
 AUDIT_ENABLED        = True
 
 # ── Risk thresholds ──────────────────────────────────────────────
-# Categories apply to the calibrated probability. The binary decision threshold
+# Categories apply to the served probability (calibrated only if the calibration step
+# chosen in training is not "none"). The binary decision threshold
 # is chosen during training and stored in models/model_metadata.json.
 LOW_RISK_THRESHOLD      = 0.35   # below = Low
 HIGH_RISK_THRESHOLD     = 0.65   # at or above = Elevated

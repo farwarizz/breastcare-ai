@@ -275,7 +275,7 @@ def main() -> None:
             "split_seed": D.SPLIT_SEED,
             "n": {"fit": len(yf), "conformal": len(yc), "test": len(yt)},
             "bootstrap": {"resamples": N_BOOTSTRAP, "seed": BOOT_SEED, "interval": "95% percentile"},
-            "risk_categories": "Low < 0.35 ≤ Moderate < 0.65 ≤ Elevated (calibrated probability)",
+            "risk_categories": "Low < 0.35 ≤ Moderate < 0.65 ≤ Elevated (served probability; see calibration.method)",
         },
         "datasets": {"mammographic": provenance},
         "selection": {

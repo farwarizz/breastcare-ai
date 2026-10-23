@@ -23,10 +23,11 @@ GRID = pd.DataFrame(
 
 
 @pytest.mark.parametrize("features", CASES)
-def test_prediction_is_calibrated_with_a_conformal_set(features):
+def test_prediction_has_a_conformal_set_and_an_honest_calibration_flag(features):
     out = predict(features)
     assert "confidence_band" not in out
-    assert out["calibrated"] is True
+    # true only when the training rule chose a calibration map (it chose "none" for the served model)
+    assert out["calibrated"] is (model_meta()["calibration"]["method"] != "none")
     assert 0.0 <= out["probability"] <= 1.0
     assert set(out["prediction_set"]) <= {"Benign", "Malignant"}
     assert out["set_coverage"] == model_meta()["conformal"]["coverage_target"]

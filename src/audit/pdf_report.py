@@ -133,7 +133,7 @@ def generate_pdf_report(
     risk_data = [
         ["Metric", "Value"],
         ["Model", prediction.get("model", "N/A")],
-        ["Probability Type", f"Calibrated estimate (calibration step: "
+        ["Probability Type", f"Model probability (calibration step: "
                              f"{prediction.get('calibration_method', 'n/a')})"],
         [f"{coverage:.0%} Prediction Set", "{" + ", ".join(pset) + "}"],
         ["Predicted Class", f"{prediction['predicted_class']} "

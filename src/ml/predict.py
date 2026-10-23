@@ -1,13 +1,15 @@
 """
-src/ml/predict.py — Calibrated risk estimate plus a conformal prediction set.
+src/ml/predict.py — Risk estimate plus a conformal prediction set.
 
 For each case:
-- probability       calibrated P(malignant): model score → calibration map fitted
-                    on out-of-fold predictions (see src/ml/calibration.py)
+- probability       P(malignant): model score → calibration map chosen on
+                    out-of-fold predictions (see src/ml/calibration.py). The rule may
+                    choose "none" (the served model's raw probability); `calibrated`
+                    is true only when a calibration map was actually applied.
 - prediction_set    Mondrian conformal set at the stored coverage target
                     (90% per true class; see src/ml/conformal.py)
 - predicted_class   at a threshold chosen on out-of-fold development data
-- risk_category     Low < 0.35 ≤ Moderate < 0.65 ≤ Elevated (calibrated probability)
+- risk_category     Low < 0.35 ≤ Moderate < 0.65 ≤ Elevated (served probability)
 """
 from __future__ import annotations
 
@@ -56,7 +58,7 @@ def predict(features: dict) -> dict:
     return {
         "probability":           float(row["probability"]),
         "raw_model_probability": float(row["raw_probability"]),
-        "calibrated":            True,
+        "calibrated":            meta["calibration"]["method"] != "none",
         "calibration_method":    meta["calibration"]["method"],
         "prediction_set":        list(row["prediction_set"]),
         "set_coverage":          meta["conformal"]["coverage_target"],

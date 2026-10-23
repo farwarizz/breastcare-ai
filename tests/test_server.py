@@ -64,12 +64,13 @@ def test_health_reports_models_truthfully(monkeypatch):
         config.MODEL_METADATA_PATH.read_text(encoding="utf-8"))["served_model"]["label"]
 
 
-def test_assess_returns_calibrated_probability_and_prediction_set():
+def test_assess_returns_probability_and_prediction_set():
     r = client.post("/api/assess", json=FEATURES)
     assert r.status_code == 200
     pred = r.json()["prediction"]
     assert "confidence_band" not in pred
-    assert pred["calibrated"] is True
+    # `calibrated` reports whether a calibration map was applied, not a constant
+    assert pred["calibrated"] is (pred["calibration_method"] != "none")
     assert set(pred["prediction_set"]) <= {"Benign", "Malignant"}
 
 
