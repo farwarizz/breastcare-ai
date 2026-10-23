@@ -169,7 +169,7 @@ def model_card_block(md: dict) -> str:
 |---|---|
 | Model | {s['label']} ({params}) |
 | Inputs | age, shape, margin, density (BI-RADS assessment excluded) |
-| Output | calibrated P(malignant), {conf['coverage_target']:.0%} conformal prediction set, class at threshold {s['threshold']['value']:.3f} |
+| Output | P(malignant) ({'calibrated, ' + s['calibration']['method'] if s['calibration']['method'] != 'none' else 'no calibration step applied'}), {conf['coverage_target']:.0%} conformal prediction set, class at threshold {s['threshold']['value']:.3f} |
 | Trained on | {s['trained_on']} of the UCI Mammographic Mass data |
 | Calibration | `{s['calibration']['method']}` (chosen by CV Brier on out-of-fold predictions) |
 | Conformal | {conf['method']}; Benign in set if p ≤ {conf['benign_if_p_le']:.3f}, Malignant if p ≥ {conf['malignant_if_p_ge']:.3f} |
@@ -392,9 +392,15 @@ def safety_sentence(saf: dict) -> str:
     pre_txt = ""
     if pre:
         pg, pb = pre["summary"]["guarded"], pre["summary"]["baseline"]
-        pre_txt = (f" Before the fixes, held-out v1 gave {pct(pg['attack_success_rate'])} with the safety layers vs "
-                   f"{pct(pb['attack_success_rate'])} without (crisis {pct(pg['by_category']['crisis'])}); v1 is now part "
+        pv = pre.get("held_out_version", "v1")
+        pre_txt = (f" Before the fixes, held-out {pv} gave {pct(pg['attack_success_rate'])} with the safety layers vs "
+                   f"{pct(pb['attack_success_rate'])} without (crisis {pct(pg['by_category']['crisis'])}); {pv} is now part "
                    f"of the development set.")
+    acc = saf.get("acceptance")
+    if acc:
+        unmet = [k.replace('_', ' ') for k, ok in acc["met"].items() if not ok]
+        pre_txt += (" Pre-registered acceptance criteria: all met." if acc["all_met"]
+                    else f" Pre-registered acceptance criteria not met: {', '.join(unmet)}.")
     return (f"**Red team:** {parts[0]}.{crisis_txt} On the {parts[1]}.{pre_txt} The input guard blocked "
             f"{pct(fa['blocked'])} of the {fa['n']} benign retrieval questions. Judge `{saf['judge_model']}`.")
 
@@ -410,7 +416,7 @@ def staleness(ev: dict, kb: dict) -> dict:
         prov = ans.get("provenance") or {}
         if (prov.get("chunks_sha256") != kb.get("chunks_sha256")
                 or prov.get("system_prompt_sha256") != hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest()):
-            out["answers"] = ("generated before the current system prompt and knowledge base (Phase 2.1); "
+            out["answers"] = ("generated with a different system prompt or knowledge base than the current code; "
                               "re-run `python -m src.evals.answers`")
     saf = ev.get("safety")
     prov = (saf or {}).get("provenance")
@@ -419,7 +425,7 @@ def staleness(ev: dict, kb: dict) -> dict:
                          f"during the run (mismatched: {prov.get('mismatched')}); see provenance")
     elif saf and saf.get("held_out_version", "v1") != HELDOUT_VERSION:
         out["safety"] = (f"results of the pre-fix system on held-out {saf.get('held_out_version', 'v1')}; the run on "
-                         f"held-out {HELDOUT_VERSION} with the Phase 2.1 fixes is not complete")
+                         f"held-out {HELDOUT_VERSION} with the current (Phase 2.2) fixes is not complete")
     return out
 
 
@@ -540,11 +546,14 @@ generated the answers, which can favour its own output, and it is unverified unt
         fa = saf["guard_false_alarms_on_benign_questions"]
         sections = []
         version = saf.get("held_out_version", "v1")
-        held_file = "redteam_heldout_v2.jsonl" if version == "v2" else "redteam_heldout.jsonl"
+        from src.evals.redteam import HELDOUT_VERSION
+        held_file = (f"redteam_heldout_{version}.jsonl" if version == HELDOUT_VERSION
+                     else f"archive/redteam_heldout_{version}.jsonl")
         blocks = [("held_out", f"Held-out set {version} (`evals/{held_file}`)", saf["sets"]["held_out"]),
                   ("development", "Development set (`evals/redteam_prompts.jsonl`)", saf["sets"]["development"])]
         if saf.get("prefix_baseline"):
-            blocks.append(("prefix", "Pre-fix baseline: held-out v1 before the fixes "
+            pv = saf["prefix_baseline"].get("held_out_version", "v1")
+            blocks.append(("prefix", f"Pre-fix baseline: held-out {pv} before the fixes "
                                      f"(`{saf['prefix_baseline']['file']}`)", saf["prefix_baseline"]))
         for name, title, s in blocks:
             g, b = s["summary"]["guarded"], s["summary"]["baseline"]
