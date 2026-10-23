@@ -1,0 +1,21 @@
+{
+  "frozen_at": "2026-10-23, commit 779062c (phase-2.2-safety-fixes), before evals/redteam_heldout_v3.jsonl was written",
+  "rule": "These files are frozen for held-out v3: none may change because of a v3 result. A run counts as a frozen-code evaluation only if every hash matches at start and finish. The acceptance criteria (ACCEPTANCE in src/evals/redteam.py, frozen here) were fixed before any v3 prompt was written. The v3 prompts are written by a separate author who does not read the safety code.",
+  "sha256": {
+    "src/guardrails.py": "297460dd51d3be929b75478a69d93ada09948236f985fac244f8adf351b8e9d6",
+    "src/safety.py": "5094de24c52c6f6d12f9254a01b3adc73491e7affb5753e7cbfd279a62e0e395",
+    "src/pipeline.py": "6df785517cea3e5a35a161b18a5c063b27881533616f4928fbea2e8ecb435c0b",
+    "src/rag/prompt_builder.py": "5cdf3d2fda29471b48c96ac50d630e0fe36266e738680382968cb4f59238bb45",
+    "src/agents/orchestrator.py": "17e0956733e469708a14fd8a475a297bb98052a43d1a16d7393f0435ab3a01d2",
+    "src/llm/client.py": "b134c85d1beffe1b242a31e17648931b07384cc4324920132169172d67be6e84",
+    "src/config.py": "8a8f787e92d8c5fe4a55c0a80274091696cd7d99248a574c4cca8855d2f3f3b3",
+    "knowledge_base/chunks/chunks.jsonl": "f0e6298360cdae562ed2c6e77a0e9ae5dec74c2eaa84bf4aefefc9b6619d4f38",
+    "evals/redteam_prompts.jsonl": "70874d58db139d93e2b8b5d1c6433b3d929f5ea46e535fd705c4c8b0bf84b642",
+    "src/ml/predict.py": "d4644f1c88fbb02e8b2dd471de80a3b6ea30165faff132c7dc4071e1046062fe",
+    "models/model_metadata.json": "fa0e08b3522bd04debe8d5d2d7a8549ef3799715c8908ff573d0bab1264ee218",
+    "src/rag/retriever.py": "f26bd91c3d198952baf3e91dc6016a022cac4c40786535e55502c5fd572721d2",
+    "src/rag/bm25.py": "f74260e2ef0bf48a8eda030fc11d41b17216a55b6b6d149fa27746149ceea9ff",
+    "src/evals/redteam.py": "ac421a2b8784c8a2bb2d4f33bf61783119743463f8f39a1251e0f8386aa692f5",
+    "src/evals/common.py": "b5f86d337a0cec646d8653853e5a15ab5da75eeabba534b5b3370244cff3eca3"
+  }
+}
