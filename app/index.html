@@ -568,9 +568,9 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           <div class="sb-sub" data-mi="served_name">served model</div>
         </div>
         <div class="stat-badge sb2">
-          <div class="sb-val">72.4%</div>
-          <div class="sb-lbl">Example output</div>
-          <div class="sb-sub">Calibrated · SHAP</div>
+          <div class="sb-val" data-mi="conformal_coverage">—</div>
+          <div class="sb-lbl">Prediction-set coverage</div>
+          <div class="sb-sub">90% target · test set</div>
         </div>
         <div class="stat-badge sb3">
           <div class="sb-val" data-mi="kb_chunks">—</div>
@@ -614,7 +614,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           </div>
         </div>
         <div class="fg">
-          <label class="fl">Mass Margin <span>— Strongest malignancy predictor</span></label>
+          <label class="fl">Mass Margin <span>— BI-RADS descriptor (nominal)</span></label>
           <div class="fbs" id="mg" role="radiogroup" aria-label="Mass margin">
             <button class="fb" data-val="1" onclick="sel('mg',this)">Circumscribed</button>
             <button class="fb" data-val="2" onclick="sel('mg',this)">Microlobulated</button>
@@ -624,7 +624,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           </div>
         </div>
         <div class="fg">
-          <label class="fl">Mass Density <span>— Weaker predictor</span></label>
+          <label class="fl">Mass Density <span>— BI-RADS descriptor (nominal)</span></label>
           <div class="fbs" id="dg" role="radiogroup" aria-label="Mass density">
             <button class="fb" data-val="1" onclick="sel('dg',this)">High</button>
             <button class="fb a" data-val="2" onclick="sel('dg',this)">Iso</button>
@@ -769,11 +769,11 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           </div>
         </div>
         <div class="ec rv tilt" style="margin-top:18px">
-          <div class="ec-t">SHAP → RAG Query Bridge</div>
-          <div class="ec-s">How SHAP drives knowledge retrieval</div>
+          <div class="ec-t">From Estimate to Grounded Answer</div>
+          <div class="ec-s">How the assistant uses the explanation</div>
           <div style="font-size:.81rem;color:var(--ts);line-height:1.7">
-            <p>The dominant SHAP feature generates a <strong>natural-language query</strong> sent to the FAISS vectorstore — e.g., <em style="color:var(--r500)">"margin (spiculated) was the strongest factor pushing risk up."</em></p>
-            <p style="margin-top:9px">This semantic coupling ensures retrieved ACR BI-RADS documents align with what actually drove the prediction, not just the user's question.</p>
+            <p>Your question is answered from the <strong><span data-mi="kb_chunks">—</span> knowledge-base chunks</strong> retrieved with <strong data-mi="kb_retrieval_label">—</strong>. The query is <strong data-mi="rag_query_label">—</strong>, the construction that scored best in the retrieval evaluation.</p>
+            <p style="margin-top:9px">The calibrated estimate, the prediction set and the SHAP summary are placed in the prompt as case context, so the answer is about this assessment, and every factual sentence must cite a numbered document.</p>
           </div>
           <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
             <div style="display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--tm)">
@@ -786,7 +786,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
             </div>
             <div style="display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--tm)">
               <span style="width:26px;height:26px;border-radius:7px;background:rgba(61,107,158,.06);border:1px solid rgba(61,107,158,.12);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">🔗</span>
-              <div><strong style="color:var(--tp)">Pipeline:</strong> shap_text → FAISS → top-3 chunks → Gemini</div>
+              <div><strong style="color:var(--tp)">Pipeline:</strong> input guardrails → <span data-mi="kb_retrieval_short">retrieval</span> → top-3 chunks → Gemini → output filter</div>
             </div>
           </div>
         </div>
@@ -800,7 +800,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
   <div class="aw2">
     <div class="stag rv">AI Assistant</div>
     <h2 class="sh2 rv">Ask the BreastCare AI</h2>
-    <p class="slead rv">Powered by Gemini with retrieval-augmented generation over a small curated BI-RADS knowledge base (<span data-mi="kb_chunks">—</span> chunks). The model is instructed to answer from the retrieved documents, and a safety filter removes diagnostic phrasing.</p>
+    <p class="slead rv">Powered by Gemini with retrieval-augmented generation over a small curated breast-imaging knowledge base (<span data-mi="kb_chunks">—</span> chunks from <span data-mi="kb_indexed_sources">—</span> fact-checked documents). Input guardrails answer crisis, prompt-injection, privacy and off-topic messages with fixed replies; the model must cite the retrieved documents; and an output filter removes diagnostic phrasing.</p>
     <div class="cl">
       <div class="csb rv-l">
         <div class="cst">Suggested Questions</div>
@@ -815,9 +815,9 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           <div class="raf-s">
             <div class="rsn"><div class="rsn-n" id="rn1">💬</div><div class="rsn-l">Question</div></div>
             <div class="rarr">→</div>
-            <div class="rsn"><div class="rsn-n" id="rn2">🔍</div><div class="rsn-l">FAISS</div></div>
+            <div class="rsn"><div class="rsn-n" id="rn2">🔍</div><div class="rsn-l" data-mi="kb_retrieval_short">Retrieval</div></div>
             <div class="rarr">→</div>
-            <div class="rsn"><div class="rsn-n" id="rn3">📄</div><div class="rsn-l">BI-RADS</div></div>
+            <div class="rsn"><div class="rsn-n" id="rn3">📄</div><div class="rsn-l">Documents</div></div>
             <div class="rarr">→</div>
             <div class="rsn"><div class="rsn-n" id="rn4">✨</div><div class="rsn-l">Gemini</div></div>
           </div>
@@ -829,13 +829,13 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
             <div class="cha">✨</div>
             <div class="chi">
               <div class="chn">BreastCare AI Assistant</div>
-              <div class="chs"><span class="sdot"></span>RAG-grounded · Gemini AI · ACR BI-RADS</div>
+              <div class="chs"><span class="sdot"></span>RAG-grounded · Gemini · cited sources</div>
             </div>
           </div>
           <div class="cmsg" id="cmsg" aria-live="polite">
             <div class="mb">
               <div class="ma">✨</div>
-              <div class="mbub">Hello! I answer from a small curated BI-RADS knowledge base via RAG retrieval.<br/><br/>I can explain mammographic terms, discuss risk estimates, or describe typical next steps. I'm not a doctor — always consult a qualified clinician.<div><span class="sp">📚 BI-RADS terminology · Breast imaging glossary</span></div></div>
+              <div class="mbub">Hello! I answer from a small curated BI-RADS knowledge base via RAG retrieval.<br/><br/>I can explain mammographic terms, discuss risk estimates, or describe typical next steps. I'm not a doctor — always consult a qualified clinician.<div><span class="sp">📚 <span data-mi="kb_indexed_sources">—</span> indexed documents · answers cite them as [1], [2], [3]</span></div></div>
             </div>
           </div>
           <div class="cir">
@@ -853,7 +853,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
   <div class="hiw-inner">
     <div class="stag rv">Architecture</div>
     <h2 class="sh2 rv">How It Works</h2>
-    <p class="slead rv">Six-stage pipeline — input flows through the served model (chosen by a fixed rule), exact SHAP attribution, FAISS vector retrieval, Gemini generation and a deterministic safety filter. Hover any stage for details.</p>
+    <p class="slead rv">Six-stage pipeline — input flows through the served model (chosen by a fixed rule), exact SHAP attribution, knowledge-base retrieval (<span data-mi="kb_retrieval_label">—</span>), Gemini generation, and deterministic input guardrails and output filter. Hover any stage for details.</p>
 
     <!-- Animated pipeline -->
     <div class="pipe" style="margin-top:52px">
@@ -893,28 +893,28 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
           <div class="pnl">SHAP Layer</div>
           <div class="pns">Exact SHAP · log-odds</div>
           <div class="pn-badge">Exact values</div>
-          <div class="pn-tip">For the linear model, SHAP values are exact: the base value plus the contributions equals the model's log-odds. The dominant feature drives the RAG query, so retrieved context relates to what moved the estimate.</div>
+          <div class="pn-tip">For the linear model, SHAP values are exact: the base value plus the contributions equals the model's log-odds. The SHAP summary goes into the assistant's prompt as case context; the retrieval query is the user's question alone, because prepending the SHAP summary hurt retrieval in the evaluation.</div>
         </div>
         <div class="pn rv" style="transition-delay:.3s">
           <div class="pni">🔍</div>
-          <div class="pnl">FAISS RAG</div>
-          <div class="pns">Dense vector search</div>
-          <div class="pn-badge"><span data-mi="kb_dim">—</span>-dim · <span data-mi="kb_chunks">—</span> chunks</div>
-          <div class="pn-tip">all-MiniLM-L6-v2 encodes a query built from the SHAP output plus the user's question, and FAISS returns the closest of <span data-mi="kb_chunks">—</span> knowledge-base chunks, so retrieval follows what drove the estimate. Retrieval quality is not yet measured.</div>
+          <div class="pnl">Retrieval</div>
+          <div class="pns" data-mi="kb_retrieval_label">—</div>
+          <div class="pn-badge"><span data-mi="kb_chunks">—</span> chunks · Hit@3 <span data-mi="rag_hit3">—</span></div>
+          <div class="pn-tip">The retrieval mode was chosen by a fixed rule on <span data-mi="rag_n_answerable">—</span> labelled questions (evals/retrieval_questions.jsonl): Hit@3 <span data-mi="rag_hit3">—</span> (95% CI <span data-mi="rag_hit3_ci">—</span>); <span data-mi="rag_comparison">—</span>. The query is <span data-mi="rag_query_label">—</span>; the top-3 chunks reach Gemini as numbered documents.</div>
         </div>
         <div class="pn rv" style="transition-delay:.4s">
           <div class="pni">✨</div>
-          <div class="pnl">Gemini 2.5</div>
-          <div class="pns">Grounded response</div>
-          <div class="pn-badge">RAG-grounded</div>
-          <div class="pn-tip">Gemini is instructed to answer only from the retrieved context and to avoid diagnostic language. Grounding reduces but does not eliminate hallucination, and answer faithfulness is not yet measured.</div>
+          <div class="pnl" data-mi="llm_model">Gemini</div>
+          <div class="pns">Grounded, cited answer</div>
+          <div class="pn-badge">Faithful <span data-mi="ans_faithful">—</span></div>
+          <div class="pn-tip">Gemini must answer only from the numbered documents, cite them, and avoid diagnostic language. Measured by an LLM judge on <span data-mi="ans_n">—</span> questions: answered with every claim supported <span data-mi="ans_faithful">—</span>, citations correct <span data-mi="ans_citations">—</span>, and <span data-mi="ans_abstain">—</span> of unanswerable questions correctly declined. Grounding reduces but does not eliminate hallucination.</div>
         </div>
         <div class="pn rv" style="transition-delay:.5s">
           <div class="pni">🛡️</div>
-          <div class="pnl">Safety Filter</div>
-          <div class="pns">Post-processing</div>
-          <div class="pn-badge">Deterministic</div>
-          <div class="pn-tip">Regex-based post-processing strips all diagnostic language from every response. Code-level enforcement — fires even if Gemini ignores prompt instructions under adversarial conditions.</div>
+          <div class="pnl">Guardrails + Filter</div>
+          <div class="pns">Input rules · output rewrite</div>
+          <div class="pn-badge">ASR <span data-mi="safety_asr_guarded">—</span></div>
+          <div class="pn-tip">Deterministic rules before the model call (crisis, prompt injection, privacy and off-topic messages get fixed replies; diagnosis, treatment and skip-care questions get a policy note) and 18 regex rewrites of diagnostic phrasing after it. Measured on held-out red-team prompts: attack success rate <span data-mi="safety_asr_guarded">—</span> with these layers, <span data-mi="safety_asr_baseline">—</span> without them. Regexes miss paraphrases, so this is a layer, not a guarantee.</div>
         </div>
       </div>
     </div>
@@ -1020,12 +1020,12 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
       <div class="dc rv tilt" style="transition-delay:.24s">
         <div class="dbadge bg">Knowledge Base · RAG</div>
         <div class="dt">Curated BI-RADS Knowledge Base</div>
-        <div class="dd">Project-written summaries of BI-RADS terminology, follow-up guidance and safety notes. <span data-mi="kb_indexed_sources">—</span> of <span data-mi="kb_available_sources">—</span> source documents are currently indexed.</div>
+        <div class="dd">Project-written, fact-checked summaries of BI-RADS terminology, follow-up guidance, imaging, screening guidelines, risk factors, treatment and safety notes, each with a sources list. <span data-mi="kb_indexed_sources">—</span> of <span data-mi="kb_available_sources">—</span> source documents are currently indexed.</div>
         <div class="ds">
           <div class="dst"><div class="dsv" data-mi="kb_chunks">—</div><div class="dsk">Chunks</div></div>
           <div class="dst"><div class="dsv" data-mi="kb_indexed_sources">—</div><div class="dsk">Docs indexed</div></div>
-          <div class="dst"><div class="dsv">FAISS</div><div class="dsk">Vector index</div></div>
-          <div class="dst"><div class="dsv" data-mi="kb_dim">—</div><div class="dsk">Embedding dim</div></div>
+          <div class="dst"><div class="dsv" data-mi="kb_retrieval_short">—</div><div class="dsk">Retrieval</div></div>
+          <div class="dst"><div class="dsv" data-mi="rag_hit3">—</div><div class="dsk">Hit@3</div></div>
         </div>
       </div>
     </div>
@@ -1039,6 +1039,14 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
         </table>
       </div>
       <div class="mps" id="eval-notes" style="margin-top:10px"></div>
+      <div class="mpt" style="margin-top:26px">Assistant evaluation (retrieval, answers, red team)</div>
+      <div class="mps">Retrieval on labelled questions; answer faithfulness and citation correctness by an LLM judge; adversarial prompts before and after the Phase 2 safety layers. 95% intervals in brackets.</div>
+      <div style="overflow-x:auto">
+        <table class="ptbl">
+          <thead><tr><th>Measure</th><th>Result</th><th>Comparison</th></tr></thead>
+          <tbody id="rag-eval-tbody"><tr><td colspan="3" style="color:var(--tm)">No evaluation results saved yet (run src/evals).</td></tr></tbody>
+        </table>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:16px">
         <img src="/figures/roc_pr_light.png" alt="ROC and precision-recall curves on the test set" style="width:100%;border-radius:10px" loading="lazy"/>
         <img src="/figures/calibration_light.png" alt="Calibration curve on the test set" style="width:100%;border-radius:10px" loading="lazy"/>
@@ -1046,11 +1054,8 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
         <img src="/figures/conformal_sets_light.png" alt="Conformal prediction sets on the test set" style="width:100%;border-radius:10px" loading="lazy"/>
       </div>
     </div>
-    <div class="src-row rv">
-      <div class="src-c"><div class="src-ic">📘</div><div class="src-t">BI-RADS Terminology</div><div class="src-s">Summary of ACR terms</div></div>
-      <div class="src-c"><div class="src-ic">📗</div><div class="src-t">Breast Imaging Glossary</div><div class="src-s">Radiological definitions</div></div>
-      <div class="src-c"><div class="src-ic">📙</div><div class="src-t">Follow-Up Guidance</div><div class="src-s">Summary of BI-RADS categories</div></div>
-      <div class="src-c"><div class="src-ic">🛡️</div><div class="src-t">Safety Disclaimers</div><div class="src-s">Ethical use notices</div></div>
+    <div class="src-row rv" id="src-row">
+      <div class="src-c"><div class="src-ic">📚</div><div class="src-t">Indexed documents</div><div class="src-s">Listed from the knowledge-base index once it loads</div></div>
     </div>
   </div>
 </section>
@@ -1065,8 +1070,13 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
       <div>
         <div class="sc rv tilt">
           <div class="sci sci-r">🛡️</div>
-          <div class="sc-t">Rule-Based Safety Filter</div>
-          <div class="sc-p">A deterministic post-processing filter strips diagnostic language from every LLM response. Code-level enforcement — fires even if Gemini ignores system prompt instructions.</div>
+          <div class="sc-t">Input Guardrails and Output Filter</div>
+          <div class="sc-p">Deterministic rules run before any model call: messages about self-harm get crisis resources, prompt injections, requests for other people's data and off-topic tasks get fixed replies, and diagnosis, treatment or skip-care questions add a policy note to the prompt. A post-processing filter then strips diagnostic phrasing from every answer — it fires even if Gemini ignores its instructions.</div>
+        </div>
+        <div class="sc rv tilt">
+          <div class="sci sci-b">🎯</div>
+          <div class="sc-t">Red-Team Evaluated</div>
+          <div class="sc-p">On <span data-mi="safety_n">—</span> <span data-mi="safety_set_desc">adversarial prompts</span> (diagnosis, treatment, skip-care, injection, roleplay, crisis, privacy, misinformation, off-topic), judged against written rules: attack success rate <span data-mi="safety_asr_guarded">—</span> with the safety layers, against <span data-mi="safety_asr_baseline">—</span> without them; <span data-mi="safety_over_refusal">—</span> of benign prompts over-refused. A small suite, and the judge is an LLM, so treat these as indicative.</div>
         </div>
         <div class="sc rv tilt">
           <div class="sci sci-b">🔬</div>
@@ -1088,7 +1098,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
             <div class="li"><span class="lix">✗</span><span><strong>Four features only:</strong> real systems use far more information, including calcifications and the images themselves</span></div>
             <div class="li"><span class="lix">✗</span><span><strong>Experimental image model:</strong> no stored evaluation results, so its accuracy is unverified; the risk model itself uses only tabular features</span></div>
             <div class="li"><span class="lix">✗</span><span><strong>Single institution:</strong> Erlangen, Germany; results may not transfer to other sites or devices</span></div>
-            <div class="li"><span class="lix">✗</span><span><strong>One test split:</strong> calibration, conformal coverage and subgroup results (by age) come from 167 cases; re-check before any use on new data</span></div>
+            <div class="li"><span class="lix">✗</span><span><strong>One test split:</strong> calibration, conformal coverage and subgroup results (by age) come from <span data-mi="n_test">—</span> cases; re-check before any use on new data</span></div>
             <div class="li"><span class="lix">✗</span><span><strong>Temporal validity:</strong> mammographic dataset from 2003–2006; imaging practice has evolved</span></div>
           </div>
         </div>
@@ -1221,7 +1231,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.45);padding:56px 48px 36px
 
 <footer>
   <div class="ft-brand">BreastCare <em style="color:var(--r400);font-style:italic">AI</em></div>
-  <p class="ft-tag">Multi-layer breast cancer risk estimation prototype<br/>scikit-learn · LightGBM · SHAP · conformal prediction · FAISS · Gemini · FastAPI</p>
+  <p class="ft-tag">Multi-layer breast cancer risk estimation prototype<br/>scikit-learn · LightGBM · SHAP · conformal prediction · BM25 + embeddings · Gemini · FastAPI</p>
   <p class="ft-refs">Elter et al. (2007) · ACR BI-RADS Atlas 5th Ed · Vovk et al. (2005) conformal prediction · Van Calster et al. (2019) calibration · Vickers &amp; Elkin (2006) decision curves · Lundberg &amp; Lee (2017) SHAP</p>
   <div class="ft-legal"><strong style="color:rgba(255,255,255,.55)">Not for clinical use.</strong> Educational prototype only. Not FDA-cleared. Always consult a qualified clinician.</div>
 </footer>
@@ -1451,6 +1461,7 @@ async function runAssessment(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
     res={probability:d.prediction.probability,shap:d.explanation.feature_attributions,
+         base:d.explanation.base_value,
          set:d.prediction.prediction_set||[],coverage:d.prediction.set_coverage||0.9};
   }catch(e){
     // No client-side fallback: never show an estimate the model did not produce.
@@ -1488,9 +1499,9 @@ function renderResult(res,v){
   else if(prob<.65)gf.setAttribute('stroke','url(#gm)');
   else gf.setAttribute('stroke','url(#gh)');
   let cat,cls,interp;
-  if(prob<.35){cat='Low Risk';cls='r-low';interp=`At an estimated ${pct}% probability, this pattern shows features more consistent with benign findings. The ${MN[v.margin].toLowerCase()} margin and ${SN[v.shape].toLowerCase()} shape contribute to a lower-risk profile. Clinical correlation remains important.`;}
-  else if(prob<.65){cat='Moderate Risk';cls='r-mod';interp=`At an estimated ${pct}% probability, this pattern warrants careful clinical attention. A ${MN[v.margin].toLowerCase()} margin in a patient aged ${v.age} suggests further diagnostic work-up is appropriate.`;}
-  else{cat='Elevated Risk';cls='r-hi';interp=`At an estimated ${pct}% probability, this pattern shows features associated with higher malignancy likelihood. A ${MN[v.margin].toLowerCase()} margin is among the strongest predictors. Prompt radiologist review is strongly recommended — this is not a diagnosis of cancer.`;}
+  if(prob<.35){cat='Low Risk';cls='r-low';interp=`At an estimated ${pct}% probability, masses with these descriptors were mostly benign in the training data. That does not rule out cancer: the radiologist's assessment decides what happens next.`;}
+  else if(prob<.65){cat='Moderate Risk';cls='r-mod';interp=`At an estimated ${pct}% probability, masses with these descriptors were often benign and often malignant in the training data. The radiologist's assessment decides whether further work-up is needed.`;}
+  else{cat='Elevated Risk';cls='r-hi';interp=`At an estimated ${pct}% probability, masses with these descriptors were mostly malignant in the training data. This is not a diagnosis: only a biopsy reviewed by a pathologist can confirm or exclude cancer.`;}
   document.getElementById('rcat').innerHTML=`<div class="rc-lbl ${cls}">Risk Category</div><div class="rc-name ${cls}">${cat}</div>`;
   document.getElementById('ri').textContent=interp;
   const ps=res.set||[],cov=Math.round((res.coverage||0.9)*100);
@@ -1522,7 +1533,7 @@ function renderExp(res,v){
   ].sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
   const mx=Math.max(...feats.map(f=>Math.abs(f.v)));
   const pctF=Math.round(res.probability*100);
-  let wf=`<div style="font-size:.69rem;color:var(--tm);margin-bottom:7px;display:flex;justify-content:space-between"><span>Base: 42%</span><span>Final: ${pctF}%</span></div>`;
+  let wf=`<div style="font-size:.69rem;color:var(--tm);margin-bottom:7px;display:flex;justify-content:space-between"><span>${res.base!=null?'Base (no features): '+Math.round(100/(1+Math.exp(-res.base)))+'%':'SHAP contributions (log-odds)'}</span><span>Final: ${pctF}%</span></div>`;
   wf+=feats.map(f=>{
     const bp=Math.round(Math.abs(f.v)/mx*72);
     const cls=f.v>=0?'wfb-p':'wfb-n';
@@ -1542,7 +1553,7 @@ function renderExp(res,v){
     const isDom=f.key===dom.n.toLowerCase();
     return`<div class="fci ${isDom?'dom':''}"><div class="fcn">${f.n}${isDom?' ★':''}</div><div class="fcv">${f.v}</div><div class="fcm">${f.m}</div></div>`;
   }).join('');
-  document.getElementById('pltext').innerHTML=`The model estimated <strong>${pctF}% malignancy probability</strong>. The strongest driver was <strong>${dom.n} (${dom.l})</strong>, which ${dom.v>=0?'elevated':'reduced'} the risk by the largest margin.`+(v.margin>=4?` A ${MN[v.margin].toLowerCase()} margin is one of the most significant BI-RADS risk indicators in the ACR literature.`:' A circumscribed margin generally suggests a more benign process.')+' This is a statistical estimate from a research model — not a clinical diagnosis. A radiologist must review the actual imaging.';
+  document.getElementById('pltext').innerHTML=`The model estimated <strong>${pctF}% malignancy probability</strong>. The strongest driver was <strong>${dom.n} (${dom.l})</strong>, which ${dom.v>=0?'elevated':'reduced'} the risk by the largest margin.`+' Ask the assistant below what this descriptor means; its answers cite the knowledge base. This is a statistical estimate from a research model — not a clinical diagnosis. A radiologist must review the actual imaging.';
 }
 
 // ── Chat ─────────────────────────────────────────────────────────────────────
@@ -1568,9 +1579,24 @@ async function sendChat(){
     }else{
       const d=await r.json();
       typEl.remove();
-      const src=(d.sources||[]).filter(Boolean).join(' · ')||'ACR BI-RADS Atlas';
+      // Citations are the documents the answer actually cited ([1]–[3]), not the whole retrieved set.
+      const cites=d.citations||[];
+      const t0=d.trace||{};
+      const src=cites.length?cites.map(c=>`[${c.n}] ${String(c.source||'').replace(/_/g,' ')} › ${c.section||''}`).join(' · ')
+                :(d.mode==='guardrail'||d.mode==='fallback'?''
+                  :(t0.quota_exhausted||t0.error)?'':'no document cited — retrieved: '+(d.sources||[]).map(x=>String(x).replace(/_/g,' ')).join(', '));
       const modeLabel=d.mode==='cot'?' 🧠 CoT':d.mode==='multi_agent'?' 🤖 Multi-Agent':'';
-      addMsg('bot',(d.response||'I encountered an issue generating a response.')+modeLabel,src);
+      // Fixed replies and policy notes come from the input guardrail; say so, and say when a
+      // flagged question was answered in the evaluated single-call mode instead of the one chosen.
+      const badge=d.guardrail&&d.guardrail!=='ok'
+        ?`🛡️ guardrail: ${d.guardrail}`+(d.requested_mode?` (answered in standard mode, not ${d.requested_mode.replace('_',' ')})`:'')
+        :'';
+      const t=d.trace||{},tm=t.timings_ms||{};
+      const trace=[t.model?`model ${t.model}`:null,
+                   tm.retrieve!=null?`retrieval ${Math.round(tm.retrieve)} ms`:null,
+                   t.llm_latency_ms!=null?`LLM ${(t.llm_latency_ms/1000).toFixed(1)} s`:null,
+                   t.quota_exhausted?'quota exhausted — showing retrieved text':null].filter(Boolean).join(' · ');
+      addMsg('bot',(d.response||'I encountered an issue generating a response.')+modeLabel,src,badge,trace);
       // Show reasoning trace if available
       if(d.reasoning_trace){
         document.getElementById('cot-trace').style.display='block';
@@ -1587,14 +1613,18 @@ async function sendChat(){
   }
 }
 
-function addMsg(role,text,src){
+function addMsg(role,text,src,badge,trace){
   const msgs=document.getElementById('cmsg');
   const d=document.createElement('div');
   d.className=role==='user'?'mu':'mb';
   d.style.opacity='0';d.style.transform='translateY(8px)';d.style.transition='all .3s cubic-bezier(.22,.61,.36,1)';
-  const safe=text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const srcHtml=src&&role==='bot'?`<div><span class="sp">📚 ${src}</span></div>`:'';
-  d.innerHTML=`<div class="ma">${role==='user'?'👤':'✨'}</div><div class="mbub">${safe.replace(/\n/g,'<br/>')}${srcHtml}</div>`;
+  const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const safe=esc(text);
+  const meta=role!=='bot'?'':
+    (src?`<div><span class="sp">📚 ${esc(src)}</span></div>`:'')+
+    (badge?`<div><span class="sp" style="background:#fff6e5;color:#8a5a00;border-color:#f1d9a6">${esc(badge)}</span></div>`:'')+
+    (trace?`<div style="font-size:.66rem;color:var(--tm);margin-top:5px">${esc(trace)}</div>`:'');
+  d.innerHTML=`<div class="ma">${role==='user'?'👤':'✨'}</div><div class="mbub">${safe.replace(/\n/g,'<br/>')}${meta}</div>`;
   msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
   requestAnimationFrame(()=>{d.style.opacity='1';d.style.transform='none';});
   return d;
@@ -1648,13 +1678,88 @@ function animateCount(el,target,fixed,suffix){
   const v=(m,d=2)=>m&&m.value!=null?m.value.toFixed(d):'—';
   const c=(m,d=2)=>m&&m.ci?m.ci[0].toFixed(d)+'–'+m.ci[1].toFixed(d):'—';
   const pc=m=>m&&m.value!=null?(m.value*100).toFixed(1)+'%':'—';
+  // Phase 2 evaluations (reports/*.json): absent until `python -m src.evals.<name>` has been run.
+  const ev=info.evaluations||{},rag=ev.retrieval||{},ans=ev.answers||{},saf=ev.safety||{};
+  const pcv=m=>m&&m.value!=null?(m.value*100).toFixed(0)+'%':'—';
+  const pcc=m=>m&&m.ci?(m.ci[0]*100).toFixed(0)+'–'+(m.ci[1]*100).toFixed(0)+'%':'—';
+  const embShort=(kb.embedder||'').split('/').pop();
+  const modeLabel=mode=>{
+    if(!mode)return '—';
+    const rer=mode.endsWith('+rerank'),kind=mode.replace('+rerank','').split(':')[0];
+    const s=kind==='bm25'?'BM25 (lexical)':kind==='dense'?`dense embeddings (${embShort})`:`hybrid BM25 + ${embShort} embeddings (reciprocal-rank fusion)`;
+    return rer?s+' + cross-encoder re-ranking':s;
+  };
+  const modeShort=mode=>{
+    if(!mode)return '—';
+    const kind=mode.replace('+rerank','').split(':')[0],s=kind==='bm25'?'BM25':kind==='dense'?'Dense':'Hybrid';
+    return mode.endsWith('+rerank')?s+' + rerank':s;
+  };
+  const chosen=(rag.selection||{}).chosen,best=(rag.selection||{}).best,modes=rag.modes||{};
+  const chosenM=((modes[chosen]||{}).metrics)||{},bm25M=((modes.bm25||{}).metrics)||{},qc=rag.query_construction||{};
+  // When the cheapest mode was chosen, the interesting comparison is the best (costlier) mode, not BM25 itself.
+  const bestM=((modes[best]||{}).metrics)||{},bestMs=(modes[best]||{}).latency_ms;
+  const cmp=chosen==='bm25'&&best&&best!==chosen
+    ?`best mode ${best} ${pcv(bestM['hit@3'])} at ${Math.round(bestMs||0)} ms/query`
+    :`BM25 alone ${pcv(bm25M['hit@3'])}`;
+  // Red team: the held-out set (written after the guardrails were frozen) is the headline;
+  // the development set is in-sample. Fall back to the older single-set report shape.
+  const sets=saf.sets||{},held=sets.held_out||{},dev=sets.development||{};
+  const headline=held.summary?held:(dev.summary?dev:saf);
+  const sg=(headline.summary||{}).guarded||{},sb=(headline.summary||{}).baseline||{};
+  const dg=(dev.summary||{}).guarded||{},db=(dev.summary||{}).baseline||{};
+  const advN=s=>s&&s.n_prompts!=null?s.n_prompts-((s.categories||{}).benign||0):null;
+  // Retrieval numbers describe one exact index; flag them if the served index has changed since.
+  const stale=rag.chunks_sha256&&kb.chunks_sha256&&rag.chunks_sha256!==kb.chunks_sha256;
+  const staleNote=stale?' (measured on an earlier index; re-run the evaluation)':'';
   const vals={
     served_name:sv.label, served_auroc:v(st.auroc), served_auroc_ci:c(st.auroc),
     served_specificity:pc(st.specificity), n_test:n.test, n_fit:n.fit, n_conformal:n.conformal,
     mammo_clean_rows:mm.clean_rows, mammo_malignant:mm.malignant, mammo_benign:mm.benign,
     kb_chunks:kb.n_chunks, kb_indexed_sources:kb.n_indexed_sources,
     kb_available_sources:kb.n_available_sources, kb_dim:kb.embedding_dim,
+    kb_retrieval_label:modeLabel(kb.retrieval_mode), kb_retrieval_short:modeShort(kb.retrieval_mode),
+    rag_query_label:kb.retrieval_query==='shap_prefix'?'the SHAP summary followed by the question':'the question alone',
+    rag_hit3:pcv(chosenM['hit@3'])+staleNote, rag_hit3_ci:pcc(chosenM['hit@3']), rag_comparison:cmp,
+    conformal_coverage:v((st.conformal||{}).coverage),
+    rag_n_answerable:rag.n_answerable, llm_model:(info.llm||{}).model,
+    ans_n:ans.n, ans_faithful:pcv((ans.answerable||{}).answered_faithfully||(ans.answerable||{}).faithful),
+    ans_citations:pcv((ans.answerable||{}).citations_correct),
+    ans_abstain:pcv((ans.unanswerable||{}).correct_abstention),
+    safety_n:advN(headline),
+    safety_set_desc:held.summary?'held-out adversarial prompts, written after the guardrails were frozen':'adversarial prompts (development set, in-sample)',
+    safety_asr_guarded:pcv(sg.attack_success_rate), safety_asr_baseline:pcv(sb.attack_success_rate),
+    safety_over_refusal:pcv(sg.over_refusal),
   };
+  const rt=document.getElementById('rag-eval-tbody');
+  if(rt&&(chosen||ans.n||sg.attack_success_rate)){
+    const dim=t=>`<span style="color:var(--tm);font-size:.75em">(${t})</span>`,rows=[];
+    if(chosen){
+      rows.push([`Retrieval Hit@3 — ${modeShort(chosen)}, chosen by rule`,`${pcv(chosenM['hit@3'])} ${dim(pcc(chosenM['hit@3']))}`,`${cmp}; ${rag.n_answerable} labelled questions${staleNote}`]);
+      rows.push(['Retrieval MRR@10',`${pcv(chosenM['mrr@10'])} ${dim(pcc(chosenM['mrr@10']))}`,chosen==='bm25'&&best&&best!==chosen?`best mode ${best} ${pcv(bestM['mrr@10'])}`:`BM25 alone ${pcv(bm25M['mrr@10'])}`]);
+      if(qc.bare_question)rows.push(['Query construction, Hit@3: question alone',pcv(qc.bare_question['hit@3']),`SHAP summary + question ${pcv((qc.shap_prefix_plus_question||{})['hit@3'])}`]);
+    }
+    if(ans.n){
+      const a=ans.answerable||{},u=ans.unanswerable||{};
+      const af=a.answered_faithfully||a.faithful;
+      rows.push(['Answered, every claim supported by the documents (LLM judge)',`${pcv(af)} ${dim(pcc(af))}`,`${ans.n_answerable} answerable questions; faithful when answering ${pcv(a.faithful_when_answering)}`]);
+      rows.push(['Citations point to supporting documents',`${pcv(a.citations_correct)} ${dim(pcc(a.citations_correct))}`,`${pcv(a.has_valid_citation)} of answers cite at least one document`]);
+      rows.push(['Declines questions the documents do not cover',`${pcv(u.correct_abstention)} ${dim(pcc(u.correct_abstention))}`,`${ans.n_unanswerable} unanswerable questions`]);
+    }
+    if(sg.attack_success_rate){
+      const label=held.summary?'held-out prompts':'prompts';
+      rows.push([`Red team: attack success rate (${label})`,`${pcv(sg.attack_success_rate)} ${dim(pcc(sg.attack_success_rate))}`,`without the safety layers ${pcv(sb.attack_success_rate)}; ${vals.safety_n} adversarial ${label}`]);
+      rows.push([`Red team: over-refusal of benign ${label}`,`${pcv(sg.over_refusal)} ${dim(pcc(sg.over_refusal))}`,`without the safety layers ${pcv(sb.over_refusal)}`]);
+      if(held.summary&&dg.attack_success_rate)rows.push(['Red team: development set (in-sample)',`${pcv(dg.attack_success_rate)} ${dim(pcc(dg.attack_success_rate))}`,`without the safety layers ${pcv(db.attack_success_rate)}; the guardrails were written against these ${advN(dev)} prompts`]);
+    }
+    rt.innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td><span class="mv">${r[1]}</span></td><td style="color:var(--tm)">${r[2]}</td></tr>`).join('');
+  }
+  const sr=document.getElementById('src-row');
+  if(sr&&kb.indexed_sources&&kb.indexed_sources.length){
+    const icons={birads_terminology:'📘',breast_imaging_glossary:'📗',acr_followup_guidelines:'📙',safety_disclaimer:'🛡️'};
+    const acro={acr:'ACR',nccn:'NCCN',who:'WHO',birads:'BI-RADS'};
+    const pretty=s=>s.replace(/_/g,' ').replace(/\b\w+\b/g,w=>acro[w]||w.charAt(0).toUpperCase()+w.slice(1));
+    sr.innerHTML=kb.indexed_sources.map(s=>`<div class="src-c"><div class="src-ic">${icons[s]||'📄'}</div><div class="src-t">${pretty(s)}</div><div class="src-s">knowledge_base/sources/${s}.md</div></div>`).join('');
+  }
   document.querySelectorAll('[data-mi]').forEach(el=>{
     const x=vals[el.dataset.mi];
     if(x!=null)el.textContent=x;
