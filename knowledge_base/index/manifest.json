@@ -1,0 +1,34 @@
+{
+  "n_chunks": 103,
+  "chunks_sha256": "56cffbd56e68b49c055ecbda99a6e622886ec124dcc3903d301e082ba1a1c66c",
+  "chunker": {
+    "max_chars": 900,
+    "contextual_header": true
+  },
+  "sources": {
+    "acr_followup_guidelines": "ec51c425e757adc6db759fb3c6ca8a02cad165a46005f8d0eee72093db958cdc",
+    "birads_terminology": "8dbe9f785f4cb66384e24bb6039c01259d332ff71e73e17084ecdbb2b0fe3f2c",
+    "breast_imaging_glossary": "cbf572114adbfceb01d8e59efcdb995eaad9d2cdf1a6367b8749e1e04b26b85d",
+    "imaging_modalities": "d64fda7d440dad74fb2312bc74d47012e6f0aaaed9a33aaab539c57b025fdf14",
+    "nccn_screening_guidelines": "6635a345907af2543db26072fcbc6457cc050a7123df6b6e561bd216021e94f8",
+    "patient_communication": "c369cda7455a310e3462186d09c656bba73a31230c3d966c7b8e8926bdd6c99b",
+    "risk_factors_epidemiology": "0eb745d03be4df72958c77291515849b86fd31af691ca8fae6509873572ec9e9",
+    "safety_disclaimer": "3ccc9c2a9b06a04de070a84b1336c1bf54e672b5dc1541dceb12ad3668d896eb",
+    "treatment_pathways": "9304ae07ce33726baed38e84fab8361a1822789a0faf4c359ed1af94eb8ff130",
+    "who_screening_protocols": "e16e08cdfd8ca49195181f4ca4cc816ea5ddad206ae33868ac09bec4490ad1c3"
+  },
+  "embedders": {
+    "minilm": {
+      "model": "sentence-transformers/all-MiniLM-L6-v2",
+      "library": "fastembed",
+      "dim": 384,
+      "file": "embeddings_minilm.npy"
+    },
+    "potion": {
+      "model": "minishlab/potion-base-8M",
+      "library": "model2vec",
+      "dim": 256,
+      "file": "embeddings_potion.npy"
+    }
+  }
+}

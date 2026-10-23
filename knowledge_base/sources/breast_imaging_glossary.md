@@ -2,49 +2,59 @@
 
 ## What is a Mammographic Mass?
 
-A mammographic mass is a space-occupying lesion seen in two different projections on a mammogram. A mass has a three-dimensional shape that differentiates it from a density, which is visible in only one projection. Masses are characterised by their shape, margin, and density.
+A mass is a three-dimensional finding with an outward-bulging contour, seen on two different mammographic projections (or on a single projection with tomosynthesis). Masses are described by their shape, margin and density. A finding seen on only one projection is called an asymmetry rather than a mass.
 
 ## What is a Mammogram?
 
-A mammogram is an X-ray of the breast. It is the primary screening tool for breast cancer detection. Digital mammography uses electronic detectors to convert X-rays into digital images, which can be enhanced and stored electronically. Digital breast tomosynthesis (3D mammography) acquires multiple images at different angles to produce reconstructed cross-sectional images, improving detection in dense breast tissue.
+A mammogram is an X-ray of the breast and the primary tool for breast cancer screening. Digital mammography records the X-rays electronically, so images can be enhanced and stored. Digital breast tomosynthesis (3D mammography) takes images from several angles and reconstructs thin slices through the breast. It improves cancer detection in many women with dense breasts, although a large US study found no gain at later screening rounds in extremely dense breasts.
 
 ## What is BI-RADS?
 
-BI-RADS stands for Breast Imaging Reporting and Data System. It is a standardised reporting system developed by the American College of Radiology (ACR) to reduce variability in mammographic interpretation. BI-RADS provides a structured lexicon for describing findings and a numeric assessment category to guide clinical management.
-
-BI-RADS assessment categories range from 0 to 6:
-- Category 0: Incomplete — additional imaging needed
+BI-RADS (Breast Imaging Reporting and Data System) is the American College of Radiology's standardised lexicon, report structure, assessment-category scheme and audit system for mammography, ultrasound, MRI and contrast-enhanced mammography. Its final assessment categories are:
+- Category 0: Incomplete — additional imaging and/or comparison with prior images is needed
 - Category 1: Negative — routine screening
 - Category 2: Benign — routine screening
-- Category 3: Probably benign — short-interval follow-up (6 months)
-- Category 4: Suspicious — biopsy should be considered (sub-divided 4A, 4B, 4C)
-- Category 5: Highly suggestive of malignancy — biopsy required
+- Category 3: Probably benign — short-interval follow-up, usually at 6 months
+- Category 4: Suspicious — tissue diagnosis (subdivided 4A, 4B, 4C)
+- Category 5: Highly suggestive of malignancy — tissue diagnosis
 - Category 6: Known biopsy-proven malignancy
 
 ## What is a Fibroadenoma?
 
-A fibroadenoma is the most common benign breast tumour, typically presenting as a well-defined, oval or round, circumscribed mass in young women. Fibroadenomas may exhibit calcifications on imaging. They do not require treatment unless symptomatic or large.
+A fibroadenoma is the most common benign breast tumour, typically seen as a well-defined, oval or round, circumscribed mass in young women. Coarse calcifications are typical of older, involuting fibroadenomas. Removal is considered when a fibroadenoma is large, growing, causing symptoms, or looks atypical on imaging.
 
 ## What is a Cyst?
 
-A breast cyst is a fluid-filled sac within the breast tissue. Simple cysts are completely anechoic on ultrasound and require no further workup. Complicated and complex cysts may require further imaging or aspiration.
+A breast cyst is a fluid-filled sac. On ultrasound, a simple cyst is circumscribed, round or oval, free of internal echoes (anechoic) and thin-walled, often with posterior acoustic enhancement; it is benign. Complicated cysts are also usually benign and may be aspirated if they cause symptoms. Complex cystic and solid lesions should be biopsied.
 
 ## What is Fine Needle Aspiration (FNA)?
 
-Fine needle aspiration is a minimally invasive diagnostic procedure in which a thin needle is inserted into a mass to extract cells for cytological analysis. The Wisconsin Breast Cancer Diagnostic (WDBC) dataset features were computed from FNA specimens.
+Fine needle aspiration is a minimally invasive procedure in which a thin needle draws cells from a mass for cytological examination. The Wisconsin Diagnostic Breast Cancer (WDBC) dataset's features were computed from digitised FNA images: 10 nuclear measurements, each summarised by its mean, standard error and worst value, giving 30 features.
 
 ## What is a Biopsy?
 
-A breast biopsy is the removal of a tissue sample from a breast abnormality for pathological examination. Image-guided core needle biopsy (CNB) is the standard of care for evaluating suspicious mammographic masses. A biopsy is required to confirm or exclude malignancy. An AI risk estimate is not a substitute for biopsy.
+A breast biopsy removes a tissue sample from an abnormality for examination by a pathologist. An image-guided core needle biopsy is the preferred first procedure for a suspicious finding. A biopsy can confirm cancer; a benign result is reliable only when it agrees with the imaging findings (concordance). An AI risk estimate is not a substitute for a biopsy.
 
 ## What are Nuclear Features?
 
-Nuclear features describe the characteristics of cell nuclei observed under microscopy, including radius, texture, perimeter, area, smoothness, compactness, concavity, concave points, symmetry, and fractal dimension. The WDBC dataset contains 30 nuclear features computed from FNA images.
+Nuclear features describe the cell nuclei seen under the microscope, such as radius, texture, perimeter, area, smoothness, compactness, concavity, concave points, symmetry and fractal dimension. The WDBC dataset contains 30 such features.
 
 ## What is Malignancy Probability?
 
-Malignancy probability is the estimated likelihood that a mass represents a cancer, expressed as a percentage. It is derived from the features of the mass and the prior probability of malignancy in the population. A malignancy probability is a statistical estimate, not a diagnosis. Only histopathological examination of biopsy tissue can confirm or exclude malignancy.
+A malignancy probability is a model's estimate of how often masses with the same features turned out to be cancer, expressed as a percentage. It reflects the cases the model learned from: in the UCI Mammographic Mass data, 445 of 961 masses were malignant, a far higher share than among masses found at routine screening. A probability is a statistical estimate, not a diagnosis.
 
 ## What is Sensitivity and Specificity?
 
-Sensitivity (recall) is the proportion of true positive cases correctly identified. Specificity is the proportion of true negative cases correctly identified. In breast cancer screening, high sensitivity is prioritised to minimise false negatives (missed cancers), sometimes at the cost of lower specificity (more false positives requiring additional workup).
+Sensitivity is the share of people with the disease whom a test correctly flags: true positives divided by all people with the disease. Specificity is the share of people without the disease whom the test correctly clears: true negatives divided by all people without it. Screening programmes trade one against the other, and most women recalled after a screening mammogram do not have cancer.
+
+## Sources
+
+- American College of Radiology. BI-RADS v2025 Mammography Lexicon Summary Form. https://edge.sitecorecloud.io/americancoldf5f-acrorgf92a-productioncb02-3650/media/ACR/Files/RADS/BI-RADS/BI-RADS-Summary-Form-Mammography.pdf
+- American College of Radiology. BI-RADS v2025 Ultrasound Lexicon Summary Form. https://edge.sitecorecloud.io/americancoldf5f-acrorgf92a-productioncb02-3650/media/ACR/Files/RADS/BI-RADS/BI-RADS-Summary-Form-Ultrasound.pdf
+- National Cancer Institute. Breast Cancer Screening (PDQ), health professional version. https://www.cancer.gov/types/breast/hp/breast-screening-pdq
+- National Cancer Institute. Mammograms fact sheet. https://www.cancer.gov/types/breast/mammograms-fact-sheet
+- Lowry KP, et al. Screening performance of digital breast tomosynthesis vs digital mammography by breast density and age. JAMA Network Open. 2020.
+- American Cancer Society. Fibroadenomas of the breast. https://www.cancer.org/cancer/types/breast-cancer/non-cancerous-breast-conditions/fibroadenomas-of-the-breast.html
+- Berg WA, et al. Cystic lesions of the breast: sonographic-pathologic correlation. Radiology. 2003.
+- UCI Machine Learning Repository. Breast Cancer Wisconsin (Diagnostic). https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic
+- Elter M. Mammographic Mass [dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C53K6Z
