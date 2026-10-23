@@ -33,7 +33,6 @@ def test_no_stale_anthropic_or_claude_references():
         *(ROOT / "src").rglob("*.py"), *(ROOT / "scripts").glob("*.py"),
         *(ROOT / "knowledge_base" / "sources").glob("*.md"),
         ROOT / "knowledge_base" / "chunks" / "chunks.jsonl",
-        ROOT / "knowledge_base" / "vectorstore" / "chunk_metadata.json",
     ]
     stale = re.compile(r"anthropic|claude", re.IGNORECASE)
     offenders = [str(p.relative_to(ROOT)) for p in files

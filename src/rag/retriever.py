@@ -1,118 +1,141 @@
 """
-src/rag/retriever.py — Query the FAISS vectorstore and return top-k chunks.
-Auto-detects TF-IDF vs dense embedder from the flag file.
+src/rag/retriever.py — Search the knowledge base.
+
+Modes
+  bm25            keyword search (src/rag/bm25.py)
+  dense:<name>    cosine similarity with a torch-free embedder (src/rag/embedders.py)
+  hybrid:<name>   reciprocal rank fusion, score = Σ 1 / (60 + rank), of bm25 and dense:<name>
+  <mode>+rerank   re-order the top 20 of <mode> with a cross-encoder (src/rag/rerank.py)
+
+The default mode is config.RETRIEVAL_MODE, chosen by the retrieval evaluation
+(src/evals/retrieval.py). If a mode's embedder is not installed or its vectors
+do not match the current chunks, search falls back to bm25 and records the mode
+it actually used. It never compares vectors from different models.
 """
 from __future__ import annotations
+
 import json
-import pickle
-import numpy as np
-import faiss
+import logging
 from functools import lru_cache
 from pathlib import Path
 import sys
 
+import numpy as np
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from src.config import (
-    FAISS_INDEX_PATH, CHUNK_METADATA_PATH, TFIDF_PATH, SVD_PATH,
-    EMBEDDER_FLAG_PATH, CHUNK_TOP_K,
-)
+from src.config import CHUNK_TOP_K, CHUNKS_JSONL, KB_INDEX_DIR, KB_MANIFEST_PATH, RETRIEVAL_MODE
+from src.rag.bm25 import BM25
+from src.rag import rerank as reranker
+from src.rag.embedders import EMBEDDERS, available, encode
+
+logger = logging.getLogger(__name__)
+RRF_K = 60
 
 
 @lru_cache(maxsize=1)
-def _load_index_and_meta():
-    if not FAISS_INDEX_PATH.exists():
-        raise FileNotFoundError(
-            f"FAISS index not found at {FAISS_INDEX_PATH}. "
-            "Run `python scripts/build_knowledge_base.py` first."
-        )
-    index = faiss.read_index(str(FAISS_INDEX_PATH))
-    with open(CHUNK_METADATA_PATH, encoding="utf-8") as f:
-        metadata = json.load(f)
-    embedder_type = "tfidf"
-    if EMBEDDER_FLAG_PATH.exists():
-        embedder_type = EMBEDDER_FLAG_PATH.read_text().strip()
-    return index, metadata, embedder_type
+def _index():
+    if not CHUNKS_JSONL.exists() or not KB_MANIFEST_PATH.exists():
+        raise FileNotFoundError("Knowledge-base index missing. Run `python scripts/build_knowledge_base.py`.")
+    with open(CHUNKS_JSONL, encoding="utf-8") as f:
+        chunks = [json.loads(line) for line in f if line.strip()]
+    manifest = json.loads(KB_MANIFEST_PATH.read_text(encoding="utf-8"))
+    from src.rag.index import chunks_hash
+    if chunks_hash(chunks) != manifest.get("chunks_sha256"):
+        raise ValueError("chunks.jsonl does not match the index manifest; rebuild the knowledge base.")
+    return chunks, manifest, BM25([c["index_text"] for c in chunks])
 
 
-@lru_cache(maxsize=1)
-def _load_tfidf_models():
-    with open(TFIDF_PATH, "rb") as f:
-        vectorizer = pickle.load(f)
-    with open(SVD_PATH, "rb") as f:
-        svd = pickle.load(f)
-    return vectorizer, svd
+@lru_cache(maxsize=None)
+def _vectors(name: str) -> np.ndarray | None:
+    """The stored vectors for an embedder, or None if they cannot be used safely."""
+    chunks, manifest, _ = _index()
+    info = manifest["embedders"].get(name)
+    if info is None or not available(name):
+        return None
+    path = KB_INDEX_DIR / info["file"]
+    if not path.exists():
+        return None
+    vectors = np.load(path)
+    return vectors if vectors.shape == (len(chunks), info["dim"]) else None
 
 
-def _encode_query(query: str, embedder_type: str) -> np.ndarray:
-    if embedder_type == "dense":
-        try:
-            from sentence_transformers import SentenceTransformer
-            model = SentenceTransformer("all-MiniLM-L6-v2")
-            vec = model.encode([query], convert_to_numpy=True).astype("float32")
-            faiss.normalize_L2(vec)
-            return vec
-        except Exception:
-            pass
-    # Fallback: TF-IDF + SVD
-    vectorizer, svd = _load_tfidf_models()
-    tfidf_vec = vectorizer.transform([query])
-    vec = svd.transform(tfidf_vec).astype("float32")
-    faiss.normalize_L2(vec)
-    return vec
+def resolve_mode(mode: str | None = None) -> str:
+    """The mode that will actually run (falls back to bm25 if dense vectors are unusable)."""
+    mode = mode or RETRIEVAL_MODE
+    if mode.endswith("+rerank"):
+        base = resolve_mode(mode[: -len("+rerank")])
+        if not reranker.available():
+            logger.warning("Re-ranker unavailable (fastembed missing); using %s", base)
+            return base
+        return f"{base}+rerank"
+    if mode == "bm25":
+        return mode
+    kind, _, name = mode.partition(":")
+    if kind not in ("dense", "hybrid") or name not in EMBEDDERS:
+        raise ValueError(f"unknown retrieval mode {mode!r}")
+    if _vectors(name) is None:
+        logger.warning("Retrieval mode %s unavailable (embedder or vectors missing); using bm25", mode)
+        return "bm25"
+    return mode
+
+
+def _order(scores: np.ndarray, candidates: np.ndarray) -> np.ndarray:
+    """Candidate indices sorted by score (descending), ties broken by position."""
+    return candidates[np.lexsort((candidates, -scores[candidates]))]
+
+
+def search(query: str, k: int = CHUNK_TOP_K, mode: str | None = None,
+           source: str | None = None) -> list[dict]:
+    chunks, _, bm25 = _index()
+    used = resolve_mode(mode)
+    if used.endswith("+rerank"):
+        pool = search(query, reranker.POOL, used[: -len("+rerank")], source)
+        return [{**c, "retrieval_mode": used} for c in reranker.rerank(query, pool, k)]
+    candidates = np.array([i for i, c in enumerate(chunks) if source is None or c["source"] == source])
+    if len(candidates) == 0:
+        return []
+
+    def dense_scores(name: str) -> np.ndarray:
+        return _vectors(name) @ encode(name, [query])[0]
+
+    if used == "bm25":
+        scores = bm25.scores(query)
+    elif used.startswith("dense:"):
+        scores = dense_scores(used.split(":", 1)[1])
+    else:
+        # Reciprocal-rank fusion. BM25 ranks only chunks that share a term with the query:
+        # a chunk with BM25 score 0 was not retrieved by it and gets no credit from that
+        # list (otherwise ties would be broken by file position and leak into the fusion).
+        scores = np.zeros(len(chunks))
+        lexical = bm25.scores(query)
+        for ranked in (_order(lexical, candidates[lexical[candidates] > 0]),
+                       _order(dense_scores(used.split(":", 1)[1]), candidates)):
+            for rank, idx in enumerate(ranked, start=1):
+                scores[idx] += 1.0 / (RRF_K + rank)
+
+    out = []
+    for rank, idx in enumerate(_order(scores, candidates)[:k], start=1):
+        chunk = {key: v for key, v in chunks[idx].items() if key != "index_text"}
+        out.append({**chunk, "score": round(float(scores[idx]), 6), "rank": rank,
+                    "retrieval_mode": used})
+    return out
 
 
 def rag_query(query: str, k: int = CHUNK_TOP_K) -> list[dict]:
-    """
-    Search FAISS for top-k most similar chunks.
-
-    Returns list of dicts with keys:
-        chunk_id, source, section, text, score
-    """
-    index, metadata, embedder_type = _load_index_and_meta()
-    query_vec = _encode_query(query, embedder_type)
-
-    # Handle dimension mismatch (e.g., index=384 dense, query=128 TF-IDF fallback)
-    index_dim = index.d
-    query_dim = query_vec.shape[1]
-    if query_dim != index_dim:
-        if query_dim < index_dim:
-            # Pad query vector with zeros to match index dimension
-            pad = np.zeros((1, index_dim - query_dim), dtype="float32")
-            query_vec = np.hstack([query_vec, pad])
-            faiss.normalize_L2(query_vec)
-        else:
-            # Truncate to index dimension
-            query_vec = query_vec[:, :index_dim].copy()
-            faiss.normalize_L2(query_vec)
-
-    distances, indices = index.search(query_vec, k)
-    results = []
-    seen = set()
-    for dist, idx in zip(distances[0], indices[0]):
-        if idx < 0:
-            continue
-        chunk = metadata.get(str(idx), {})
-        chunk_id = chunk.get("chunk_id", str(idx))
-        if chunk_id in seen:
-            continue
-        seen.add(chunk_id)
-        results.append({
-            **chunk,
-            "score": float(dist),
-        })
-    return results
+    return search(query, k)
 
 
 def query_by_source(source_name: str, query: str, k: int = 1) -> list[dict]:
-    """
-    Retrieve chunks filtered to a specific source document.
-    Used for safety disclaimer injection on high-risk predictions.
-    """
-    _, metadata, _ = _load_index_and_meta()
-    # Filter chunks by source, then return up to k
-    source_chunks = [
-        {**c, "score": 1.0}
-        for c in metadata.values()
-        if c.get("source") == source_name
-    ]
-    return source_chunks[:k]
+    """Best-matching chunk(s) from one document (used for the safety notice on high-risk results)."""
+    return search(query, k, source=source_name)
+
+
+def stats() -> dict:
+    chunks, manifest, _ = _index()
+    return {
+        "n_chunks": len(chunks),
+        "n_sources": len({c["source"] for c in chunks}),
+        "embedders": {n: {"model": i["model"], "dim": i["dim"]} for n, i in manifest["embedders"].items()},
+        "configured_mode": RETRIEVAL_MODE,
+        "active_mode": resolve_mode(),
+    }
