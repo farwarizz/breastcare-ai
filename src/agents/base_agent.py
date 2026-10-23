@@ -97,28 +97,10 @@ class BaseAgent:
         return {"text": raw_text}
 
     def _call_llm(self, user_message: str) -> str:
-        """Call Gemini API with this agent's system prompt."""
-        from openai import OpenAI
-
-        api_key = get_api_key()
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY not set")
-
-        client = OpenAI(
-            api_key=api_key,
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        )
-
-        response = client.chat.completions.create(
-            model=GEMINI_MODEL,
-            max_tokens=AGENT_MAX_TOKENS,
-            temperature=AGENT_TEMPERATURE,
-            messages=[
-                {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": user_message},
-            ],
-        )
-        return response.choices[0].message.content
+        """Call Gemini through the shared client (retries, fallback, usage tracking)."""
+        from src.llm.client import complete
+        return complete([{"role": "user", "content": user_message}], self.system_prompt,
+                        max_tokens=AGENT_MAX_TOKENS, temperature=AGENT_TEMPERATURE).text
 
     def get_trace(self) -> dict[str, Any]:
         """Return execution trace for transparency/debugging."""

@@ -41,26 +41,24 @@ FIGURES_DIR      = EVAL_REPORTS_DIR / "figures"
 # ── Image model paths ────────────────────────────────────────────
 IMG_MODEL_PATH       = MODELS_DIR / "efficientnet_cbis.pth"
 
-# ── Knowledge base paths ─────────────────────────────────────────
+# ── Knowledge base (built by `python scripts/build_knowledge_base.py`) ─
 KB_DIR              = ROOT / "knowledge_base"
 KB_SOURCES_DIR      = KB_DIR / "sources"
-KB_CHUNKS_DIR       = KB_DIR / "chunks"
-KB_VECTORSTORE_DIR  = KB_DIR / "vectorstore"
-CHUNKS_JSONL        = KB_CHUNKS_DIR / "chunks.jsonl"
-FAISS_INDEX_PATH    = KB_VECTORSTORE_DIR / "faiss.index"
-CHUNK_METADATA_PATH = KB_VECTORSTORE_DIR / "chunk_metadata.json"
-TFIDF_PATH          = KB_VECTORSTORE_DIR / "tfidf_vectorizer.pkl"
-SVD_PATH            = KB_VECTORSTORE_DIR / "svd_reducer.pkl"
-EMBEDDER_FLAG_PATH  = KB_VECTORSTORE_DIR / "embedder_type.txt"
+CHUNKS_JSONL        = KB_DIR / "chunks" / "chunks.jsonl"
+KB_INDEX_DIR        = KB_DIR / "index"
+KB_MANIFEST_PATH    = KB_INDEX_DIR / "manifest.json"   # embedders, dims, source hashes
 
-# ── GraphRAG paths ───────────────────────────────────────────────
-KB_GRAPHSTORE_DIR    = KB_DIR / "graphstore"
-KNOWLEDGE_GRAPH_PATH = KB_GRAPHSTORE_DIR / "knowledge_graph.graphml"
-ENTITY_CACHE_PATH    = KB_GRAPHSTORE_DIR / "entity_cache.json"
-COMMUNITY_CACHE_PATH = KB_GRAPHSTORE_DIR / "community_summaries.json"
+# ── Evaluation sets and LLM response cache ───────────────────────
+EVALS_DIR           = ROOT / "evals"
 
 # ── Audit & reporting paths ──────────────────────────────────────
 AUDIT_DB_PATH        = DATA_DIR / "audit.db"
+# Serverless hosts (Vercel) have a read-only filesystem except /tmp: the audit log
+# and downloaded model caches go there (per instance, not persistent).
+if os.environ.get("VERCEL"):
+    AUDIT_DB_PATH = Path("/tmp/audit.db")
+    os.environ.setdefault("HF_HOME", "/tmp/hf")
+    os.environ.setdefault("FASTEMBED_CACHE_PATH", "/tmp/fastembed")
 REPORTS_DIR          = DATA_DIR / "reports"
 AUDIT_ENABLED        = True
 
@@ -70,6 +68,14 @@ AUDIT_ENABLED        = True
 LOW_RISK_THRESHOLD      = 0.35   # below = Low
 HIGH_RISK_THRESHOLD     = 0.65   # at or above = Elevated
 CHUNK_TOP_K             = 3      # retrieved chunks per query
+# Retrieval mode served by the app: "bm25", "dense:<embedder>", "hybrid:<embedder>", each
+# optionally "+rerank". Set by the fixed rule in src/evals/retrieval.py, never by hand
+# (reports/rag_evaluation.md; tests/test_evals.py checks the two agree). BM25 was within
+# the rule's 0.02 Hit@3 tolerance of the best mode and needs no embedding model at runtime.
+RETRIEVAL_MODE          = "bm25"
+# Query for a user question: "question" (the question alone) or "shap_prefix"
+# (SHAP summary + question). Also set from the retrieval evaluation.
+RETRIEVAL_QUERY         = "question"
 
 # ── Mammographic feature mappings ────────────────────────────────
 SHAPE_MAP = {
@@ -97,21 +103,29 @@ DENSITY_MAP = {
 FEATURE_NAMES = ["age", "shape", "margin", "density"]
 
 # ── LLM (Google Gemini via its OpenAI-compatible endpoint) ───────
-GEMINI_MODEL   = "gemini-2.5-flash"   # free-tier key from Google AI Studio
-LLM_MAX_TOKENS = 900
+# Free-tier key from Google AI Studio. The primary model is the one the evaluations
+# measure; gemini-2.5-flash's free tier allows only a few dozen requests a day, so it is
+# a fallback rather than the default.
+GEMINI_MODEL   = "gemini-3.5-flash-lite"
+# Tried in order when the primary model is out of quota, overloaded or retired.
+LLM_FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-3.5-flash"]
+# Gemini 2.5+/3.x models "think" by default and the hidden thinking tokens count
+# against max_tokens: at reasoning_effort "low", gemini-3.5-flash-lite spent 370–800 of
+# 900 tokens thinking and cut answers off mid-sentence. "minimal" (3.x) and "none"
+# (2.5) use no hidden tokens; the client also records finish_reason "length".
+LLM_MODEL_PARAMS = {
+    "gemini-2.5-flash":      {"reasoning_effort": "none"},
+    "gemini-3.5-flash-lite": {"reasoning_effort": "minimal"},
+    "gemini-3.5-flash":      {"reasoning_effort": "minimal"},
+}
+JUDGE_MODEL    = "gemini-3.5-flash-lite"   # LLM-as-judge in the evaluations (see DESIGN §6 on bias)
+LLM_MAX_TOKENS = 1500                      # the prompt asks for < 220 words; this is headroom
 
 # ── Multi-agent pipeline ─────────────────────────────────────────
 MULTI_AGENT_ENABLED  = False   # opt-in via UI toggle
-AGENT_MAX_TOKENS     = 600
+AGENT_MAX_TOKENS     = 1200
 AGENT_TEMPERATURE    = 0.3
 
-# ── Chunking ─────────────────────────────────────────────────────
-CHUNK_MIN_LEN = 80
-CHUNK_MAX_LEN = 1200
-
-# ── SHAP embedding dims ──────────────────────────────────────────
-EMBED_DIM_DENSE    = 384   # all-MiniLM-L6-v2
-EMBED_DIM_FALLBACK = 128   # TF-IDF + SVD fallback
 
 # ── Google Gemini API key ────────────────────────────────────────
 # Free key (no credit card): https://aistudio.google.com
