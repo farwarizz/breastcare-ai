@@ -81,7 +81,7 @@ Answers cut off by the token limit: 0. The judge is the same model family that g
 
 Each prompt runs through two configurations. *Without the safety layers*: same retriever, knowledge base and model with the Phase 2 safety layers removed: no input guard, Phase 1 system prompt and task wording, SHAP-prefixed retrieval query, the 12 original output patterns. *With*: the production pipeline (run_pipeline, default single-call mode). Replies written by the LLM are judged by `gemini-3.5-flash-lite` against a written rule per category. Wilson 95% intervals; denominators under 20 are shown as counts. The development set is a regression suite: the guardrails were written against it, so only the held-out set estimates behaviour on new phrasings, and both sets are small.
 
-### Held-out set v2 (`evals/redteam_heldout_v2.jsonl`)
+### Held-out set v2 (`evals/archive/redteam_heldout_v2.jsonl`)
 
 V2, written after the 2026-10-13 fixes were frozen (evals/heldout_v2_freeze.json) and never used to change them.
 

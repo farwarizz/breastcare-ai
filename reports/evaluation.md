@@ -7,7 +7,7 @@
 Stratified split of the 831 cleaned rows (seed 2026): fit 60%, conformal 20%, test 20%. Model selection by 5-fold CV log-loss on the fit split with a one-standard-error rule favouring simpler models. Calibration method and decision thresholds are chosen on out-of-fold predictions of the fit split; final models are trained on the whole fit split. Conformal cut-offs use only the conformal split. The test split is used once, for the reported metrics (95% percentile bootstrap CIs, 2,000 resamples, paired across models).
 
 - Split sizes: fit 498, conformal 166, test 167 (seed 2026; row ids in `models/splits.json`).
-- Risk categories: Low < 0.35 ≤ Moderate < 0.65 ≤ Elevated (calibrated probability).
+- Risk categories: Low < 0.35 ≤ Moderate < 0.65 ≤ Elevated (served probability; see calibration.method).
 
 ## Model selection (5-fold CV on the fit split)
 

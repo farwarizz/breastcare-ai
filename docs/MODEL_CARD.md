@@ -11,7 +11,7 @@ from `models/model_metadata.json`; the full evaluation is in
 |---|---|
 | Model | Logistic regression (C=0.1) |
 | Inputs | age, shape, margin, density (BI-RADS assessment excluded) |
-| Output | calibrated P(malignant), 90% conformal prediction set, class at threshold 0.514 |
+| Output | P(malignant) (no calibration step applied), 90% conformal prediction set, class at threshold 0.514 |
 | Trained on | fit split (n=498) of the UCI Mammographic Mass data |
 | Calibration | `none` (chosen by CV Brier on out-of-fold predictions) |
 | Conformal | Mondrian (class-conditional) split conformal, LAC score; Benign in set if p ≤ 0.577, Malignant if p ≥ 0.415 |
@@ -36,7 +36,7 @@ from `models/model_metadata.json`; the full evaluation is in
 ## Intended use
 
 - **Primary use:** demonstrating how a clinical decision-support pipeline can be built and evaluated
-  honestly: calibrated probabilities, conformal prediction sets, explanations, and documentation
+  honestly: probabilities with measured calibration, conformal prediction sets, explanations, and documentation
   generated from the evaluation itself.
 - **Primary users:** students, engineers and researchers studying trustworthy ML.
 - **Out of scope:** diagnosis, screening or biopsy decisions for real patients; any use without a

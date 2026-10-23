@@ -1,8 +1,8 @@
 # BreastCare AI: notes for coding assistants
 
 Research and educational prototype (not a medical device). It estimates breast-mass malignancy
-risk from four BI-RADS descriptors on the real UCI Mammographic Mass data: a calibrated
-probability, a Mondrian conformal prediction set, SHAP contributions and a Gemini RAG assistant
+risk from four BI-RADS descriptors on the real UCI Mammographic Mass data: a probability (no
+calibration step for the served model; `calibrated` reports whether one was applied), a Mondrian conformal prediction set, SHAP contributions and a Gemini RAG assistant
 with input guardrails, numbered citations and an output filter.
 It is served by FastAPI (`server.py`) with one frontend (`app/index.html`).
 Design: `docs/DESIGN.md` · model card: `docs/MODEL_CARD.md` · results: `reports/evaluation.md` and
@@ -39,9 +39,11 @@ Design: `docs/DESIGN.md` · model card: `docs/MODEL_CARD.md` · results: `report
 - `RETRIEVAL_MODE` and `RETRIEVAL_QUERY` in `src/config.py` are copied from the choice that
   `src/evals/retrieval.py`'s fixed rule makes, never picked by taste; `tests/test_evals.py` fails if they
   disagree with the saved report, or if the report describes a different index.
-- The input-guardrail regexes are frozen against `evals/redteam_heldout.jsonl`: never change
-  `src/guardrails.py` because of a held-out result. Add the case to the development set and write new
-  held-out prompts instead, or the held-out number stops meaning anything.
+- The safety code is frozen against the current held-out set (`evals/redteam_heldout_v3.jsonl`; file hashes
+  in `evals/heldout_v3_freeze.json`): never change `src/guardrails.py`, `src/safety.py`, `src/pipeline.py`,
+  the prompts or the other frozen files because of a held-out result. Add the case to the development set
+  and write a new held-out set instead (v4), or the held-out number stops meaning anything. The as-run
+  report of each held-out run is archived byte-for-byte under `evals/runs/` with its SHA-256.
 - Knowledge-base documents state only what their `## Sources` section supports. Keep section headings
   stable: `evals/retrieval_questions.jsonl` and the evaluation's `SECTION_FOR` map refer to them.
 - The LLM provider is Gemini (`GEMINI_API_KEY`, OpenAI-compatible endpoint in `src/llm/client.py`).
@@ -52,8 +54,11 @@ Design: `docs/DESIGN.md` · model card: `docs/MODEL_CARD.md` · results: `report
 
 Phase 0 (honesty cleanup) and Phase 1 (ML rigor) are done. Phase 2 (fact-checked knowledge base,
 evaluated retrieval, cited answers, guardrails, red team) is implemented; held-out v1 showed the safety
-layers did not generalise (crisis misses), so Phase 2.1 fixed them and is re-evaluated on held-out v2.
+layers did not generalise (crisis misses), Phase 2.1 fixed them, and held-out v2 (2026-10-20) was NO-GO
+(attack success 13/62 with the safety layers vs 10/62 without). Phase 2.2 (2026-10-23) fixed the v2
+failures and the audit's deployment blockers and is evaluated on held-out v3.
 Phase 3 (packaging, CI, deployment, audit trail in the UI, real drift baselines) starts only when the
-GO conditions are met: no crisis misses and attack success below the no-safety baseline on held-out v2,
-the judge-agreement sheet labelled by a person, and the commits approved. Then Phase 4, presentation.
-Nothing is published or deployed before that.
+GO conditions are met: the pre-registered v3 acceptance criteria (`ACCEPTANCE` in `src/evals/redteam.py`)
+all met, the judge-agreement sheet labelled by a person (AI labels in
+`evals/judge_agreement_sheet_ai_adjudicated.csv` do not count), and the owner's approval. Then Phase 4,
+presentation. Nothing is published or deployed before that.
