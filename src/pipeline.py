@@ -14,6 +14,7 @@ The UI calls run_pipeline() only; it never touches ML/SHAP/RAG/agents directly.
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 import sys
 
@@ -25,9 +26,20 @@ from src.config import (
 from src.ml.predict  import predict
 from src.ml.explain  import explain
 from src.rag.retriever      import rag_query, query_by_source
-from src.rag.prompt_builder import build_retrieval_query, build_prompt
-from src.llm.client  import call_llm
-from src.safety      import filter_response
+from src.rag.prompt_builder import (build_prompt, build_retrieval_query, parse_citations,
+                                    select_retrieval_query, SYSTEM_PROMPT)
+from src.llm.client  import QuotaExhausted, complete
+from src.safety      import HIGH_RISK_DISCLAIMER, STANDARD_DISCLAIMER, apply_patterns, filter_response
+from src.guardrails  import check_input
+
+UNAVAILABLE_REPLY = ("The assistant could not generate an answer just now. The estimate, the "
+                     "prediction set and the explanation above are unaffected; please try the "
+                     "question again in a moment.")
+SUPPORT_LINES = ("If you are struggling or having thoughts of harming yourself, you don't have to face it "
+                 "alone: contact your local emergency number, or a crisis line (in the US, call or text 988; "
+                 "in the UK and Ireland, Samaritans on 116 123; elsewhere, findahelpline.com). Talking to "
+                 "someone you trust or to your care team can help too.")
+SUPPORT_LINES_PRESENT = re.compile(r"\b988\b|116 123|findahelpline", re.IGNORECASE)
 
 logger = logging.getLogger(__name__)
 
@@ -52,129 +64,190 @@ def run_pipeline(
     user_question: str | None = None,
     mode: str = "single",
     session_id: str = "",
-    use_hybrid_rag: bool = False,
+    llm_kwargs: dict | None = None,
 ) -> dict:
     """
     Run the complete BreastCare AI pipeline.
 
-    Parameters
-    ----------
-    features : dict — {age, shape, margin, density}
-    user_question : str or None — optional follow-up from chat panel
-    mode : 'single' | 'multi_agent' | 'cot'
-    session_id : str — audit session ID
-    use_hybrid_rag : bool — use GraphRAG hybrid retrieval
+    Order: input guardrail → prediction + SHAP → retrieval → generation → output
+    filter. The guardrail answers crisis, injection, privacy and off-topic
+    messages with fixed text and never calls the LLM for them.
 
-    Returns
-    -------
-    dict with prediction, explanation, llm_response, sources_used, chunks,
-    query_used, and optional reasoning_trace / agent_traces.
+    llm_kwargs is passed to the LLM client (the evaluations use it for their
+    response cache and to wait out rate limits).
+
+    Returns a dict with prediction, explanation, llm_response, citations,
+    sources_used, chunks, query_used, guardrail, trace (stage timings, model,
+    token usage) and, for agent modes, reasoning_trace / agent_traces.
     """
-    # ── Steps 1-2: ML prediction + SHAP explanation ─────────────
-    prediction = predict(features)
-    explanation = explain(features)
+    timer = _Timer()
+    decision = check_input(user_question)
+    with timer("predict"):
+        prediction = predict(features)
+    with timer("explain"):
+        explanation = explain(features)
 
-    # ── Step 3: Build retrieval query from SHAP output ──────────
-    retrieval_query = build_retrieval_query(explanation, user_question)
-
-    # ── Step 4: Retrieve relevant chunks ────────────────────────
-    if use_hybrid_rag:
-        try:
-            from src.rag.graph_retriever import hybrid_retrieve
-            chunks = hybrid_retrieve(retrieval_query, k=CHUNK_TOP_K)
-        except Exception as exc:
-            logger.warning("Hybrid RAG failed, falling back to vector: %s", exc)
+    if not decision.calls_llm:
+        result = {
+            "prediction": prediction, "explanation": explanation,
+            "llm_response": {"main_text": decision.fixed_reply,
+                             "disclaimer": STANDARD_DISCLAIMER.strip(),
+                             "high_risk": False, "filters_fired": 0},
+            "citations": [], "sources_used": [], "chunks": [], "query_used": None,
+            "guardrail": decision.category, "mode": "guardrail",
+        }
+    else:
+        retrieval_query = select_retrieval_query(explanation, user_question)
+        with timer("retrieve"):
             chunks = rag_query(retrieval_query, k=CHUNK_TOP_K)
-    else:
-        chunks = rag_query(retrieval_query, k=CHUNK_TOP_K)
+            if prediction["probability"] >= HIGH_RISK_THRESHOLD:
+                existing = {c.get("chunk_id") for c in chunks}
+                chunks += [c for c in query_by_source("safety_disclaimer", retrieval_query, k=1)
+                           if c.get("chunk_id") not in existing]
+        # The chain-of-thought and multi-agent modes are not covered by the red-team
+        # evaluation and do not carry the guardrail's policy notes, so a question the
+        # guardrail flagged always takes the evaluated single-call path.
+        requested = mode
+        if mode in ("multi_agent", "cot") and decision.policy_note:
+            mode = "single"
+        with timer("generate"):
+            if mode in ("multi_agent", "cot"):
+                result = _run_agent_pipeline(features, prediction, explanation, chunks,
+                                             retrieval_query, user_question, mode, llm_kwargs)
+            else:
+                result = _run_single_pipeline(features, prediction, explanation, chunks,
+                                              retrieval_query, user_question, decision.policy_note,
+                                              llm_kwargs)
+        result["guardrail"] = decision.category
+        if requested != result["mode"]:
+            result["requested_mode"] = requested
+        # Backstop for the distress tier: the support lines are guaranteed, whatever the model wrote.
+        lr = result.get("llm_response") or {}
+        if decision.category == "distress" and not SUPPORT_LINES_PRESENT.search(lr.get("main_text", "")):
+            lr["main_text"] = f"{SUPPORT_LINES}\n\n{lr.get('main_text', '')}".strip()
+            lr["support_lines_added"] = True
+        text = (result.get("llm_response") or {}).get("main_text", "")
+        # Citations come only from a generated answer (not from the quota/error fallbacks).
+        cites = (parse_citations(text, len(chunks)) if (result.get("_llm") or {}).get("model")
+                 else {"cited": [], "invalid": []})
+        result["citations"] = [{"n": n, "source": chunks[n - 1].get("source"),
+                                "section": chunks[n - 1].get("section")} for n in cites["cited"]]
+        result["invalid_citations"] = cites["invalid"]
 
-    # ── Step 5: Inject safety disclaimer for high-risk ──────────
-    if prediction["probability"] >= HIGH_RISK_THRESHOLD:
-        safety_chunks = query_by_source("safety_disclaimer", retrieval_query, k=1)
-        existing_ids = {c.get("chunk_id") for c in chunks}
-        for sc in safety_chunks:
-            if sc.get("chunk_id") not in existing_ids:
-                chunks.append(sc)
-
-    # ── Steps 6-8: LLM generation (mode-dependent) ─────────────
-    if mode in ("multi_agent", "cot"):
-        result = _run_agent_pipeline(
-            features, prediction, explanation, chunks,
-            retrieval_query, user_question, mode,
-        )
-    else:
-        result = _run_single_pipeline(
-            features, prediction, explanation, chunks,
-            retrieval_query, user_question,
-        )
-
-    # ── Audit logging ───────────────────────────────────────────
-    _log_to_audit(session_id, features, prediction, explanation, result, mode)
-
+    result["trace"] = {"timings_ms": timer.times, **result.pop("_llm", {})}
+    _log_to_audit(session_id, features, prediction, explanation, result, result["mode"])
     return result
+
+
+class _Timer:
+    """Collects wall-clock milliseconds per pipeline stage."""
+    def __init__(self):
+        self.times: dict[str, float] = {}
+
+    def __call__(self, name: str):
+        import contextlib, time
+
+        @contextlib.contextmanager
+        def block():
+            t0 = time.perf_counter()
+            yield
+            self.times[name] = round((time.perf_counter() - t0) * 1000, 1)
+        return block()
 
 
 def _run_single_pipeline(
     features, prediction, explanation, chunks,
-    retrieval_query, user_question,
+    retrieval_query, user_question, policy_note=None, llm_kwargs=None,
 ) -> dict:
-    """Original 8-step single-pass pipeline."""
-    messages = build_prompt(prediction, explanation, chunks, features, user_question)
-    raw_response = call_llm(messages)
-    safe_response = filter_response(raw_response, prediction["probability"])
+    """Single LLM call with the grounded prompt, then the output filter."""
+    messages = build_prompt(prediction, explanation, chunks, features, user_question, policy_note)
+    try:
+        res = complete(messages, SYSTEM_PROMPT, **(llm_kwargs or {}))
+        llm = {"model": res.model, "usage": res.usage, "llm_latency_ms": res.latency_ms,
+               "finish_reason": res.finish_reason}
+        safe_response = filter_response(res.text, prediction["probability"])
+        if res.truncated:
+            safe_response["main_text"] += " …\n\n(The answer was cut off; please ask again for the rest.)"
+    except QuotaExhausted:
+        llm = {"model": None, "quota_exhausted": True}
+        safe_response = _passages_reply(chunks, prediction["probability"])
+    except Exception as exc:                      # auth, bad request, network: never show raw errors
+        logger.error("LLM call failed: %s", exc)
+        llm = {"model": None, "error": type(exc).__name__}
+        safe_response = _fixed_reply(UNAVAILABLE_REPLY, prediction["probability"])
 
     return {
         "prediction":   prediction,
         "explanation":  explanation,
         "llm_response": safe_response,
-        "sources_used": list({c.get("source", "") for c in chunks}),
+        "sources_used": list(dict.fromkeys(c.get("source", "") for c in chunks)),
         "chunks":       chunks,
         "query_used":   retrieval_query,
         "mode":         "single",
+        "_llm":         llm,
     }
+
+
+def _fixed_reply(text: str, probability: float) -> dict:
+    """A reply that did not come from the LLM, with the usual disclaimers attached."""
+    high = probability >= HIGH_RISK_THRESHOLD
+    disclaimer = (HIGH_RISK_DISCLAIMER + STANDARD_DISCLAIMER) if high else STANDARD_DISCLAIMER
+    return {"main_text": text, "disclaimer": disclaimer.strip(), "high_risk": high,
+            "filters_fired": 0, "full_text": text + disclaimer}
+
+
+def _passages_reply(chunks: list[dict], probability: float) -> dict:
+    """When every model is out of quota: the retrieved passages verbatim (never the prompt,
+    which holds internal instructions), labelled as unsummarised knowledge-base text."""
+    passages = "\n\n".join(f"**{c.get('source', '').replace('_', ' ')} › {c.get('section', '')}**\n{c.get('text', '')}"
+                           for c in chunks) or "No passages were retrieved."
+    text = ("⚠️ The AI model's free quota is used up for now, so here are the most relevant "
+            "knowledge-base passages, unedited:\n\n" + passages +
+            "\n\nPlease try again later for a written answer.")
+    return _fixed_reply(text, probability)
 
 
 def _run_agent_pipeline(
     features, prediction, explanation, chunks,
-    retrieval_query, user_question, mode,
+    retrieval_query, user_question, mode, llm_kwargs=None,
 ) -> dict:
-    """Multi-agent or Chain-of-Thought pipeline."""
+    """Multi-agent or Chain-of-Thought pipeline (optional, unevaluated). Falls back to the
+    evaluated single-call pipeline whenever an agent step fails."""
+    from src.agents.orchestrator import MultiAgentPipeline
+
+    context = {
+        "features": features,
+        "prediction": prediction,
+        "explanation": explanation,
+        "chunks": chunks,
+        "user_question": user_question or "",
+    }
     try:
-        from src.agents.orchestrator import MultiAgentPipeline
-
-        context = {
-            "features": features,
-            "prediction": prediction,
-            "explanation": explanation,
-            "chunks": chunks,
-            "user_question": user_question or "",
-        }
-
-        pipeline = MultiAgentPipeline()
-        agent_result = pipeline.run(context, mode=mode)
-
-        return {
-            "prediction":       prediction,
-            "explanation":      explanation,
-            "llm_response": {
-                "main_text":  agent_result.get("main_text", ""),
-                "disclaimer": agent_result.get("disclaimer", ""),
-                "high_risk":  agent_result.get("high_risk", False),
-            },
-            "sources_used":     list({c.get("source", "") for c in chunks}),
-            "chunks":           chunks,
-            "query_used":       retrieval_query,
-            "mode":             mode,
-            "reasoning_trace":  agent_result.get("reasoning_trace", ""),
-            "agent_traces":     agent_result.get("agent_traces", []),
-        }
-
+        agent_result = MultiAgentPipeline().run(context, mode=mode)
     except Exception as exc:
-        logger.error("Agent pipeline failed, falling back to single: %s", exc)
-        return _run_single_pipeline(
-            features, prediction, explanation, chunks,
-            retrieval_query, user_question,
-        )
+        agent_result = {"success": False, "reasoning_trace": f"{type(exc).__name__}"}
+    if not agent_result.get("success"):
+        logger.error("Agent pipeline (%s) failed, using the single-call pipeline", mode)
+        return _run_single_pipeline(features, prediction, explanation, chunks,
+                                    retrieval_query, user_question, None, llm_kwargs)
+
+    return {
+        "prediction":       prediction,
+        "explanation":      explanation,
+        "llm_response": {
+            "main_text":  agent_result.get("main_text", ""),
+            "disclaimer": agent_result.get("disclaimer", ""),
+            "high_risk":  agent_result.get("high_risk", False),
+        },
+        "sources_used":     list(dict.fromkeys(c.get("source", "") for c in chunks)),
+        "chunks":           chunks,
+        "query_used":       retrieval_query,
+        "mode":             mode,
+        # The step-by-step trace is shown in the UI, so it passes the same output filter.
+        "reasoning_trace":  apply_patterns(agent_result.get("reasoning_trace", ""))[0],
+        "agent_traces":     agent_result.get("agent_traces", []),
+        "_llm":             {"model": agent_result.get("model") or "agents"},
+    }
 
 
 def run_pipeline_ml_only(features: dict, session_id: str = "") -> dict:

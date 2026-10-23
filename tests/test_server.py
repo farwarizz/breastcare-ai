@@ -101,8 +101,22 @@ def test_model_info_serves_saved_metadata():
     assert r.status_code == 200
     body = r.json()
     assert body["metadata"] == json.loads(config.MODEL_METADATA_PATH.read_text(encoding="utf-8"))
-    chunks = json.loads(config.CHUNK_METADATA_PATH.read_text(encoding="utf-8"))
-    assert body["knowledge_base"]["n_chunks"] == len(chunks)
+    with open(config.CHUNKS_JSONL, encoding="utf-8") as f:
+        n_chunks = sum(1 for line in f if line.strip())
+    kb = body["knowledge_base"]
+    assert kb["n_chunks"] == n_chunks
+    assert kb["retrieval_mode"] == config.RETRIEVAL_MODE and kb["retrieval_query"] == config.RETRIEVAL_QUERY
+    assert body["llm"]["model"] == config.GEMINI_MODEL
+    # Evaluation summaries come straight from reports/*.json, without the per-item rows.
+    for name, path in {"retrieval": "rag_evaluation.json", "answers": "answer_evaluation.json",
+                       "safety": "safety_evaluation.json"}.items():
+        report = config.EVAL_REPORTS_DIR / path
+        if report.exists():
+            saved = json.loads(report.read_text(encoding="utf-8"))
+            saved.pop("rows", None)
+            assert body["evaluations"][name] == saved
+        else:
+            assert name not in body["evaluations"]
 
 
 def test_evaluation_figures_are_served():

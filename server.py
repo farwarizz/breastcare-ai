@@ -23,7 +23,6 @@ Extended Endpoints:
     GET  /api/audit/history    → prediction audit trail
     GET  /api/audit/stats      → aggregate statistics
     POST /api/report           → download PDF report
-    GET  /api/graph-status     → knowledge graph stats
     GET  /api/drift-report     → drift report (placeholder baselines, illustrative)
     GET  /api/global-shap      → dataset-wide SHAP analysis
     GET  /api/model-info       → saved metrics + knowledge-base facts for the UI
@@ -55,10 +54,21 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+import logging
+
+logger = logging.getLogger("breastcare.server")
+
+
+def _server_error(exc: Exception) -> HTTPException:
+    """Log the real error; tell the client only that something failed (no internal paths,
+    provider messages or keys in responses)."""
+    logger.exception("request failed: %s", exc)
+    return HTTPException(status_code=500, detail="Internal error while processing the request. "
+                                                 "The server log has the details.")
 
 app = FastAPI(
     title="BreastCare AI",
-    version="2.1.0",
+    version="2.2.0",
     description="Research prototype: calibrated breast-mass risk estimate with conformal "
                 "prediction sets, SHAP explanations and a retrieval-grounded assistant",
 )
@@ -103,7 +113,6 @@ class ChatRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=500)
     mode:     str = Field(default="single", pattern="^(single|multi_agent|cot)$")
     session_id: str = Field(default="")
-    use_hybrid_rag: bool = Field(default=False)
 
 
 class RiskProfileRequest(BaseModel):
@@ -157,7 +166,7 @@ def assess(req: AssessRequest):
             "query":       result["query_used"],
         })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 @app.post("/api/chat")
@@ -173,7 +182,6 @@ def chat(req: ChatRequest):
                 user_question=req.question,
                 mode=req.mode,
                 session_id=req.session_id,
-                use_hybrid_rag=req.use_hybrid_rag,
             )
             lr = result.get("llm_response") or {}
             response_data = {
@@ -183,6 +191,10 @@ def chat(req: ChatRequest):
                 "prediction":  result["prediction"],
                 "explanation": result["explanation"],
                 "mode":        result.get("mode", req.mode),
+                "citations":   result.get("citations", []),
+                "guardrail":   result.get("guardrail"),
+                "trace":       result.get("trace", {}),
+                "requested_mode": result.get("requested_mode"),
             }
             # Include reasoning trace for multi-agent/CoT
             if result.get("reasoning_trace"):
@@ -205,7 +217,7 @@ def chat(req: ChatRequest):
                 "mode":        "fallback",
             })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 # ── Image Analysis ────────────────────────────────────────────────────────────
@@ -272,7 +284,7 @@ def risk_profile(req: RiskProfileRequest):
 
         return JSONResponse(risk_data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 # ── Model Comparison ──────────────────────────────────────────────────────────
@@ -285,7 +297,7 @@ def compare_models_endpoint(req: CompareRequest):
         from src.analytics.model_comparison import compare_models
         return JSONResponse(compare_models(features))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 # ── Batch Prediction ──────────────────────────────────────────────────────────
@@ -312,7 +324,7 @@ async def batch_predict_endpoint(file: UploadFile = File(...)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 # ── Audit Trail ───────────────────────────────────────────────────────────────
@@ -326,7 +338,7 @@ def audit_history(limit: int = 50, offset: int = 0):
         history = db.get_prediction_history(limit=limit, offset=offset)
         return JSONResponse({"history": history, "count": len(history)})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 @app.get("/api/audit/stats")
@@ -337,7 +349,7 @@ def audit_stats():
         db = AuditDB()
         return JSONResponse(db.get_stats())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 @app.post("/api/audit/session")
@@ -349,7 +361,7 @@ def create_session():
         session_id = db.create_session()
         return JSONResponse({"session_id": session_id})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 @app.get("/api/audit/export")
@@ -365,7 +377,7 @@ def export_audit():
             headers={"Content-Disposition": "attachment; filename=breastcare_audit.csv"},
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 # ── PDF Report ────────────────────────────────────────────────────────────────
@@ -397,19 +409,7 @@ def generate_report(req: AssessRequest):
             },
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ── Knowledge Graph ───────────────────────────────────────────────────────────
-
-@app.get("/api/graph-status")
-def graph_status():
-    """Get knowledge graph statistics."""
-    try:
-        from src.rag.graph_builder import get_graph_stats
-        return JSONResponse(get_graph_stats())
-    except Exception as e:
-        return JSONResponse({"available": False, "error": str(e)})
+        raise _server_error(e)
 
 
 # ── Model Monitoring ──────────────────────────────────────────────────────────
@@ -421,7 +421,7 @@ def drift_report():
         report = _get_monitor().get_drift_report()
         return JSONResponse(report)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 # ── Global SHAP ──────────────────────────────────────────────────────────────
@@ -433,7 +433,7 @@ def global_shap():
         from src.analytics.global_shap import compute_global_shap
         return JSONResponse(compute_global_shap())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 # ── Model Info (source of truth for numbers shown in the UI) ─────────────────
@@ -445,15 +445,25 @@ def model_info():
         from src.model_info import get_model_info
         return JSONResponse(get_model_info())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _server_error(e)
 
 
 # ── Health Check ──────────────────────────────────────────────────────────────
 
+def _retrieval_mode() -> str | None:
+    """The retrieval mode that will run, or None if the knowledge-base index is missing or invalid."""
+    try:
+        from src.rag.retriever import _index, resolve_mode
+        _index()
+        return resolve_mode()
+    except Exception:
+        return None
+
+
 @app.get("/health")
 def health():
     from src.ml.image_model import is_available as img_available
-    from src.config import KNOWLEDGE_GRAPH_PATH, AUDIT_DB_PATH, SERVED_MODEL_PATH
+    from src.config import AUDIT_DB_PATH, SERVED_MODEL_PATH
 
     served = None
     try:
@@ -461,14 +471,17 @@ def health():
         served = model_meta("served")["label"]
     except Exception:
         pass
+    retrieval = _retrieval_mode()
     return {
-        "status": "ok",
-        "version": "2.1.0",
+        # "degraded": the risk model or the knowledge-base index is missing, so /api/assess
+        # or /api/chat will fail.
+        "status": "ok" if served and retrieval else "degraded",
+        "version": "2.2.0",
         "served_model": served,
         "served_model_file": SERVED_MODEL_PATH.exists(),
         "gemini_key_set": bool(os.environ.get("GEMINI_API_KEY")),
         "image_model": img_available(),
-        "knowledge_graph": KNOWLEDGE_GRAPH_PATH.exists(),
+        "retrieval": retrieval,
         "audit_db": AUDIT_DB_PATH.exists(),
         "endpoints": {
             "core": ["/api/assess", "/api/chat"],
@@ -476,7 +489,7 @@ def health():
                 "/api/assess-image", "/api/risk-profile",
                 "/api/compare-models", "/api/batch-predict",
                 "/api/audit/history", "/api/audit/stats",
-                "/api/report", "/api/graph-status",
+                "/api/report",
                 "/api/drift-report", "/api/global-shap",
                 "/api/model-info",
             ],
