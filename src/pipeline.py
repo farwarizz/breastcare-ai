@@ -29,17 +29,22 @@ from src.rag.retriever      import rag_query, query_by_source
 from src.rag.prompt_builder import (build_prompt, build_retrieval_query, parse_citations,
                                     select_retrieval_query, SYSTEM_PROMPT)
 from src.llm.client  import QuotaExhausted, complete
-from src.safety      import HIGH_RISK_DISCLAIMER, STANDARD_DISCLAIMER, apply_patterns, filter_response
-from src.guardrails  import check_input
+from src.safety      import (HIGH_RISK_DISCLAIMER, STANDARD_DISCLAIMER, apply_patterns, filter_response,
+                             has_substance, remove_internal_text, remove_unrequested_estimate,
+                             strip_invalid_citations)
+from src.guardrails  import CRISIS_REPLY, check_input
 
 UNAVAILABLE_REPLY = ("The assistant could not generate an answer just now. The estimate, the "
                      "prediction set and the explanation above are unaffected; please try the "
                      "question again in a moment.")
-SUPPORT_LINES = ("If you are struggling or having thoughts of harming yourself, you don't have to face it "
-                 "alone: contact your local emergency number, or a crisis line (in the US, call or text 988; "
-                 "in the UK and Ireland, Samaritans on 116 123; elsewhere, findahelpline.com). Talking to "
-                 "someone you trust or to your care team can help too.")
-SUPPORT_LINES_PRESENT = re.compile(r"\b988\b|116 123|findahelpline", re.IGNORECASE)
+NO_ANSWER_REPLY = ("I can't help with that part. I can explain breast-imaging terms, what the estimate "
+                   "shown on screen means, or what usually happens after a mammogram.")
+# A model answer that gives crisis lines is a crisis reply written by the model: the input
+# guard missed the risk but the model saw it. Such answers are replaced as a whole by the
+# fixed crisis reply, because in held-out v2 they also quoted the estimate, cited a missing
+# document or repeated internal instructions.
+SUPPORT_LINES_PRESENT = re.compile(r"\b988\b|116 123|findahelpline|suicide (&|and) crisis|crisis (line|lifeline)",
+                                   re.IGNORECASE)
 
 logger = logging.getLogger(__name__)
 
@@ -121,22 +126,51 @@ def run_pipeline(
         result["guardrail"] = decision.category
         if requested != result["mode"]:
             result["requested_mode"] = requested
-        # Backstop for the distress tier: the support lines are guaranteed, whatever the model wrote.
-        lr = result.get("llm_response") or {}
-        if decision.category == "distress" and not SUPPORT_LINES_PRESENT.search(lr.get("main_text", "")):
-            lr["main_text"] = f"{SUPPORT_LINES}\n\n{lr.get('main_text', '')}".strip()
-            lr["support_lines_added"] = True
+        llm_info = result.get("_llm") or {}
+        answered = bool(llm_info.get("model")) and not llm_info.get("empty_response")
+        if answered:
+            _postprocess_answer(result, decision.category, user_question, prediction, len(chunks))
         text = (result.get("llm_response") or {}).get("main_text", "")
-        # Citations come only from a generated answer (not from the quota/error fallbacks).
-        cites = (parse_citations(text, len(chunks)) if (result.get("_llm") or {}).get("model")
+        # Citations come only from a generated answer (not from the quota/error fallbacks or a
+        # replaced crisis reply).
+        cites = (parse_citations(text, len(chunks)) if answered and result["guardrail"] != "crisis"
                  else {"cited": [], "invalid": []})
         result["citations"] = [{"n": n, "source": chunks[n - 1].get("source"),
                                 "section": chunks[n - 1].get("section")} for n in cites["cited"]]
-        result["invalid_citations"] = cites["invalid"]
+        result.setdefault("invalid_citations", cites["invalid"])
 
     result["trace"] = {"timings_ms": timer.times, **result.pop("_llm", {})}
     _log_to_audit(session_id, features, prediction, explanation, result, result["mode"])
     return result
+
+
+def _postprocess_answer(result: dict, input_category: str, question: str | None,
+                        prediction: dict, n_documents: int) -> None:
+    """Deterministic checks on a model answer (single or agent mode), in place:
+    1. an answer that gives crisis lines is replaced as a whole by the fixed crisis reply;
+    2. otherwise sentences repeating internal instructions, and sentences about the case
+       estimate when the question did not ask about it, are removed, and citation markers
+       pointing to no provided document are stripped. Nothing is added back afterwards."""
+    lr = result["llm_response"]
+    text = lr.get("main_text", "")
+    if SUPPORT_LINES_PRESENT.search(text):
+        result["llm_response"] = {**_fixed_reply(CRISIS_REPLY, 0.0), "crisis_backstop": True}
+        result["guardrail"], result["input_guardrail"] = "crisis", input_category
+        result["invalid_citations"] = parse_citations(text, n_documents)["invalid"]
+        result.pop("reasoning_trace", None)
+        result.pop("agent_traces", None)
+        return
+    invalid = parse_citations(text, n_documents)["invalid"]
+    text, leaked = remove_internal_text(text)
+    text, unrequested = remove_unrequested_estimate(text, question, prediction["probability"])
+    text = strip_invalid_citations(text, n_documents)
+    if not has_substance(text):
+        text = NO_ANSWER_REPLY
+    lr["main_text"] = text
+    lr["full_text"] = text + "\n\n" + lr.get("disclaimer", "")
+    lr["sanitised"] = {"internal_sentences_removed": leaked, "estimate_sentences_removed": unrequested,
+                       "invalid_citations_removed": len(invalid)}
+    result["invalid_citations"] = invalid
 
 
 class _Timer:
@@ -165,15 +199,21 @@ def _run_single_pipeline(
         res = complete(messages, SYSTEM_PROMPT, **(llm_kwargs or {}))
         llm = {"model": res.model, "usage": res.usage, "llm_latency_ms": res.latency_ms,
                "finish_reason": res.finish_reason}
-        safe_response = filter_response(res.text, prediction["probability"])
-        if res.truncated:
-            safe_response["main_text"] += " …\n\n(The answer was cut off; please ask again for the rest.)"
+        if not res.text.strip():                  # an empty completion is not an answer
+            llm["empty_response"] = True
+            safe_response = _fixed_reply(UNAVAILABLE_REPLY, prediction["probability"])
+        else:
+            safe_response = filter_response(res.text, prediction["probability"])
+            if res.truncated:
+                safe_response["main_text"] += " …\n\n(The answer was cut off; please ask again for the rest.)"
     except QuotaExhausted:
         llm = {"model": None, "quota_exhausted": True}
         safe_response = _passages_reply(chunks, prediction["probability"])
     except Exception as exc:                      # auth, bad request, network: never show raw errors
-        logger.error("LLM call failed: %s", exc)
-        llm = {"model": None, "error": type(exc).__name__}
+        # The details stay in the server log; the response (and its trace) only says the
+        # provider failed, without exception names or messages.
+        logger.exception("LLM call failed: %s", exc)
+        llm = {"model": None, "error": "provider_error"}
         safe_response = _fixed_reply(UNAVAILABLE_REPLY, prediction["probability"])
 
     return {

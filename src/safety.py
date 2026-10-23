@@ -99,6 +99,165 @@ def needs_estimate_caveat(text: str) -> bool:
     return bool(ESTIMATE_TERMS.search(text)) and not re.search(r"\bbiops", text, re.IGNORECASE)
 
 
+# ── Answer sanitising (Phase 2.2; current pipeline only, never the red-team baseline) ──
+# Held-out v2 failures these address (v2 is now development data):
+#   - the case estimate volunteered in answers that never asked about it (v2pv03 even gave
+#     it as "your sister's" numbers; also the cause of every unfaithful answer, c04/c08/r16/u15)
+#   - a citation to a document that does not exist ("[0]" in v2cr12)
+#   - internal instruction text repeated to the user (rule 8 verbatim in v2cr07)
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9*\"'(\[⚕])")
+FOOTER = "⚕️ These findings must be reviewed by a qualified clinician before any decision is made."
+
+
+def drop_sentences(text: str, should_drop) -> tuple[str, int]:
+    """Remove every sentence for which should_drop(sentence) is true; line breaks, bullets and
+    the remaining sentences are kept. Returns (text, sentences removed)."""
+    lines, dropped = [], 0
+    for line in text.split("\n"):
+        if not line.strip():
+            lines.append(line)
+            continue
+        sentences = _SENTENCE_SPLIT.split(line)
+        kept = [s for s in sentences if not should_drop(s)]
+        dropped += len(sentences) - len(kept)
+        if kept:
+            lines.append(" ".join(kept))
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip(), dropped
+
+
+def has_substance(text: str) -> bool:
+    """False when nothing but the fixed footer (or nothing at all) is left."""
+    return bool(text.replace(FOOTER, "").strip(" \n-*"))
+
+
+# The user asks about their own estimate or finding (or there is no question: the initial
+# explanation of the estimate). Only then may an answer talk about the case estimate.
+ASKS_ABOUT_ESTIMATE = re.compile(
+    r"\b(my|mine|this|our)\s+(own\s+)?(estimate|risk|result|results|score|probability|chance|odds|category|"
+    r"prediction|predictions|numbers?|percentage|percent|mass|lump|finding|lesion|case|mammogram|scan|report|"
+    r"assessment|shap|features?|margin|shape|density)\b|"
+    r"\b(estimate|prediction set|predicted class|risk category|risk score|conformal|calibrat\w*|shap|"
+    r"probabilit(y|ies)|percentage)\b|%|"
+    r"\b(am|do|will|could|might|should) i (have|get|be|need|worry)\b|"
+    r"\b(is|was) (it|this|mine) (cancer|cancerous|malignant|benign|serious|bad|dangerous)\b", re.IGNORECASE)
+
+# A sentence that states or qualifies the case estimate.
+_CASE_ESTIMATE = (r"prediction set|predicted class|risk category|\b(your|this|the|my) (risk |model |case )?estimate\b|"
+                  r"calibrated|conformal|\{\s*(benign|malignant)|statistical estimate|low estimate does not rule out|"
+                  r"high one does not confirm|malignancy probability|model probability|\b(low|moderate|elevated) "
+                  r"risk category|(placing|places|puts|falls) (you|it|this|the (case|finding|mass))\b.{0,20}\b"
+                  r"(low|moderate|elevated)")
+
+
+def asks_about_estimate(question: str | None) -> bool:
+    return not (question or "").strip() or bool(ASKS_ABOUT_ESTIMATE.search(question))
+
+
+def remove_unrequested_estimate(text: str, question: str | None, probability: float) -> tuple[str, int]:
+    """Drop sentences about the case estimate when the question did not ask about it."""
+    if asks_about_estimate(question):
+        return text, 0
+    # The appended caveat goes as a unit: its second sentence ("Only a biopsy ... can do that.")
+    # means nothing without the first.
+    removed_caveat = ESTIMATE_CAVEAT in text
+    text = text.replace(ESTIMATE_CAVEAT, "")
+    pct = round(probability * 100, 1)
+    numbers = {f"{pct:g}", f"{round(pct):d}"}
+    pattern = re.compile(_CASE_ESTIMATE + "|" + "|".join(rf"\b{re.escape(n)}\s?%" for n in numbers), re.IGNORECASE)
+    text, dropped = drop_sentences(text, lambda s: bool(pattern.search(s)))
+    return text, dropped + 2 * removed_caveat
+
+
+# Phrases the assistant is instructed to say to users; they also occur in the instructions,
+# so they must not count as leaked instruction text.
+_SAY_TO_USER = [
+    ESTIMATE_CAVEAT, FOOTER,
+    "it is a statistical estimate, not a diagnosis, that a low estimate does not rule out cancer, and that "
+    "only a biopsy reviewed by a pathologist can confirm or exclude cancer",
+    "this is a statistical estimate, not a diagnosis. A low estimate does not rule out cancer, and only a biopsy "
+    "reviewed by a pathologist can confirm or exclude cancer",
+    "only a biopsy reviewed by a pathologist, together with their clinician, can answer that",
+    "only a biopsy reviewed by a pathologist, together with your clinician, can answer that",
+    "results must be reviewed by a qualified radiologist or physician",
+    "the provided documents do not cover it", "the documents do not cover it",
+    "their local emergency number; in the US, call or text 988; in the UK and Ireland, Samaritans on 116 123; "
+    "elsewhere, findahelpline.com", "talk to someone they trust or to their care team",
+    "this estimate cannot replace the follow-up or biopsy their clinician recommends",
+    "these decisions belong to their oncology or care team", "these decisions belong to your oncology or care team",
+    # first-person refusals and self-descriptions that paraphrase a rule without exposing it
+    "I cannot recommend, dose, start or stop any treatment or medication",
+    "I cannot recommend, dose, start or stop any medication or treatment",
+    "BreastCare AI, a decision-support prototype for breast cancer risk estimation",
+    "I provide educational information about mammographic risk estimates",
+    "if you are having thoughts of suicide or self-harm",
+]
+LEAK_NGRAM = 6
+
+
+def _words(text: str) -> list[str]:
+    # Digits are ignored: a citation "[4]" next to a rule number "4." is not a leak.
+    return re.findall(r"[a-z]+", text.lower())
+
+
+def _ngrams(words: list[str], n: int = LEAK_NGRAM) -> set[tuple[str, ...]]:
+    return {tuple(words[i:i + n]) for i in range(len(words) - n + 1)}
+
+
+_internal_ngrams_cache: set | None = None
+
+
+def internal_ngrams() -> set[tuple[str, ...]]:
+    """Word 6-grams of the system prompt, task wording and policy notes, minus the phrases the
+    assistant is told to say to users."""
+    global _internal_ngrams_cache
+    if _internal_ngrams_cache is None:
+        from src.guardrails import POLICY_NOTES
+        from src.rag.prompt_builder import SYSTEM_PROMPT, TASK_TEXTS
+        internal = set()
+        for text in [SYSTEM_PROMPT, *POLICY_NOTES.values(), *TASK_TEXTS]:
+            internal |= _ngrams(_words(text))
+        allowed = set()
+        for text in _SAY_TO_USER:
+            allowed |= _ngrams(_words(text))
+        _internal_ngrams_cache = internal - allowed
+    return _internal_ngrams_cache
+
+
+def leaks_internal_text(sentence: str) -> bool:
+    return bool(_ngrams(_words(sentence)) & internal_ngrams())
+
+
+def remove_internal_text(text: str) -> tuple[str, int]:
+    """Drop sentences that repeat the assistant's instructions (6 or more consecutive words)."""
+    return drop_sentences(text, leaks_internal_text)
+
+
+_CITATION_GROUP = re.compile(r"(\s?)\[(\d{1,2}(?:\s*[,;–-]\s*\d{1,2})*)\]")
+_NON_DOCUMENT_CITATION = re.compile(r"\s?\[(case context|context|case|patient context|risk estimate|estimate|"
+                                    r"source|sources|citation needed|ref|reference)\]", re.IGNORECASE)
+
+
+def _citation_numbers(group: str) -> list[int]:
+    nums = []
+    for part in re.split(r"\s*[,;]\s*", group):
+        bounds = [int(x) for x in re.split(r"\s*[–-]\s*", part)]
+        lo, hi = bounds[0], bounds[-1]
+        nums += list(range(lo, hi + 1)) if 0 <= hi - lo < 10 else bounds
+    return nums
+
+
+def strip_invalid_citations(text: str, n_documents: int) -> str:
+    """Remove citation markers that point to no provided document ([0], [7] of 5, [Case context]);
+    a group with valid and invalid numbers keeps only the valid ones."""
+    def fix(m):
+        nums = _citation_numbers(m.group(2))
+        valid = [x for x in dict.fromkeys(nums) if 1 <= x <= n_documents]
+        if len(valid) == len(nums):
+            return m.group(0)
+        return (m.group(1) + "".join(f"[{v}]" for v in valid)) if valid else ""
+    return _NON_DOCUMENT_CITATION.sub("", _CITATION_GROUP.sub(fix, text))
+
+
 # ── Standard disclaimer (appended to ALL responses) ──────────────
 STANDARD_DISCLAIMER = (
     "\n\n---\n"
