@@ -131,3 +131,34 @@ def test_calibration_claims_match_the_calibration_step():
         assert "calibrated probability" not in (config.ROOT / "README.md").read_text(encoding="utf-8").lower()
     info = client.get("/api/model-info").json()["metadata"]
     assert info["served_model"]["calibration"]["method"] == method
+
+
+# ── Follow-ups found by the frontend review (2026-10-23) ──────────────────────
+def _stub_chat(monkeypatch, result_extra):
+    import src.pipeline as pipeline
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key-not-used")
+    monkeypatch.setattr(server, "chat_limiter", server._RateLimiter(per_minute=100, per_day=100))
+    monkeypatch.setattr(pipeline, "run_pipeline", lambda *a, **k: {
+        "llm_response": {"main_text": "fixed", "disclaimer": ""}, "prediction": {}, "explanation": {},
+        "mode": "single", "citations": [], "guardrail": "crisis", "trace": {}, **result_extra})
+    return client.post("/api/chat", json={**FEATURES, "question": "Part of me thinks this is pointless."})
+
+
+def test_chat_forwards_input_guardrail_only_when_the_backstop_replaced_an_answer(monkeypatch):
+    replaced = _stub_chat(monkeypatch, {"input_guardrail": "treatment"}).json()
+    assert replaced["guardrail"] == "crisis" and replaced["input_guardrail"] == "treatment"
+    plain = _stub_chat(monkeypatch, {}).json()
+    assert "input_guardrail" not in plain
+
+
+def test_retry_after_is_readable_by_allowed_cross_origin_clients(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key-not-used")
+    monkeypatch.setattr(server, "chat_limiter", server._RateLimiter(per_minute=0, per_day=100))
+    r = client.post("/api/chat", json={**FEATURES, "question": "What is a cyst?"},
+                    headers={"Origin": "http://localhost:5199"})
+    assert r.status_code == 429 and r.headers["Retry-After"]
+    assert r.headers["access-control-allow-origin"] == "http://localhost:5199"
+    assert "retry-after" in r.headers["access-control-expose-headers"].lower()
+    other = client.post("/api/chat", json={**FEATURES, "question": "What is a cyst?"},
+                        headers={"Origin": "https://evil.example"})
+    assert "access-control-allow-origin" not in other.headers      # still no CORS for other origins

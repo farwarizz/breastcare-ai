@@ -93,6 +93,8 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization"],
+    # A frontend on another (allowed) origin needs Retry-After to say when to try again after a 429.
+    expose_headers=["Retry-After"],
 )
 
 
@@ -121,9 +123,9 @@ class _RateLimiter:
                 tomorrow = datetime.datetime.combine(today + datetime.timedelta(days=1), datetime.time())
                 return max(1, int(tomorrow.timestamp() - now))
             hits = [h for h in self._hits.get(client, []) if now - h < 60]
-            if len(hits) >= self.per_minute:
+            if len(hits) >= self.per_minute:          # per_minute = 0 turns chat off (always 429)
                 self._hits[client] = hits
-                return max(1, int(60 - (now - hits[0])) + 1)
+                return max(1, int(60 - (now - hits[0])) + 1) if hits else 60
             hits.append(now)
             self._hits[client] = hits
             self._day_count += 1
@@ -285,6 +287,10 @@ def chat(req: ChatRequest):
                 "trace":       result.get("trace", {}),
                 "requested_mode": result.get("requested_mode"),
             }
+            # Set only when the crisis backstop replaced a model answer: how the input itself was
+            # routed (a guardrail category, never model or prompt text).
+            if result.get("input_guardrail"):
+                response_data["input_guardrail"] = result["input_guardrail"]
             # Include reasoning trace for multi-agent/CoT
             if result.get("reasoning_trace"):
                 response_data["reasoning_trace"] = result["reasoning_trace"]
