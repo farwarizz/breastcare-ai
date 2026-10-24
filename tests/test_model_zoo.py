@@ -143,8 +143,8 @@ def test_model_info_zoo_is_null_without_the_zoo(no_zoo):
 
 def test_health_lists_assess_models_and_the_new_version():
     body = client.get("/health").json()
-    assert body["version"] == server.API_VERSION == "2.5.0"
-    assert client.get("/openapi.json").json()["info"]["version"] == "2.5.0"
+    assert body["version"] == server.API_VERSION == "2.6.0"
+    assert client.get("/openapi.json").json()["info"]["version"] == "2.6.0"
     assert "/api/assess-models" in body["endpoints"]["extended"]
 
 

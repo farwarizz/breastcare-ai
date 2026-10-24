@@ -32,6 +32,7 @@ Extended Endpoints:
 from __future__ import annotations
 
 import contextvars
+import re
 import functools
 import io
 import json
@@ -70,7 +71,7 @@ def _server_error(exc: Exception) -> HTTPException:
     return HTTPException(status_code=500, detail="Internal error while processing the request. "
                                                  "The server log has the details.")
 
-API_VERSION = "2.5.0"
+API_VERSION = "2.6.0"
 
 app = FastAPI(
     title="BreastCare AI",
@@ -321,6 +322,22 @@ def _find_model(model_id: str | None) -> dict | None:
     return next((m for m in _model_registry() if m["id"] == model_id), None)
 
 
+def _env_flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _user_selection_enabled() -> bool:
+    """2.6.0: choosing a model per request is an administrative option, off unless
+    LLM_USER_MODEL_SELECTION is set. Without it a request's `model` is refused (422)."""
+    return _env_flag("LLM_USER_MODEL_SELECTION")
+
+
+def _admin_default_model() -> str | None:
+    """2.6.0: LLM_DEFAULT_MODEL names the model that answers when a request names none. Unset, the
+    evaluated default chain answers. It is never used as a fallback when another model fails."""
+    return os.environ.get("LLM_DEFAULT_MODEL", "").strip() or None
+
+
 def _gemini_complete(messages, system=None, **kwargs) -> LLMResult:
     """Gemini through the frozen client; model=None (or absent) is the evaluated default chain."""
     return _ORIGINAL_COMPLETE(messages, system, **kwargs)
@@ -355,8 +372,18 @@ def _extra_complete(messages, system=None, *, model: str, max_tokens: int = LLM_
     usage = resp.usage.model_dump() if getattr(resp, "usage", None) else {}
     usage = {k: usage.get(k) for k in ("prompt_tokens", "completion_tokens", "total_tokens")} if usage else {}
     text = (choice.message.content if choice is not None and choice.message is not None else None) or ""
-    return LLMResult(text, model, usage, round((time.perf_counter() - t0) * 1000, 1), False,
-                     choice.finish_reason if choice is not None else None)
+    return LLMResult(_strip_reasoning(text), model, usage, round((time.perf_counter() - t0) * 1000, 1),
+                     False, choice.finish_reason if choice is not None else None)
+
+
+_REASONING_BLOCK = re.compile(r"<(think|thinking|reasoning)>.*?</\1>\s*", re.S | re.I)
+
+
+def _strip_reasoning(text: str) -> str:
+    """Some OpenAI-compatible models (reasoning models on Groq, Ollama, ...) put their reasoning in
+    the answer between <think> tags. It is not part of the answer, and the pipeline's citation and
+    output checks expect the answer alone, so it is removed before the pipeline sees the text."""
+    return _REASONING_BLOCK.sub("", text).strip()
 
 
 @functools.wraps(_ORIGINAL_COMPLETE)
@@ -397,6 +424,46 @@ def _model_error(model_id: str, entry: dict | None) -> str:
                 f"/health llm.models.")
     return (f"Model '{model_id}' is not available on this server (its provider is not configured). "
             f"Omit `model` for the default, or use a model that /health llm.models lists as available.")
+
+
+MODEL_SELECTION_OFF = ("Choosing a language model per request is turned off on this server. An administrator "
+                       "sets the model with LLM_DEFAULT_MODEL, or allows a choice with "
+                       "LLM_USER_MODEL_SELECTION.")
+
+# ── Small talk (2.6.0) ────────────────────────────────────────────────────────
+# A message that is only a greeting, thanks or an acknowledgement has nothing to retrieve: the
+# knowledge-base passages found for "hi" are unrelated to it. Such messages get a fixed reply,
+# with no retrieval and no model call. The match is on the whole message, so anything with
+# content (a question, a worry, a crisis message) still takes the guarded pipeline.
+_SMALL_TALK = re.compile(
+    r"^(?:(?:hi+|hello+|hey+|hiya|yo|greetings|salaam|salam|assalam ?o? ?alaikum|good (?:morning|afternoon|evening|day)"
+    r"|thanks?(?: a lot| so much| very much)?|thank you(?: so much| very much)?|thx|ty|cheers"
+    r"|ok(?:ay)?|alright|got it|great|cool|nice|perfect|bye|goodbye|see you)"
+    r"(?: there| again| everyone| all| assistant| bot)?[\s,!.?:)(]*)+$",
+    re.I)
+SMALL_TALK_REPLY = ("Hello. I can explain breast-imaging terms, what the estimate for this case means and "
+                    "what usually happens next, using a curated knowledge base with numbered citations. "
+                    "What would you like to know?")
+
+
+def _is_small_talk(question: str) -> bool:
+    q = question.strip()
+    return 0 < len(q) <= 60 and bool(_SMALL_TALK.match(q))
+
+
+def _small_talk_response(features: dict, req) -> JSONResponse:
+    from src.config import GEMINI_MODEL
+    from src.ml.explain import explain
+    from src.ml.predict import predict
+    return JSONResponse({
+        "response": SMALL_TALK_REPLY, "disclaimer": "", "sources": [],
+        "prediction": predict(features), "explanation": explain(features),
+        "mode": req.mode, "citations": [], "guardrail": "ok", "route": "small_talk",
+        "trace": {}, "requested_mode": req.mode,
+        "generation": {"status": "fixed", "provider": None, "configured_model": GEMINI_MODEL,
+                       "model": None, "requested_model": req.model, "evaluated": False},
+        "passages": [],
+    })
 
 
 NOT_CONFIGURED_REPLY = ("Answer generation is not configured on this server: no language-model key is set "
@@ -447,24 +514,40 @@ def chat(req: ChatRequest):
     checks). Every request takes this path, with or without a language-model key, so crisis
     and other fixed replies never depend on the provider being configured.
 
-    `model` (2.4.0) names one model from /health llm.models, used alone; without it the evaluated
-    default chain answers. A model that is unknown or unavailable is refused (422) unless the input
-    guardrail answers the message with fixed text (crisis, distress, refusals), which needs no
-    model: those replies never depend on the model choice either."""
+    `model` (2.4.0) names one model from /health llm.models, used alone; since 2.6.0 only when the
+    server allows it (LLM_USER_MODEL_SELECTION), otherwise it is refused (422). Without it the
+    administrator's LLM_DEFAULT_MODEL answers, or the evaluated default chain. A model that is
+    unknown or unavailable is refused (422; 503 for a misconfigured administrator default) unless the
+    input guardrail answers the message with fixed text (crisis, distress, refusals), which needs no
+    model: those replies never depend on the model choice either. No other model or provider is
+    tried in its place.
+
+    Greetings, thanks and similar small talk (2.6.0) get a fixed reply with no retrieval and no
+    model call, so no passage is shown beside them."""
     features = {"age": req.age, "shape": req.shape, "margin": req.margin, "density": req.density}
-    entry = _find_model(req.model) if req.model is not None else None
-    if req.model is not None and (entry is None or not entry["available"]):
+    if req.model is not None and not _user_selection_enabled():
+        raise HTTPException(status_code=422, detail=[{"loc": ["body", "model"], "type": "value_error",
+                                                      "msg": MODEL_SELECTION_OFF}])
+    if _is_small_talk(req.question):
+        return _small_talk_response(features, req)
+    model = req.model if req.model is not None else _admin_default_model()
+    entry = _find_model(model) if model is not None else None
+    if model is not None and (entry is None or not entry["available"]):
         from src.guardrails import check_input
         if check_input(req.question).calls_llm:
+            if req.model is None:   # the administrator's default is misconfigured
+                raise HTTPException(status_code=503, detail=(
+                    f"The configured default language model '{model}' is not available on this server "
+                    f"(LLM_DEFAULT_MODEL). No other model is used in its place."))
             raise HTTPException(status_code=422, detail=[{"loc": ["body", "model"], "type": "value_error",
-                                                          "msg": _model_error(req.model, entry)}])
+                                                          "msg": _model_error(model, entry)}])
     # Starlette runs this sync handler in a worker thread with a copy of the request's context;
     # the pipeline runs in this thread, so it sees the value. Reset afterwards all the same.
-    token = _requested_model.set(req.model)
+    token = _requested_model.set(model)
     try:
         from src.pipeline import run_pipeline
         _install_model_router()
-        if req.model is None:
+        if model is None:
             key_set, provider = _gemini_key_set(), "gemini"
         else:
             key_set = bool(entry and entry["available"])
@@ -472,7 +555,7 @@ def chat(req: ChatRequest):
         result = run_pipeline(features, user_question=req.question, mode=req.mode,
                               session_id=req.session_id)
         lr = result.get("llm_response") or {}
-        generation = _generation_status(result, key_set, requested_model=req.model, provider=provider)
+        generation = _generation_status(result, key_set, requested_model=model, provider=provider)
         response_text = lr.get("main_text", "")
         if generation["status"] == "not_configured":
             response_text = NOT_CONFIGURED_REPLY
@@ -805,7 +888,9 @@ def _llm_info() -> dict:
     return {"provider": "gemini", "model": GEMINI_MODEL, "fallback_models": list(LLM_FALLBACK_MODELS),
             "key_set": _gemini_key_set(),
             "models": [{k: m[k] for k in ("id", "provider", "evaluated", "available")}
-                       for m in _model_registry()]}
+                       for m in _model_registry()],
+            "user_selectable": _user_selection_enabled(),
+            "default_model": _admin_default_model()}
 
 
 @app.get("/health")

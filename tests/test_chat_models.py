@@ -34,6 +34,9 @@ def isolated(monkeypatch):
     provider: unstubbed model calls are recorded and fail the test."""
     monkeypatch.setattr(server, "chat_limiter", server._RateLimiter(per_minute=1000, per_day=1000))
     monkeypatch.setenv("GEMINI_API_KEY", GEMINI_KEY_MARKER)
+    # 2.6.0: per-request choice is an administrative option; these tests exercise it switched on
+    monkeypatch.setenv("LLM_USER_MODEL_SELECTION", "1")
+    monkeypatch.delenv("LLM_DEFAULT_MODEL", raising=False)
     for name in EXTRA_ENV:
         monkeypatch.delenv(name, raising=False)
     stray = []
@@ -123,7 +126,7 @@ def test_router_is_installed_in_the_pipeline_and_the_client():
 
 def test_health_lists_the_gemini_models_with_exactly_one_evaluated():
     body = client.get("/health").json()
-    assert body["version"] == "2.5.0" and client.get("/openapi.json").json()["info"]["version"] == "2.5.0"
+    assert body["version"] == "2.6.0" and client.get("/openapi.json").json()["info"]["version"] == "2.6.0"
     llm = body["llm"]
     # the 2.3.1 fields are unchanged
     assert llm["provider"] == "gemini" and llm["model"] == GEMINI_MODEL
