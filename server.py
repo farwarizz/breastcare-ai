@@ -68,7 +68,7 @@ def _server_error(exc: Exception) -> HTTPException:
 
 app = FastAPI(
     title="BreastCare AI",
-    version="2.3.0",
+    version="2.3.1",
     description="Research prototype: breast-mass risk estimate with conformal "
                 "prediction sets, SHAP explanations and a retrieval-grounded assistant",
 )
@@ -260,57 +260,82 @@ def assess(req: AssessRequest):
         raise _server_error(e)
 
 
+NOT_CONFIGURED_REPLY = ("Answer generation is not configured on this server: no language-model key is set "
+                        "(GEMINI_API_KEY). The knowledge-base passages retrieved for your question are listed "
+                        "separately; they are not an answer.")
+
+
+def _generation_status(result: dict, key_set: bool) -> dict:
+    """Who produced the reply, in terms a client can rely on (never inferred from the text):
+    generated       the language model wrote it (after the output checks)
+    fixed           fixed text: a guardrail reply, or the crisis reply that replaced a model answer
+    not_configured  no language-model key on this server; retrieval only
+    quota_exhausted every model was out of quota; the reply lists the retrieved passages
+    unavailable     the provider failed or returned nothing; the reply is a try-again message"""
+    from src.config import GEMINI_MODEL
+    trace = result.get("trace") or {}
+    base = {"provider": "gemini", "configured_model": GEMINI_MODEL, "model": None}
+    if result.get("mode") == "guardrail" or (result.get("guardrail") == "crisis" and result.get("input_guardrail")):
+        return {**base, "status": "fixed"}
+    if trace.get("model") and not trace.get("empty_response"):
+        return {**base, "status": "generated", "model": trace["model"]}
+    if not key_set:
+        return {**base, "status": "not_configured"}
+    if trace.get("quota_exhausted"):
+        return {**base, "status": "quota_exhausted"}
+    return {**base, "status": "unavailable"}
+
+
+def _passages(result: dict, status: str) -> list[dict]:
+    """The retrieved knowledge-base passages, numbered as the model saw them, with whether the
+    answer cited each. None beside fixed replies (crisis and refusals stand on their own)."""
+    if status == "fixed":
+        return []
+    cited = {c["n"] for c in result.get("citations") or []}
+    return [{"n": i, "source": c.get("source"), "section": c.get("section"), "text": c.get("text", ""),
+             "cited": i in cited} for i, c in enumerate(result.get("chunks") or [], 1)]
+
+
 @app.post("/api/chat", dependencies=[Depends(limit_chat)])
 def chat(req: ChatRequest):
-    """Run full pipeline: ML + SHAP + RAG + Gemini. Supports single/multi_agent/cot modes."""
+    """Run the guarded pipeline (input guard → prediction → retrieval → language model → output
+    checks). Every request takes this path, with or without a language-model key, so crisis
+    and other fixed replies never depend on the provider being configured."""
     features = {"age": req.age, "shape": req.shape, "margin": req.margin, "density": req.density}
     try:
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-        if api_key:
-            from src.pipeline import run_pipeline
-            result = run_pipeline(
-                features,
-                user_question=req.question,
-                mode=req.mode,
-                session_id=req.session_id,
-            )
-            lr = result.get("llm_response") or {}
-            response_data = {
-                "response":    lr.get("main_text", ""),
-                "disclaimer":  lr.get("disclaimer", ""),
-                "sources":     result.get("sources_used", []),
-                "prediction":  result["prediction"],
-                "explanation": result["explanation"],
-                "mode":        result.get("mode", req.mode),
-                "citations":   result.get("citations", []),
-                "guardrail":   result.get("guardrail"),
-                "trace":       result.get("trace", {}),
-                "requested_mode": result.get("requested_mode"),
-            }
-            # Set only when the crisis backstop replaced a model answer: how the input itself was
-            # routed (a guardrail category, never model or prompt text).
-            if result.get("input_guardrail"):
-                response_data["input_guardrail"] = result["input_guardrail"]
-            # Include reasoning trace for multi-agent/CoT
-            if result.get("reasoning_trace"):
-                response_data["reasoning_trace"] = result["reasoning_trace"]
-            if result.get("agent_traces"):
-                response_data["agent_traces"] = result["agent_traces"]
-
-            return JSONResponse(response_data)
-        else:
-            from src.pipeline import run_pipeline_ml_only
-            result = run_pipeline_ml_only(features)
-            chunks = result.get("chunks", [])
-            raw = "\n\n".join(c.get("text", "") for c in chunks[:2])
-            return JSONResponse({
-                "response":   f"(Gemini API key not set — showing retrieved context)\n\n{raw}",
-                "disclaimer": "Always consult a qualified clinician.",
-                "sources":    result.get("sources_used", []),
-                "prediction":  result["prediction"],
-                "explanation": result["explanation"],
-                "mode":        "fallback",
-            })
+        from src.pipeline import run_pipeline
+        key_set = bool(os.environ.get("GEMINI_API_KEY"))
+        result = run_pipeline(features, user_question=req.question, mode=req.mode,
+                              session_id=req.session_id)
+        lr = result.get("llm_response") or {}
+        generation = _generation_status(result, key_set)
+        response_text = lr.get("main_text", "")
+        if generation["status"] == "not_configured":
+            response_text = NOT_CONFIGURED_REPLY
+        response_data = {
+            "response":    response_text,
+            "disclaimer":  lr.get("disclaimer", ""),
+            "sources":     result.get("sources_used", []),
+            "prediction":  result["prediction"],
+            "explanation": result["explanation"],
+            "mode":        result.get("mode", req.mode),
+            "citations":   result.get("citations", []),
+            "guardrail":   result.get("guardrail"),
+            "trace":       result.get("trace", {}),
+            "requested_mode": result.get("requested_mode"),
+            "generation":  generation,
+            "passages":    _passages(result, generation["status"]),
+        }
+        # Set only when the crisis backstop replaced a model answer: how the input itself was
+        # routed (a guardrail category, never model or prompt text).
+        if result.get("input_guardrail"):
+            response_data["input_guardrail"] = result["input_guardrail"]
+        # Include reasoning trace for multi-agent/CoT
+        if result.get("reasoning_trace"):
+            response_data["reasoning_trace"] = result["reasoning_trace"]
+        if result.get("agent_traces"):
+            response_data["agent_traces"] = result["agent_traces"]
+        return JSONResponse(response_data)
     except Exception as e:
         raise _server_error(e)
 
@@ -560,6 +585,12 @@ def _retrieval_mode() -> str | None:
         return None
 
 
+def _llm_info() -> dict:
+    from src.config import GEMINI_MODEL, LLM_FALLBACK_MODELS
+    return {"provider": "gemini", "model": GEMINI_MODEL, "fallback_models": list(LLM_FALLBACK_MODELS),
+            "key_set": bool(os.environ.get("GEMINI_API_KEY"))}
+
+
 @app.get("/health")
 def health():
     from src.ml.image_model import is_available as img_available
@@ -576,10 +607,12 @@ def health():
         # "degraded": the risk model or the knowledge-base index is missing, so /api/assess
         # or /api/chat will fail.
         "status": "ok" if served and retrieval else "degraded",
-        "version": "2.3.0",
+        "version": "2.3.1",
         "served_model": served,
         "served_model_file": SERVED_MODEL_PATH.exists(),
         "gemini_key_set": bool(os.environ.get("GEMINI_API_KEY")),
+        # Which language model answers chat questions (never the key itself).
+        "llm": _llm_info(),
         "image_model": img_available(),
         "retrieval": retrieval,
         "audit_db": AUDIT_DB_PATH.exists(),
