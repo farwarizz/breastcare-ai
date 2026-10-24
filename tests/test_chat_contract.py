@@ -95,7 +95,7 @@ def test_crisis_backstop_reply_is_fixed_with_no_passages(monkeypatch):
 
 
 def test_health_names_the_language_model_but_never_the_key(monkeypatch):
-    monkeypatch.setenv("GEMINI_API_KEY", "AIzaSy-test-secret-value")
+    monkeypatch.setenv("GEMINI_API_KEY", "fake-key-for-tests-0000")
     body = client.get("/health").json()
     assert body["llm"]["provider"] == "gemini" and body["llm"]["key_set"] is True and body["llm"]["model"]
-    assert "AIzaSy-test-secret-value" not in str(body)
+    assert "fake-key-for-tests-0000" not in str(body)
