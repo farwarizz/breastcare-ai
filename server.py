@@ -30,10 +30,13 @@ Extended Endpoints:
 """
 from __future__ import annotations
 
+import contextvars
+import functools
 import io
 import json
 import sys
 import os
+import time
 import uuid
 import base64
 from pathlib import Path
@@ -66,9 +69,11 @@ def _server_error(exc: Exception) -> HTTPException:
     return HTTPException(status_code=500, detail="Internal error while processing the request. "
                                                  "The server log has the details.")
 
+API_VERSION = "2.4.0"
+
 app = FastAPI(
     title="BreastCare AI",
-    version="2.3.1",
+    version=API_VERSION,
     description="Research prototype: breast-mass risk estimate with conformal "
                 "prediction sets, SHAP explanations and a retrieval-grounded assistant",
 )
@@ -204,6 +209,12 @@ class ChatRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=500)
     mode:     str = Field(default="single", pattern="^(single|multi_agent|cot)$")
     session_id: str = Field(default="")
+    # 2.4.0: an `id` from /health llm.models. None keeps the evaluated default chain (GEMINI_MODEL,
+    # then its fallbacks); a named model is used alone, without fallbacks.
+    model:    Optional[str] = Field(default=None, min_length=1, max_length=200,
+                                    description="Model id from /health llm.models; omit for the "
+                                                "evaluated default. Only the default model was "
+                                                "evaluated by the held-out safety run.")
 
 
 class RiskProfileRequest(BaseModel):
@@ -260,25 +271,158 @@ def assess(req: AssessRequest):
         raise _server_error(e)
 
 
+# ── Language-model choice (2.4.0) ─────────────────────────────────────────────
+# /api/chat answers with the evaluated default chain (GEMINI_MODEL, then the fallbacks in
+# src/config.py) unless the request names a model from /health llm.models. Only GEMINI_MODEL was
+# evaluated by the held-out safety run; every other model is offered unevaluated and each response
+# says which one answered (generation.evaluated). The frozen pipeline and client are not edited:
+# their `complete` name is rebound once to a router that reads the model requested for the current
+# request from a context variable. With no model requested the router calls the original client
+# with the same arguments.
+import src.llm.client as _llm_client
+from src.llm.client import LLMResult, QuotaExhausted
+from src.config import LLM_MAX_TOKENS
+
+_requested_model: contextvars.ContextVar = contextvars.ContextVar("breastcare_requested_model", default=None)
+_ORIGINAL_COMPLETE = getattr(_llm_client.complete, "__wrapped__", _llm_client.complete)
+
+
+def _gemini_key_set() -> bool:
+    return bool(os.environ.get("GEMINI_API_KEY"))
+
+
+def _extra_provider() -> dict:
+    """The optional OpenAI-compatible provider (Groq, OpenRouter, a local Ollama, ...), read from
+    the environment on every call. Its models are listed once EXTRA_LLM_MODELS names them and can
+    be used once EXTRA_LLM_BASE_URL is set as well; EXTRA_LLM_API_KEY may stay empty (Ollama)."""
+    models = [m.strip() for m in os.environ.get("EXTRA_LLM_MODELS", "").split(",") if m.strip()]
+    return {"name": os.environ.get("EXTRA_LLM_PROVIDER", "").strip() or "custom",
+            "base_url": os.environ.get("EXTRA_LLM_BASE_URL", "").strip(),
+            "api_key": os.environ.get("EXTRA_LLM_API_KEY", "").strip(),
+            "models": list(dict.fromkeys(models))}
+
+
+def _model_registry() -> list[dict]:
+    """Every model /api/chat can be asked for: Gemini in fallback order, then the extra provider's
+    (an id Gemini already has is not listed twice). `kind` is internal and never served."""
+    from src.config import GEMINI_MODEL
+    gemini_ok = _gemini_key_set()
+    models = [{"id": m, "provider": "gemini", "evaluated": m == GEMINI_MODEL, "available": gemini_ok,
+               "kind": "gemini"} for m in _llm_client.FALLBACK_MODELS]
+    extra = _extra_provider()
+    taken = {m["id"] for m in models}
+    models += [{"id": m, "provider": extra["name"], "evaluated": False, "available": bool(extra["base_url"]),
+                "kind": "extra"} for m in extra["models"] if m not in taken]
+    return models
+
+
+def _find_model(model_id: str | None) -> dict | None:
+    return next((m for m in _model_registry() if m["id"] == model_id), None)
+
+
+def _gemini_complete(messages, system=None, **kwargs) -> LLMResult:
+    """Gemini through the frozen client; model=None (or absent) is the evaluated default chain."""
+    return _ORIGINAL_COMPLETE(messages, system, **kwargs)
+
+
+def _extra_complete(messages, system=None, *, model: str, max_tokens: int = LLM_MAX_TOKENS,
+                    temperature: float | None = 0.2, json_mode: bool = False, **_unused) -> LLMResult:
+    """One call to the extra OpenAI-compatible provider: the requested model only, no fallback.
+    A 429 (rate limit or quota) becomes QuotaExhausted, so the pipeline lists the passages; any
+    other error propagates and the pipeline reports the provider as unavailable. The client's
+    cache and rate-limit waiting (evaluation options) do not apply here."""
+    import openai
+    provider = _extra_provider()
+    if not provider["base_url"] or model not in provider["models"]:
+        raise RuntimeError("the extra language-model provider is not configured for the requested model")
+    full = ([{"role": "system", "content": system}] if system else []) + list(messages)
+    params: dict = {"max_tokens": max_tokens}
+    if temperature is not None:
+        params["temperature"] = temperature
+    if json_mode:
+        params["response_format"] = {"type": "json_object"}
+    client = openai.OpenAI(base_url=provider["base_url"], api_key=provider["api_key"] or "not-needed",
+                           timeout=25, max_retries=1)
+    t0 = time.perf_counter()
+    try:
+        resp = client.chat.completions.create(model=model, messages=full, **params)
+    except openai.APIStatusError as exc:
+        if exc.status_code == 429:
+            raise QuotaExhausted(f"{provider['name']} rate limit or quota reached for {model}") from exc
+        raise
+    choice = resp.choices[0] if resp.choices else None
+    usage = resp.usage.model_dump() if getattr(resp, "usage", None) else {}
+    usage = {k: usage.get(k) for k in ("prompt_tokens", "completion_tokens", "total_tokens")} if usage else {}
+    text = (choice.message.content if choice is not None and choice.message is not None else None) or ""
+    return LLMResult(text, model, usage, round((time.perf_counter() - t0) * 1000, 1), False,
+                     choice.finish_reason if choice is not None else None)
+
+
+@functools.wraps(_ORIGINAL_COMPLETE)
+def _routed_complete(messages, system=None, **kwargs) -> LLMResult:
+    """Stands in for `complete` in the pipeline and the agents. The underlying functions are looked
+    up by name at call time, so tests can replace them."""
+    model_id = _requested_model.get()
+    if model_id is None:
+        return _gemini_complete(messages, system, **kwargs)
+    entry = _find_model(model_id)
+    if entry is None or not entry["available"]:
+        raise RuntimeError("the requested language model is not available")
+    if entry["kind"] == "gemini":
+        return _gemini_complete(messages, system, **{**kwargs, "model": model_id})
+    return _extra_complete(messages, system, **{**kwargs, "model": model_id})
+
+
+_routed_complete._routes_requested_model = True
+
+
+def _install_model_router() -> None:
+    """Rebind `complete` to the router in the client module (the agent modes import it from there
+    at call time) and in the pipeline module if it is already imported (a later import binds the
+    router by itself). Only the original function, or an earlier router, is replaced, never a
+    test's stand-in. Safe to call repeatedly."""
+    for module in (_llm_client, sys.modules.get("src.pipeline")):
+        current = getattr(module, "complete", None) if module is not None else None
+        if current is _ORIGINAL_COMPLETE or getattr(current, "_routes_requested_model", False):
+            module.complete = _routed_complete
+
+
+_install_model_router()
+
+
+def _model_error(model_id: str, entry: dict | None) -> str:
+    if entry is None:
+        return (f"Unknown model '{model_id}'. Omit `model` for the default, or use an `id` from "
+                f"/health llm.models.")
+    return (f"Model '{model_id}' is not available on this server (its provider is not configured). "
+            f"Omit `model` for the default, or use a model that /health llm.models lists as available.")
+
+
 NOT_CONFIGURED_REPLY = ("Answer generation is not configured on this server: no language-model key is set "
                         "(GEMINI_API_KEY). The knowledge-base passages retrieved for your question are listed "
                         "separately; they are not an answer.")
 
 
-def _generation_status(result: dict, key_set: bool) -> dict:
+def _generation_status(result: dict, key_set: bool, requested_model: str | None = None,
+                       provider: str = "gemini") -> dict:
     """Who produced the reply, in terms a client can rely on (never inferred from the text):
     generated       the language model wrote it (after the output checks)
     fixed           fixed text: a guardrail reply, or the crisis reply that replaced a model answer
     not_configured  no language-model key on this server; retrieval only
     quota_exhausted every model was out of quota; the reply lists the retrieved passages
-    unavailable     the provider failed or returned nothing; the reply is a try-again message"""
+    unavailable     the provider failed or returned nothing; the reply is a try-again message
+    `evaluated` (2.4.0) is true only for an answer GEMINI_MODEL generated on the single-call path,
+    the configuration the held-out safety run evaluated; `requested_model` echoes the request."""
     from src.config import GEMINI_MODEL
     trace = result.get("trace") or {}
-    base = {"provider": "gemini", "configured_model": GEMINI_MODEL, "model": None}
+    base = {"provider": provider, "configured_model": GEMINI_MODEL, "model": None,
+            "requested_model": requested_model, "evaluated": False}
     if result.get("mode") == "guardrail" or (result.get("guardrail") == "crisis" and result.get("input_guardrail")):
         return {**base, "status": "fixed"}
     if trace.get("model") and not trace.get("empty_response"):
-        return {**base, "status": "generated", "model": trace["model"]}
+        model = trace["model"]
+        evaluated = provider == "gemini" and model == GEMINI_MODEL and result.get("mode") == "single"
+        return {**base, "status": "generated", "model": model, "evaluated": evaluated}
     if not key_set:
         return {**base, "status": "not_configured"}
     if trace.get("quota_exhausted"):
@@ -300,15 +444,34 @@ def _passages(result: dict, status: str) -> list[dict]:
 def chat(req: ChatRequest):
     """Run the guarded pipeline (input guard → prediction → retrieval → language model → output
     checks). Every request takes this path, with or without a language-model key, so crisis
-    and other fixed replies never depend on the provider being configured."""
+    and other fixed replies never depend on the provider being configured.
+
+    `model` (2.4.0) names one model from /health llm.models, used alone; without it the evaluated
+    default chain answers. A model that is unknown or unavailable is refused (422) unless the input
+    guardrail answers the message with fixed text (crisis, distress, refusals), which needs no
+    model: those replies never depend on the model choice either."""
     features = {"age": req.age, "shape": req.shape, "margin": req.margin, "density": req.density}
+    entry = _find_model(req.model) if req.model is not None else None
+    if req.model is not None and (entry is None or not entry["available"]):
+        from src.guardrails import check_input
+        if check_input(req.question).calls_llm:
+            raise HTTPException(status_code=422, detail=[{"loc": ["body", "model"], "type": "value_error",
+                                                          "msg": _model_error(req.model, entry)}])
+    # Starlette runs this sync handler in a worker thread with a copy of the request's context;
+    # the pipeline runs in this thread, so it sees the value. Reset afterwards all the same.
+    token = _requested_model.set(req.model)
     try:
         from src.pipeline import run_pipeline
-        key_set = bool(os.environ.get("GEMINI_API_KEY"))
+        _install_model_router()
+        if req.model is None:
+            key_set, provider = _gemini_key_set(), "gemini"
+        else:
+            key_set = bool(entry and entry["available"])
+            provider = entry["provider"] if entry else "gemini"
         result = run_pipeline(features, user_question=req.question, mode=req.mode,
                               session_id=req.session_id)
         lr = result.get("llm_response") or {}
-        generation = _generation_status(result, key_set)
+        generation = _generation_status(result, key_set, requested_model=req.model, provider=provider)
         response_text = lr.get("main_text", "")
         if generation["status"] == "not_configured":
             response_text = NOT_CONFIGURED_REPLY
@@ -338,6 +501,8 @@ def chat(req: ChatRequest):
         return JSONResponse(response_data)
     except Exception as e:
         raise _server_error(e)
+    finally:
+        _requested_model.reset(token)
 
 
 # ── Image Analysis ────────────────────────────────────────────────────────────
@@ -586,9 +751,12 @@ def _retrieval_mode() -> str | None:
 
 
 def _llm_info() -> dict:
+    """The default model and, since 2.4.0, every model a chat request may name (never a key)."""
     from src.config import GEMINI_MODEL, LLM_FALLBACK_MODELS
     return {"provider": "gemini", "model": GEMINI_MODEL, "fallback_models": list(LLM_FALLBACK_MODELS),
-            "key_set": bool(os.environ.get("GEMINI_API_KEY"))}
+            "key_set": _gemini_key_set(),
+            "models": [{k: m[k] for k in ("id", "provider", "evaluated", "available")}
+                       for m in _model_registry()]}
 
 
 @app.get("/health")
@@ -607,7 +775,7 @@ def health():
         # "degraded": the risk model or the knowledge-base index is missing, so /api/assess
         # or /api/chat will fail.
         "status": "ok" if served and retrieval else "degraded",
-        "version": "2.3.1",
+        "version": API_VERSION,
         "served_model": served,
         "served_model_file": SERVED_MODEL_PATH.exists(),
         "gemini_key_set": bool(os.environ.get("GEMINI_API_KEY")),
