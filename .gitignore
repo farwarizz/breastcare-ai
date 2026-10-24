@@ -18,3 +18,6 @@ mlartifacts/
 # Local scratch scripts
 test_trace.py
 test_api.py
+
+# Supervised evaluation runs (scripts/run_heldout_eval.sh): lock, state and logs
+.eval_run/
