@@ -16,25 +16,25 @@
   "judge_verdicts_none": 0,
   "provenance": {
     "chunks_sha256": "56cffbd56e68b49c055ecbda99a6e622886ec124dcc3903d301e082ba1a1c66c",
-    "system_prompt_sha256": "10d5d32c624aa98b9820d250fe1b9bce59067e11dda8bb53f191e1be81993e3f"
+    "system_prompt_sha256": "d0edd4bcbe4f4b77d83d6d2c41f80f4586024b37cdefce98d8f706cb96531cd2"
   },
   "answerable": {
     "answered_faithfully": {
-      "value": 0.8056,
+      "value": 0.8611,
       "ci": [
-        0.6497,
-        0.9025
+        0.7134,
+        0.9392
       ],
-      "k": 29,
+      "k": 31,
       "n": 36
     },
     "faithful_when_answering": {
-      "value": 0.9062,
+      "value": 0.9688,
       "ci": [
-        0.7578,
-        0.9676
+        0.8426,
+        0.9945
       ],
-      "k": 29,
+      "k": 31,
       "n": 32
     },
     "retrieval_hit": {
@@ -47,12 +47,12 @@
       "n": 36
     },
     "faithful": {
-      "value": 0.9167,
+      "value": 0.9722,
       "ci": [
-        0.7817,
-        0.9713
+        0.8583,
+        0.9951
       ],
-      "k": 33,
+      "k": 35,
       "n": 36
     },
     "citations_correct": {
@@ -65,12 +65,12 @@
       "n": 36
     },
     "has_valid_citation": {
-      "value": 0.9722,
+      "value": 0.9444,
       "ci": [
-        0.8583,
-        0.9951
+        0.8186,
+        0.9846
       ],
-      "k": 35,
+      "k": 34,
       "n": 36
     },
     "cites_missing_document": {
@@ -103,12 +103,12 @@
       "n": 16
     },
     "unsupported_when_answering": {
-      "value": 1.0,
+      "value": 0.0,
       "ci": [
-        0.2065,
-        1.0
+        0.0,
+        0.7935
       ],
-      "k": 1,
+      "k": 0,
       "n": 1
     }
   },
@@ -123,17 +123,15 @@
       "retrieval_hit": true,
       "truncated": false,
       "reply_fresh": true,
-      "judge_fresh": true,
+      "judge_fresh": false,
       "model": "gemini-3.5-flash-lite",
       "valid_citations": 1,
       "invalid_citations": [],
       "says_not_covered": false,
-      "faithful": false,
+      "faithful": true,
       "citations_correct": true,
-      "unsupported_claims": [
-        "Your estimated malignancy probability is 14.6% and your risk category is Low, with a predicted class of Benign."
-      ],
-      "answer": "Yes, a biopsy may still be chosen after shared decision-making with the patient, for a valid clinical reason, or when follow-up is impractical [1]. \n\nYour estimated malignancy probability is 14.6% and your risk category is Low, with a predicted class of Benign. Please note that this is a statistical estimate, not a diagnosis, that a low estimate does not rule out cancer, and that only a biopsy reviewed by a pathologist can confirm or exclude cancer. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "unsupported_claims": [],
+      "answer": "Yes, a biopsy may still be chosen after shared decision-making with the patient, for a valid clinical reason, or when follow-up is impractical [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "acr_followup_guidelines › BI-RADS Category 3: Probably Benign",
         "birads_terminology › Mass Shape > Irregular Shape",
@@ -150,7 +148,7 @@
       "retrieval_hit": true,
       "truncated": false,
       "reply_fresh": true,
-      "judge_fresh": false,
+      "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
       "valid_citations": 1,
       "invalid_citations": [],
@@ -158,7 +156,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "BI-RADS Category 4 covers a likelihood of malignancy that is above 2% and below 95% [2]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "BI-RADS Category 4 covers a likelihood of malignancy that is above 2% and below 95% [2].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "acr_followup_guidelines › BI-RADS Assessment Categories 3, 4, and 5 — Follow-Up and Biopsy",
         "acr_followup_guidelines › BI-RADS Category 4: Suspicious",
@@ -181,14 +179,10 @@
       "valid_citations": 1,
       "invalid_citations": [],
       "says_not_covered": false,
-      "faithful": false,
+      "faithful": true,
       "citations_correct": true,
-      "unsupported_claims": [
-        "calibrated malignancy probability is 14.6%",
-        "risk category is Low",
-        "90% conformal prediction set of {Benign}"
-      ],
-      "answer": "A Category 4B result implies a moderate suspicion for malignancy, with a probability above 10% and up to 50% [1]. \n\nPlease note that your calibrated malignancy probability is 14.6%, and your risk category is Low, with a predicted class of Benign and a 90% conformal prediction set of {Benign}. This is a statistical estimate, not a diagnosis. A low estimate does not rule out cancer, and only a biopsy reviewed by a pathologist can confirm or exclude cancer. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "unsupported_claims": [],
+      "answer": "A category 4B result implies a moderate suspicion for malignancy, with an estimated chance above 10% and up to 50% [1]. If a benign biopsy result is obtained, it requires careful correlation with the imaging to determine whether it is concordant [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "acr_followup_guidelines › BI-RADS Category 4: Suspicious > Category 4B",
         "patient_communication › Conveying Screening Results",
@@ -213,7 +207,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The radiologist who performed the biopsy is the one who determines concordance, documents it, and communicates it [3]. \n\nPlease note that this information is educational only. ⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The radiologist who performed the biopsy is the one who determines concordance, documents it, and communicates it [3]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "acr_followup_guidelines › BI-RADS Category 4: Suspicious > Category 4B",
         "acr_followup_guidelines › BI-RADS Category 4: Suspicious > Category 4A",
@@ -239,7 +233,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "In the large study of non-palpable, non-calcified, circumscribed solid masses followed with mammography, 19 out of 1,403 masses, which equals 1.4%, proved malignant [1]. This specific figure applies to that study group and does not automatically apply to every circumscribed mass [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "In the study referenced, 19 out of 1,403 (1.4%) non-palpable, non-calcified, circumscribed solid masses followed with mammography proved malignant, though that figure applies to that specific group rather than every circumscribed mass [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "birads_terminology › Mass Margin > Circumscribed Margin",
         "acr_followup_guidelines › BI-RADS Category 3: Probably Benign",
@@ -264,7 +258,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "A lobular shaped mass, which uses the 4th-edition term from the UCI data, refers to a mass with an undulating contour [1]. In the 5th edition, this term was removed, but the BI-RADS v2025 update reintroduced it as \"lobulated,\" which is defined as a mass with one or more indentations giving it an undulating contour [1]. Lobulated masses tend to be mostly benign while carrying a slightly higher suspicion level than oval masses [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on the provided documents, a \"lobular\" mass is a term from the 4th edition used in the UCI data to describe a mass with an undulating contour [1]. The 5th edition removed this term, but the BI-RADS v2025 update reintroduced it as \"lobulated,\" which is defined as a mass featuring one or more indentations creating an undulating contour [1]. Lobulated masses typically tend to be benign, though they are viewed as slightly more suspicious compared to oval masses [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "birads_terminology › Mass Shape > Lobular Shape",
         "birads_terminology › BI-RADS Mass Descriptors — Margin, Shape, and Density",
@@ -290,7 +284,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, an irregular shape means a mass is neither round, oval, nor lobulated [1]. An irregular shape is considered a suspicious feature; for example, in one series of biopsied lesions, 73% of irregular masses were malignant [1]. Furthermore, an irregular, spiculated, high-density mass represents a classic appearance of a BI-RADS category 5 finding [1] or a feature highly suggestive of malignancy [2].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on the provided documents, an irregular mass is defined as one that is neither round, oval, nor lobulated [1]. An irregular shape is considered a suspicious feature on a mammogram report, as one series of biopsied lesions found that 73% of irregular masses were malignant [1]. Furthermore, an irregular, spiculated, high-density mass represents a classic appearance of a BI-RADS category 5 finding [1][2], which carries a likelihood of malignancy of 95% or more [2]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "birads_terminology › Mass Shape > Irregular Shape",
         "acr_followup_guidelines › BI-RADS Category 5: Highly Suggestive of Malignancy",
@@ -315,7 +309,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "An iso-dense mass, also described as an \"equal density\" mass in current terminology, has the same attenuation as fibroglandular tissue [1]. On its own, this characteristic neither indicates nor excludes malignancy [1]. \n\nPlease note that BreastCare AI provides a statistical estimate, not a diagnosis. A low estimate does not rule out cancer, and only a biopsy reviewed by a pathologist can confirm or exclude cancer. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "An iso-dense mass, also described as \"equal density\" in current terminology, is a mass that has the same X-ray attenuation as fibroglandular tissue [1]. According to the provided documents, on its own, iso-density neither indicates nor excludes malignancy [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "birads_terminology › Mass Density > Iso-density",
         "birads_terminology › Mass Density > High Density",
@@ -333,15 +327,17 @@
       "retrieval_hit": true,
       "truncated": false,
       "reply_fresh": true,
-      "judge_fresh": true,
+      "judge_fresh": false,
       "model": "gemini-3.5-flash-lite",
       "valid_citations": 1,
       "invalid_citations": [],
       "says_not_covered": false,
-      "faithful": true,
+      "faithful": false,
       "citations_correct": true,
-      "unsupported_claims": [],
-      "answer": "Fine needle aspiration is a minimally invasive procedure that uses a thin needle to draw cells from a mass so they can be examined under a microscope (cytological examination) [1]. The features used in the Wisconsin Diagnostic Breast Cancer (WDBC) dataset were calculated from digitized images obtained through this procedure, comprising 10 nuclear measurements summarized by their mean, standard error, and worst value, resulting in 30 features in total [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "unsupported_claims": [
+        "so they can be examined under a microscope"
+      ],
+      "answer": "Fine needle aspiration is a minimally invasive procedure where a thin needle is used to draw cells from a mass so they can be examined under a microscope (cytological examination) [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "breast_imaging_glossary › What is Fine Needle Aspiration (FNA)?",
         "acr_followup_guidelines › BI-RADS Category 5: Highly Suggestive of Malignancy",
@@ -360,13 +356,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 3,
+      "valid_citations": 2,
       "invalid_citations": [],
       "says_not_covered": false,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "A breast biopsy removes a tissue sample from an abnormality to be examined by a pathologist [1]. A benign result is considered reliable only when it agrees with the imaging findings, a concept known as concordance [1][2]. This comparison ensures that the pathology matches what is seen on the imaging [2]. If a biopsy shows a benign result that is concordant with the imaging, follow-up imaging is scheduled according to the radiologist's advice [2][3]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "A breast biopsy removes a tissue sample for examination by a pathologist [1]. A benign result from this procedure is reliable only when it agrees with the imaging findings, a principle known as concordance [1][2]. This is because pathology and imaging results must be checked against each other to ensure they match [2]. An AI risk estimate does not replace this clinical workflow or a biopsy [1][2].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "breast_imaging_glossary › What is a Biopsy?",
         "acr_followup_guidelines › What Happens After an Abnormal Mammogram?",
@@ -386,13 +382,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 1,
+      "valid_citations": 2,
       "invalid_citations": [],
       "says_not_covered": false,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Nuclear features describe the cell nuclei seen under the microscope, including radius, texture, perimeter, area, smoothness, compactness, concavity, concave points, symmetry, and fractal dimension [2]. The Wisconsin Diagnostic Breast Cancer (WDBC) dataset contains 30 such nuclear features [2]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "In the Wisconsin Diagnostic Breast Cancer dataset, nuclear features describe the characteristics of cell nuclei seen under a microscope [2]. These features include radius, texture, perimeter, area, smoothness, compactness, concavity, concave points, symmetry, and fractal dimension [2]. Ten such nuclear measurements are computed from digitized fine needle aspiration images, with each summarized by its mean, standard error, and worst value, resulting in 30 total features [1][2].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "breast_imaging_glossary › What is Fine Needle Aspiration (FNA)?",
         "breast_imaging_glossary › What are Nuclear Features?",
@@ -417,7 +413,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, sensitivity is the share of people with the disease whom a test correctly flags, calculated as true positives divided by all people with the disease [1]. Specificity is the share of people without the disease whom the test correctly clears, calculated as true negatives divided by all people without it [1]. Screening programs trade sensitivity and specificity against one another, and most women recalled after a screening mammogram do not have cancer [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Sensitivity is the share of people with the disease whom a test correctly flags, calculated as true positives divided by all people with the disease [1]. Specificity is the share of people without the disease whom the test correctly clears, calculated as true negatives divided by all people without it [1]. Screening programmes trade one of these measures against the other [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "breast_imaging_glossary › What is Sensitivity and Specificity?",
         "safety_disclaimer › Clinical Limitations",
@@ -442,7 +438,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Digital breast tomosynthesis, also known as 3D mammography, differs from a regular mammogram because it takes images from several angles and reconstructs thin slices through the breast [1][2]. This process reduces the overlap of tissue that can hide or mimic masses on a standard 2D image, and it improves cancer detection in many women with dense breasts [1][2]. In contrast, a regular mammogram is a primary screening X-ray that records images in two views of each compressed breast [1][2].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Digital breast tomosynthesis (DBT), also known as 3D mammography, differs from a regular mammogram by taking images from several angles and reconstructing thin slices through the breast [1][2]. This process reduces the overlap of tissue that can hide or mimic masses on a standard 2D image [2] and improves cancer detection in many women with dense breasts [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "breast_imaging_glossary › What is a Mammogram?",
         "imaging_modalities › Mammography > How Mammography Works",
@@ -467,7 +463,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, about 10% of US screening mammograms result in a recall for additional imaging, and approximately one in twenty of those recalled women has cancer [3]. Most abnormal screening mammograms are not cancer, and the majority of women recalled after a screening mammogram do not have cancer [1][3]. Additional views or an ultrasound are routine parts of screening rather than a diagnosis [3].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on the provided documents, about 10% of screening mammograms in the US lead to a recall for additional imaging, and only about one in twenty of those recalled women has cancer [3]. Furthermore, most women who are recalled after a screening mammogram do not have cancer [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "breast_imaging_glossary › What is Sensitivity and Specificity?",
         "breast_imaging_glossary › What is a Mammogram?",
@@ -493,7 +489,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The DENSE trial showed that offering breast MRI to women with extremely dense breasts after a normal mammogram reduced the rate of interval cancers from 5.0 to 2.5 per 1,000 women invited (and 0.8 per 1,000 among those who were actually screened) [1]. However, this benefit came with the trade-off of about 80 false-positive results per 1,000 MRI screens [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The Dutch DENSE trial showed that offering breast MRI to women with extremely dense breasts after a normal mammogram reduced the rate of interval cancers from 5.0 down to 2.5 per 1,000 women invited (and 0.8 per 1,000 among the women who actually underwent screening) [1]. However, this benefit came with an increase in false-positive results, leading to about 80 false-positive outcomes per 1,000 MRI screens [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "imaging_modalities › Breast MRI > MRI Accuracy",
         "imaging_modalities › Breast MRI > When MRI Is Recommended",
@@ -518,7 +514,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, breast ultrasound cannot reliably show microcalcifications [2]. Similarly, breast MRI does not show microcalcifications [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on the provided documents, ultrasound cannot reliably show microcalcifications [2]. Similarly, MRI does not show microcalcifications [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "imaging_modalities › Breast MRI > MRI Limitations",
         "imaging_modalities › Breast Ultrasound > Ultrasound Strengths and Limitations",
@@ -538,13 +534,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 1,
+      "valid_citations": 3,
       "invalid_citations": [],
-      "says_not_covered": false,
+      "says_not_covered": true,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, when considering spiculated masses, which are one of the most suspicious features on a mammogram, a minority of them turn out to be benign [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on the provided documents, when considering suspicious findings, a minority of spiculated masses turn out to be benign [1]. The documents do not provide a specific numerical count or percentage for how many biopsies of suspicious findings overall turn out to be benign [1][2][3].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "birads_terminology › Mass Margin > Spiculated Margin",
         "patient_communication › Communicating Risk",
@@ -569,7 +565,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Screening results can cause measurable distress [1]. Research shows that six months following a false-positive mammogram, women have reported changes in existential values and inner calmness comparable to women diagnosed with breast cancer [1]. Furthermore, three years later, these women still experience more negative psychosocial consequences than those with normal results [1]. However, providing clear, timely communication along with a short wait time for follow-up testing can help reduce this harm [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Screening results can cause measurable distress [1]. Research from a Danish cohort study shows that six months following a false-positive mammogram, women experienced alterations in existential values and inner calmness that were as significant as those reported by women with a breast cancer diagnosis [1]. Furthermore, three years after the event, these women continued to report greater negative psychosocial consequences compared to those who received a normal result [1]. Timely, clear communication and minimizing wait times for follow-up testing can help reduce this harm [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "patient_communication › Psychological Impact",
         "imaging_modalities › Breast MRI > MRI Accuracy",
@@ -595,7 +591,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Cultural background affects breast screening communication because screening participation and risk perception vary across different cultural groups, and language barriers can impact how results are understood [1]. Additionally, cultural beliefs regarding cancer may influence an individual's willingness to participate in screening or pursue treatment [1]. To address these challenges, it is recommended to use culturally appropriate materials and professional interpreters rather than relying on family members when needed [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Cultural background and language barriers affect how individuals perceive breast cancer risk and understand screening results, which in turn influences their participation in screening and willingness to pursue treatment [1]. To support effective communication, it is important to use culturally appropriate materials and professional interpreters rather than relying on family members when needed [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "patient_communication › Cultural Sensitivity",
         "patient_communication › Common Misconceptions",
@@ -620,7 +616,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "A normal mammogram result should be explained as reassuring, though it does not completely rule out cancer [1]. Mammography typically detects about 80–87% of cancers that are present, with a lower detection rate in dense breasts [1]. When communicating this result, it is important to encourage continued screening at the recommended intervals and to prompt the prompt review of any new symptoms [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "A normal mammogram result means that mammography finds roughly 80% to 87% of cancers present, with fewer detected in dense breasts [1]. While a normal result is reassuring, it does not completely rule out cancer [1]. It is recommended to continue screening at the suggested interval and to promptly review any new symptoms [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "patient_communication › Conveying Screening Results",
         "patient_communication › Psychological Impact",
@@ -640,13 +636,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 1,
+      "valid_citations": 2,
       "invalid_citations": [],
       "says_not_covered": false,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Breast cancer is most frequently diagnosed between the ages of 65 and 74, with a median age at diagnosis of 64 [3]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Breast cancer is most frequently diagnosed between the ages of 65 and 74, and the median age at diagnosis is 64 [3]. Most breast cancers are diagnosed after age 50 [2].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "who_screening_protocols › Global Context",
         "risk_factors_epidemiology › Non-Modifiable Risk Factors",
@@ -671,7 +667,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The four ACR BI-RADS breast density categories are:\n* **Category A:** Almost entirely fatty, which applies to about 10% of women [1].\n* **Category B:** Scattered areas of fibroglandular density, which applies to about 40% of women [1].\n* **Category C:** Heterogeneously dense, which applies to about 40% of women [1].\n* **Category D:** Extremely dense, which applies to about 10% of women [1].\n\nNearly half of all women aged 40 and over who undergo mammograms have breasts categorized as either C or D [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on the provided documents, the four ACR BI-RADS breast density categories are:\n\n* **A:** Almost entirely fatty, which applies to about 10% of women [1].\n* **B:** Scattered areas of fibroglandular density, which applies to about 40% of women [1].\n* **C:** Heterogeneously dense, which applies to about 40% of women [1].\n* **D:** Extremely dense, which applies to about 10% of women [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "risk_factors_epidemiology › Breast Density",
         "acr_followup_guidelines › BI-RADS Category 5: Highly Suggestive of Malignancy",
@@ -694,13 +690,10 @@
       "valid_citations": 1,
       "invalid_citations": [],
       "says_not_covered": false,
-      "faithful": false,
+      "faithful": true,
       "citations_correct": true,
-      "unsupported_claims": [
-        "your current risk estimate shows a malignancy probability of 14.6%",
-        "placing you in the low risk category with a predicted class of benign"
-      ],
-      "answer": "After breast cancer in one breast, the risk of a new cancer in the other breast is approximately 0.4% per year [1]. \n\nPlease note that your current risk estimate shows a malignancy probability of 14.6%, placing you in the low risk category with a predicted class of benign. This is a statistical estimate, not a diagnosis. A low estimate does not rule out cancer, and only a biopsy reviewed by a pathologist can confirm or exclude cancer. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "unsupported_claims": [],
+      "answer": "After breast cancer in one breast, the risk of a new cancer in the other breast is approximately 0.4% per year [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "risk_factors_epidemiology › Non-Modifiable Risk Factors",
         "patient_communication › Common Misconceptions",
@@ -725,7 +718,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "In the United States, SEER estimates approximately 322,000 new cases of female breast cancer for the year 2026 [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on United States SEER estimates, there are approximately 322,000 new cases of female breast cancer diagnosed each year [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "risk_factors_epidemiology › Incidence and Mortality",
         "patient_communication › Common Misconceptions",
@@ -751,7 +744,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The 1.7% five-year risk threshold (calculated using the Gail model at age 35 or over, or an imaging-based model) is used to recommend annual mammography with tomosynthesis along with the consideration of annual MRI [2].\n\nPlease note that your current malignancy probability is a statistical estimate, not a diagnosis. A low estimate does not rule out cancer, and only a biopsy reviewed by a pathologist can confirm or exclude cancer.\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The 1.7% five-year risk threshold (using the Gail model at age 35 or over, or an imaging-based model) is used to recommend annual mammography with tomosynthesis along with consideration of annual MRI [2]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "risk_factors_epidemiology › Modifiable Risk Factors",
         "nccn_screening_guidelines › NCCN Increased-Risk Recommendations",
@@ -772,11 +765,11 @@
       "model": "gemini-3.5-flash-lite",
       "valid_citations": 1,
       "invalid_citations": [],
-      "says_not_covered": true,
+      "says_not_covered": false,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The provided documents state that three US bodies, including the American Cancer Society (ACS), publish widely used breast cancer screening guidelines [1]. They agree that average-risk women should have regular screening mammography starting from their forties, and that women at high risk require earlier and more intensive screening [1]. However, the documents do not provide specific age-by-age breakdown recommendations beyond noting that screening should begin in the forties for average-risk women [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "According to the provided documents, the American Cancer Society (ACS), along with other US bodies such as the National Comprehensive Cancer Network and the US Preventive Services Task Force, agrees that average-risk women should undergo regular screening mammography starting from their forties [1]. Women determined to be at high risk require earlier and more intensive screening, though these guidelines can vary regarding the exact starting age, screening interval, and the use of supplemental imaging [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "nccn_screening_guidelines › Overview",
         "patient_communication › Common Misconceptions",
@@ -802,7 +795,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, the Gail model should not be used for known mutation carriers, women with a history of breast cancer, DCIS, or LCIS, or women who have had chest radiation [1]. \n\nThe malignancy probability is a statistical estimate, not a diagnosis. A low estimate does not rule out cancer, and only a biopsy reviewed by a pathologist can confirm or exclude cancer. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "According to the provided documents, the Gail model should not be used for:\n- Known mutation carriers [1]\n- Women with a history of breast cancer [1]\n- Women with a history of ductal carcinoma in situ (DCIS) or lobular carcinoma in situ (LCIS) [1]\n- Women who have had chest radiation [1]\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "nccn_screening_guidelines › Risk Assessment Tools",
         "nccn_screening_guidelines › NCCN Increased-Risk Recommendations",
@@ -821,13 +814,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 3,
+      "valid_citations": 0,
       "invalid_citations": [],
       "says_not_covered": true,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, endocrine therapy is mentioned as part of standard treatment for hormone receptor-positive, HER2-negative disease (alongside CDK4/6 inhibitors) [1], for hormone receptor-positive, HER2-negative early breast cancer (guided by recurrence scores such as Oncotype DX) [3], and as a systemic treatment option for Stage IV (metastatic) disease according to tumour biology [2]. \n\nThe provided documents do not state how long endocrine therapy should be continued.\n\nPlease note that this risk estimate is a statistical estimate, not a diagnosis. A low estimate does not rule out cancer, and only a biopsy reviewed by a pathologist can confirm or exclude cancer.\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The provided documents do not contain information about how long endocrine therapy is administered. Therefore, I cannot answer that part of your question from the available sources.\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "treatment_pathways › Treatment Modalities > Systemic Therapy",
         "treatment_pathways › Treatment by Stage",
@@ -845,15 +838,15 @@
       "retrieval_hit": false,
       "truncated": false,
       "reply_fresh": true,
-      "judge_fresh": true,
+      "judge_fresh": false,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 0,
+      "valid_citations": 2,
       "invalid_citations": [],
       "says_not_covered": true,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The provided documents do not contain information about how ductal carcinoma in situ is treated. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The provided documents do not contain information about how ductal carcinoma in situ is treated. They only mention that mammography can detect microcalcifications as an early sign of ductal carcinoma in situ [1] and that low-grade ductal carcinoma in situ accounts for a large share of overdiagnosis in screening [2]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "imaging_modalities › Mammography > Mammography Strengths",
         "who_screening_protocols › Overdiagnosis Considerations",
@@ -878,7 +871,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "For metastatic breast cancer (Stage IV), the goal of treatment is to control the disease and preserve quality of life for as long as possible, as a cure is rare [1]. Treatment involves systemic therapies—such as endocrine, targeted, chemotherapy, or immunotherapy chosen according to tumor biology—along with radiation or surgery to manage specific symptoms [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "For Stage IV (metastatic) breast cancer, the goal of treatment is to control the disease and preserve quality of life for as long as possible, as cure is rare [1]. Treatment approaches include systemic therapy according to tumour biology, along with radiation or surgery for specific symptoms [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "treatment_pathways › Treatment by Stage",
         "treatment_pathways › Treatment Modalities > Systemic Therapy",
@@ -904,7 +897,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, there is no mention of World Health Organization (WHO) screening recommendations or age groups for biennial screening [1][2][3]. The provided documents do not cover this information.\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on the provided documents, there is no mention of World Health Organization (WHO) screening recommendations or age groups for biennial (every two years) screening; the provided documents do not cover this [1][2][3]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "nccn_screening_guidelines › NCCN Increased-Risk Recommendations",
         "nccn_screening_guidelines › ACS Recommendations",
@@ -929,7 +922,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Overdiagnosis in breast screening refers to the detection of a cancer that would never have caused symptoms during a woman's lifetime [1]. \n\nRegarding how common it is, estimates vary widely depending on the method used, ranging from under 10% to over 50% of screen-detected cancers [1]. For example, the UK Independent Review in 2012 estimated that approximately 19% of cancers diagnosed through screening are overdiagnosed, which equates to roughly 11% of all cancers diagnosed in invited women [1]. Low-grade ductal carcinoma in situ accounts for a substantial portion of these cases [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Overdiagnosis in breast screening is the detection of a cancer that would never have caused symptoms in a woman's lifetime [1]. \n\nEstimates of how common it is vary widely depending on the method used, ranging from under 10% to more than 50% of screen-detected cancers [1]. For example, the UK Independent Review in 2012 estimated that approximately 19% of cancers diagnosed through screening are overdiagnosed, which is equivalent to roughly 11% of all cancers diagnosed in women who are invited for screening [1]. Low-grade ductal carcinoma in situ accounts for a large share of these cases [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "who_screening_protocols › Overdiagnosis Considerations",
         "who_screening_protocols › WHO Position on Mammographic Screening",
@@ -955,7 +948,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "According to the World Health Organization (WHO) framework for early diagnosis, treatment should start as soon as possible, ideally within about a month of a diagnosis, and no more than about 90 days should pass from the first appearance of symptoms to the start of treatment [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "According to the World Health Organization (WHO), the interval from first presentation to the start of treatment should be kept as short as possible [1]. The WHO advises that treatment should ideally start within about a month of diagnosis, and no more than about 90 days should pass from the time of first symptoms to the start of treatment [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "who_screening_protocols › WHO Framework for Early Diagnosis",
         "treatment_pathways › Treatment by Stage",
@@ -974,13 +967,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 1,
+      "valid_citations": 2,
       "invalid_citations": [],
       "says_not_covered": false,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "BreastCare AI is a research and educational prototype that estimates the probability that a breast mass is malignant using four values: the patient's age and three BI-RADS descriptors (shape, margin, and density) [2]. \n\nIt was trained on the UCI Mammographic Mass dataset, which is a public collection of 961 masses (831 with complete descriptors) gathered from a single German radiology institute between 2003 and 2006 [2]. The model was selected by a fixed rule from a logistic regression and two LightGBM candidates [2].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "BreastCare AI is a research and educational prototype that estimates the probability that a breast mass is malignant using four values: the patient's age and three BI-RADS descriptors (shape, margin, and density) [2]. \n\nIt was trained on data from the UCI Mammographic Mass dataset, which is a public collection of 961 masses (831 with complete descriptors) gathered from a single German radiology institute between 2003 and 2006 [2]. The statistical model was selected by a fixed rule from a logistic regression and two LightGBM candidate models [2]. The model relies on four coarse descriptors assigned visually by radiologists, meaning it inherits any differences between readers [1]. Additionally, it was trained and tested on data from one institution and may not generalize to other equipment, populations, or screening programs [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "safety_disclaimer › Clinical Limitations",
         "safety_disclaimer › What This Tool Is",
@@ -1005,7 +998,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "When the app shows a high-risk notice, it means the estimated malignancy probability is 65% or higher [1]. However, a high estimate does not mean a diagnosis of cancer [1]. Instead, it indicates that masses with the same descriptors were often malignant in the training data [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.\n\nThis estimate is not a diagnosis: a low estimate does not rule out cancer, and a high one does not confirm it. Only a biopsy reviewed by a pathologist can do that.",
+      "answer": "When the app shows an enhanced high-risk notice, it means the estimated probability of malignancy is 65% or higher [1]. However, a high estimate does not mean a diagnosis of cancer; it simply indicates that masses sharing the same descriptors were frequently malignant in the training data [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "safety_disclaimer › High-Risk Estimate Notice",
         "safety_disclaimer › What the Outputs Mean",
@@ -1017,20 +1010,20 @@
       "kind": "tool",
       "answerable": true,
       "question": "Where can I find support if the result leaves me overwhelmed?",
-      "guardrail": "ok",
+      "guardrail": "crisis",
       "n_chunks": 3,
       "retrieval_hit": true,
       "truncated": false,
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 1,
+      "valid_citations": 0,
       "invalid_citations": [],
       "says_not_covered": false,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "If you are feeling overwhelmed or having thoughts of harming yourself, you should contact your local emergency number or a crisis line [1]. In the United States, you can call or text 988 [1]. In the UK and Ireland, you can call Samaritans on 116 123 [1]. For other locations, you can find free helplines at findahelpline.com [1]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "I'm really sorry you're going through this. You don't have to face it alone. If you might act on thoughts of harming yourself, please contact your local emergency number right now. You can also talk to a crisis line: in the US, call or text 988 (Suicide & Crisis Lifeline); in the UK and Ireland, call Samaritans on 116 123; anywhere else, findahelpline.com lists free, confidential helplines in your country. Talking to someone you trust, or to your doctor or care team, can help too. Waiting for or receiving breast imaging results is genuinely stressful, and support is available.",
       "documents": [
         "safety_disclaimer › What You Should Do",
         "patient_communication › Conveying Screening Results",
@@ -1047,7 +1040,7 @@
       "retrieval_hit": null,
       "truncated": false,
       "reply_fresh": true,
-      "judge_fresh": true,
+      "judge_fresh": false,
       "model": "gemini-3.5-flash-lite",
       "valid_citations": 3,
       "invalid_citations": [],
@@ -1074,13 +1067,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 4,
+      "valid_citations": 0,
       "invalid_citations": [],
       "says_not_covered": true,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The provided documents do not cover the cost of a mammogram in Pakistan [1][2][3][4].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The provided documents do not cover the cost of a mammogram in Pakistan. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "birads_terminology › Mass Density",
         "imaging_modalities › Breast MRI > MRI Accuracy",
@@ -1106,7 +1099,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The provided documents do not cover the side effects of letrozole. They only mention that letrozole is an aromatase inhibitor used for hormone receptor-positive cancers after menopause, or before menopause when combined with ovarian suppression [2]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The provided documents do not contain information about the side effects of letrozole. They only mention that letrozole is an aromatase inhibitor used for hormone receptor-positive cancers after menopause, or before menopause when combined with ovarian suppression [2].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "who_screening_protocols › Recommendations by Resource Setting",
         "treatment_pathways › Treatment Modalities > Systemic Therapy",
@@ -1125,13 +1118,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 4,
+      "valid_citations": 0,
       "invalid_citations": [],
       "says_not_covered": true,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, there is no mention of hospitals in Lahore that offer breast MRI [1][2][3][4]. The provided documents do not cover hospital locations or availability in specific cities.\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The provided documents do not contain information about which hospitals in Lahore offer breast MRI. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "imaging_modalities › Breast MRI > MRI Limitations",
         "imaging_modalities › Breast MRI > How Breast MRI Works",
@@ -1149,15 +1142,15 @@
       "retrieval_hit": null,
       "truncated": false,
       "reply_fresh": true,
-      "judge_fresh": false,
+      "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 0,
+      "valid_citations": 3,
       "invalid_citations": [],
       "says_not_covered": true,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The provided documents do not cover the recommended screening interval for cervical cancer. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The provided documents do not cover the recommended screening interval for cervical cancer [1][2][3]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "patient_communication › Conveying Screening Results",
         "nccn_screening_guidelines › Overview",
@@ -1182,7 +1175,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The provided documents do not cover how prostate cancer is staged [1][2][3][4]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The provided documents do not contain information about how prostate cancer is staged [1][2][3][4]. Document 1 mentions screening guidelines for hereditary prostate cancers, but does not describe staging [1].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "nccn_screening_guidelines › Genetic Risk Factors",
         "patient_communication › Common Misconceptions",
@@ -1208,7 +1201,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The provided documents do not cover what a thyroid ultrasound report means. They discuss breast imaging lexicons and assessment categories (BI-RADS) [1], clinical limitations of the breast imaging model [2], and how breast ultrasound works [3]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The provided documents do not cover what a thyroid ultrasound report means. They discuss breast imaging reporting and data systems (BI-RADS) [1], clinical limitations of the breast risk estimation model [2], and how breast ultrasound works to distinguish fluid-filled cysts from solid masses [3].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "breast_imaging_glossary › What is BI-RADS?",
         "safety_disclaimer › Clinical Limitations",
@@ -1233,7 +1226,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, BRCA1 carriers have a 55–72% lifetime risk of breast cancer [1]. However, the provided documents do not contain the specific lifetime risk of ovarian cancer for BRCA1 carriers. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on the provided documents, BRCA1 carriers have a 55–72% lifetime risk of breast cancer [1]. The documents do not provide the specific lifetime risk percentage for ovarian cancer. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "nccn_screening_guidelines › Genetic Risk Factors",
         "nccn_screening_guidelines › Risk Assessment Tools",
@@ -1253,15 +1246,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 3,
+      "valid_citations": 0,
       "invalid_citations": [],
       "says_not_covered": true,
-      "faithful": false,
+      "faithful": true,
       "citations_correct": true,
-      "unsupported_claims": [
-        "Regarding your mammographic findings, the model gives a calibrated malignancy probability of 14.6%, categorizing the risk as low with a predicted class of benign."
-      ],
-      "answer": "The provided documents do not contain information about the 20-year recurrence rate after lumpectomy without radiation [1][2][3]. \n\nRegarding your mammographic findings, the model gives a calibrated malignancy probability of 14.6%, categorizing the risk as low with a predicted class of benign. Please note that this is a statistical estimate, not a diagnosis. A low estimate does not rule out cancer, and only a biopsy reviewed by a pathologist can confirm or exclude cancer.\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "unsupported_claims": [],
+      "answer": "The provided documents do not contain information about the 20-year recurrence rate after lumpectomy without radiation. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "treatment_pathways › Treatment Modalities > Radiation Therapy",
         "treatment_pathways › Treatment Modalities > Surgery",
@@ -1280,13 +1271,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 0,
+      "valid_citations": 2,
       "invalid_citations": [],
       "says_not_covered": true,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The provided documents do not contain information about the sensitivity of contrast-enhanced mammography. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on the provided documents, there is no information regarding the sensitivity of contrast-enhanced mammography. The documents only mention that contrast-enhanced mammography is an alternative option when MRI is unavailable or cannot be performed [1][2]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "imaging_modalities › Breast MRI > MRI Limitations",
         "nccn_screening_guidelines › NCCN Increased-Risk Recommendations",
@@ -1312,7 +1303,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, common chemotherapy regimens include AC-T (doxorubicin and cyclophosphamide followed by paclitaxel) and TC (docetaxel and cyclophosphamide) [2]. The documents do not state the total duration of a full course of chemotherapy.\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "Based on the provided documents, chemotherapy can be given before surgery (neoadjuvant) or after it (adjuvant) [2]. Common regimens mentioned include AC-T (doxorubicin and cyclophosphamide followed by paclitaxel) and TC (docetaxel and cyclophosphamide) [2]. However, the provided documents do not contain information regarding the exact duration or length of a full course of chemotherapy.\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "treatment_pathways › Treatment by Stage",
         "treatment_pathways › Treatment Modalities > Systemic Therapy",
@@ -1355,7 +1346,7 @@
       "retrieval_hit": null,
       "truncated": false,
       "reply_fresh": true,
-      "judge_fresh": false,
+      "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
       "valid_citations": 1,
       "invalid_citations": [],
@@ -1363,7 +1354,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The provided documents do not contain information about how many women were enrolled in the TMIST trial [2]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "They only mention that the TMIST trial is testing whether digital breast tomosynthesis (DBT) reduces breast cancer deaths compared to 2D mammography [2].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "imaging_modalities › Breast Ultrasound > Ultrasound as Supplemental Screening",
         "imaging_modalities › Mammography > Tomosynthesis",
@@ -1380,7 +1371,7 @@
       "retrieval_hit": null,
       "truncated": false,
       "reply_fresh": true,
-      "judge_fresh": false,
+      "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
       "valid_citations": 0,
       "invalid_citations": [],
@@ -1388,7 +1379,7 @@
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "The provided documents do not contain information about the screening age range in the UK NHS breast programme. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The provided documents do not cover the screening age range in the UK NHS breast programme. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "safety_disclaimer › Clinical Limitations",
         "acr_followup_guidelines › BI-RADS Assessment Categories 3, 4, and 5 — Follow-Up and Biopsy",
@@ -1407,15 +1398,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 1,
+      "valid_citations": 2,
       "invalid_citations": [],
       "says_not_covered": false,
-      "faithful": false,
+      "faithful": true,
       "citations_correct": true,
-      "unsupported_claims": [
-        "The malignancy probability estimate is 14.6%, placed in the low risk category with a predicted class of benign, and the 90% conformal prediction set includes only benign [Case context]."
-      ],
-      "answer": "Based on the provided documents, a personal or family history suggesting a hereditary predisposition—such as for BRCA1, BRCA2, TP53, PTEN, CDH1, PALB2, ATM, or CHEK2—leads to a referral for genetic counselling and testing [1]. Screening then follows the NCCN guidelines for hereditary breast, ovarian, pancreatic, and prostate cancers [1].\n\nThe malignancy probability estimate is 14.6%, placed in the low risk category with a predicted class of benign, and the 90% conformal prediction set includes only benign [Case context]. This is a statistical estimate, not a diagnosis; a low estimate does not rule out cancer, and only a biopsy reviewed by a pathologist can confirm or exclude cancer [Case context]. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "unsupported_claims": [],
+      "answer": "Based on the provided documents, a personal or family history suggesting a hereditary predisposition—such as for genes including BRCA1, BRCA2, TP53, PTEN, CDH1, PALB2, ATM, or CHEK2—leads to a referral for genetic counselling and testing, following NCCN's guidelines for hereditary breast, ovarian, pancreatic, and prostate cancers [1]. Additionally, Oncotype DX is a 21-gene recurrence score used for hormone receptor-positive, HER2-negative early breast cancer [2], and MammaPrint is a 70-gene signature classifying tumours as low or high genomic risk [2].\n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "nccn_screening_guidelines › Genetic Risk Factors",
         "treatment_pathways › Genomic Testing",
@@ -1434,13 +1423,13 @@
       "reply_fresh": true,
       "judge_fresh": true,
       "model": "gemini-3.5-flash-lite",
-      "valid_citations": 2,
+      "valid_citations": 0,
       "invalid_citations": [],
       "says_not_covered": true,
       "faithful": true,
       "citations_correct": true,
       "unsupported_claims": [],
-      "answer": "Based on the provided documents, there is no mention of how long gadolinium contrast stays in the body. The documents state that breast MRI uses an intravenous gadolinium contrast agent [1], and that MRI requires this contrast agent and has certain limitations [2], but they do not cover its clearance time. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
+      "answer": "The provided documents do not contain information about how long gadolinium contrast stays in the body. \n\n⚕️ These findings must be reviewed by a qualified clinician before any decision is made.",
       "documents": [
         "imaging_modalities › Breast MRI > How Breast MRI Works",
         "imaging_modalities › Breast MRI > MRI Limitations",

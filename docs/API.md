@@ -11,7 +11,8 @@ General rules
   default: local dev servers on ports 5199, 5173 and 8080). The built-in UI is same-origin and needs none.
 - **429** — `/api/chat` rate limit (`CHAT_RATE_LIMIT_PER_MINUTE` per client, default 10;
   `CHAT_DAILY_LIMIT` per server process, default 300), with a `Retry-After` header in seconds. The limit is
-  per process: a multi-instance deployment still needs a shared limiter or the host's own.
+  per process: a multi-instance deployment still needs a shared limiter or the host's own. CORS exposes
+  `Retry-After` to allowed origins, so a separate frontend can read it.
 - **413** — upload too large (`MAX_IMAGE_BYTES` 10 MB, `MAX_CSV_BYTES` 2 MB) or too many CSV rows
   (`MAX_BATCH_ROWS` 5000).
 - **401 / 403** — `/api/audit/*` is disabled (403) unless `AUDIT_API_TOKEN` is set, and then needs
