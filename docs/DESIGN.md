@@ -479,6 +479,10 @@ History, so the numbers can be read honestly:
 5. The answer and red-team verdicts come from an LLM judge whose agreement with a person is unmeasured
    until the agreement sheet is filled in; the guardrails are regular expressions and will miss paraphrases.
 6. Not validated in any clinical setting.
+7. When the knowledge base covers a topic but not the exact question (for example, which gene panel a guideline
+   recommends), the model can answer with related, cited content instead of saying the documents do not cover
+   it. The answer evaluation counts this under correct abstention on unanswerable questions (generated results
+   above). Changing it means changing the frozen system prompt or pipeline, so it needs a new held-out round.
 
 ## 12. Project structure
 
