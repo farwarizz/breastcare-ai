@@ -33,6 +33,31 @@ from `models/model_metadata.json`; the full evaluation is in
   model within one standard error is preferred). Candidates were logistic regression, LightGBM
   monotone in age and shape, and unconstrained LightGBM.
 
+## Research comparison models
+
+The served model above is the only model whose estimate is the assessment. Five further classifier
+families exist for comparison: a random forest, histogram gradient boosting, a support vector machine
+with an RBF kernel, k-nearest neighbours and a small neural network (one hidden layer). They are
+trained by `python -m src.ml.zoo` and saved in `models/zoo/`, separately from the served model.
+
+- **Same protocol as the served model.** Same cleaned data and the same stratified split (the split
+  ids are checked against `models/splits.json`), the same four inputs (BI-RADS assessment excluded) and
+  the same 5-fold cross-validation folds on the fit split. Each family has a small fixed grid; the grid
+  point with the lowest mean cross-validated log-loss is kept. Calibration method and both thresholds
+  come from out-of-fold predictions on the fit split, and the final model is trained on the whole fit
+  split. Non-tree models use the logistic regression's preprocessing; tree models use the raw codes.
+- **Reported, not used to choose.** The test split is used only to report each model's metrics, with
+  the same bootstrap resamples as the served model, plus a paired AUROC difference against the served
+  model. The results are in `models/zoo_metadata.json` (served at `/api/model-info` → `zoo`); one case
+  can be run through every model at `POST /api/assess-models`. This card states no numbers for them.
+- **The served model is unchanged.** It, its metadata and its selection rule (`src/ml/models.py`) do
+  not depend on these models. They were added after the served model was chosen, so choosing one of
+  them because of its test result would tune on the test split, and that test result would then
+  overstate how well it generalises. The test split is also small, so the differences are mostly
+  within the intervals. A different model could be considered only through a new, pre-specified
+  selection rule evaluated on new data.
+- These models have no conformal prediction sets and no explanations.
+
 ## Intended use
 
 - **Primary use:** demonstrating how a clinical decision-support pipeline can be built and evaluated

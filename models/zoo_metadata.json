@@ -1,0 +1,909 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-24T11:49:10+00:00",
+  "protocol": "Same data, split and protocol as the served model (src/ml/train.py). The 831 cleaned UCI Mammographic Mass rows are split with seed 2026 into a fit split (498 rows), a conformal split (166) and a test split (167); the split ids are checked against models/splits.json. For each family a small fixed grid is scored by 5-fold cross-validated log-loss on the fit split, using the same folds as the served model. The out-of-fold predictions of the chosen configuration pick the calibration method (cross-validated Brier score) and two thresholds: Youden's J, and the highest threshold that keeps out-of-fold sensitivity at 95% or more. The final model is then trained on the whole fit split. The test split is used only to report results, with 95% percentile bootstrap intervals from the same 2,000 resamples (seed 2026) as the served model, so each difference from the served model is paired. The conformal split is not used: these models have no conformal sets and no explanations.",
+  "rule": "Per family, the grid point with the lowest mean 5-fold cross-validated log-loss on the fit split (the folds of src/ml/models.py; ties go to the first point in grid order). Calibration method (cross-validated Brier score) and both thresholds come from that configuration's out-of-fold predictions on the fit split. Families are not compared with each other and none replaces the served model.",
+  "split_check": {
+    "matches_saved_splits": true,
+    "saved_splits": "models/splits.json",
+    "split_seed": 2026,
+    "n": {
+      "fit": 498,
+      "conformal": 166,
+      "test": 167
+    }
+  },
+  "caveat": "These models were added after the served model was chosen. Their test results are reported, not used to choose: picking a model by these numbers would tune on the test split. With 167 test cases, differences are mostly within the intervals.",
+  "served_reference": {
+    "family": "logistic_regression",
+    "label": "Logistic regression",
+    "test_auroc_recomputed": 0.8965,
+    "matches_model_metadata": true,
+    "note": "The served model and models/model_metadata.json are unchanged; its test predictions are recomputed only for the paired comparisons."
+  },
+  "cv": {
+    "folds": 5,
+    "shuffle": true,
+    "random_state": 42
+  },
+  "bootstrap": {
+    "resamples": 2000,
+    "seed": 2026,
+    "interval": "95% percentile"
+  },
+  "models": [
+    {
+      "family": "random_forest",
+      "label": "Random forest",
+      "params": {
+        "max_depth": 3,
+        "min_samples_leaf": 5
+      },
+      "fixed_params": {
+        "n_estimators": 300,
+        "random_state": 42,
+        "n_jobs": 1
+      },
+      "preprocessing": "raw codes (age in years; shape, margin and density as integer codes)",
+      "trained_on": "fit split (n=498)",
+      "cv": {
+        "cv_logloss": 0.5012,
+        "cv_logloss_se": 0.0309,
+        "cv_auroc": 0.8389
+      },
+      "cv_grid": [
+        {
+          "params": {
+            "max_depth": 3,
+            "min_samples_leaf": 5
+          },
+          "cv_logloss": 0.5012,
+          "cv_logloss_se": 0.0309,
+          "cv_auroc": 0.8389
+        },
+        {
+          "params": {
+            "max_depth": 3,
+            "min_samples_leaf": 20
+          },
+          "cv_logloss": 0.5023,
+          "cv_logloss_se": 0.0271,
+          "cv_auroc": 0.8376
+        },
+        {
+          "params": {
+            "max_depth": 5,
+            "min_samples_leaf": 5
+          },
+          "cv_logloss": 0.505,
+          "cv_logloss_se": 0.0332,
+          "cv_auroc": 0.8332
+        },
+        {
+          "params": {
+            "max_depth": 5,
+            "min_samples_leaf": 20
+          },
+          "cv_logloss": 0.5022,
+          "cv_logloss_se": 0.0273,
+          "cv_auroc": 0.8363
+        },
+        {
+          "params": {
+            "max_depth": null,
+            "min_samples_leaf": 5
+          },
+          "cv_logloss": 0.5161,
+          "cv_logloss_se": 0.0332,
+          "cv_auroc": 0.8254
+        },
+        {
+          "params": {
+            "max_depth": null,
+            "min_samples_leaf": 20
+          },
+          "cv_logloss": 0.5022,
+          "cv_logloss_se": 0.0272,
+          "cv_auroc": 0.8362
+        }
+      ],
+      "oof": {
+        "auroc": 0.828,
+        "brier": 0.1626
+      },
+      "calibration": {
+        "method": "none",
+        "params": {},
+        "cv_brier_by_method": {
+          "none": 0.16257,
+          "sigmoid": 0.1644,
+          "isotonic": 0.16395
+        },
+        "fitted_on": "out-of-fold predictions, fit split"
+      },
+      "threshold": {
+        "value": 0.4924,
+        "method": "Youden's J on out-of-fold calibrated predictions (fit split)"
+      },
+      "high_sensitivity_threshold": {
+        "value": 0.1367,
+        "method": "highest threshold with out-of-fold sensitivity ≥ 95%"
+      },
+      "test": {
+        "n": 167,
+        "n_malignant": 81,
+        "auroc": {
+          "value": 0.8924,
+          "ci": [
+            0.8382,
+            0.9345
+          ]
+        },
+        "auprc": {
+          "value": 0.8691,
+          "ci": [
+            0.79,
+            0.9297
+          ]
+        },
+        "brier": {
+          "value": 0.1292,
+          "ci": [
+            0.1055,
+            0.158
+          ]
+        },
+        "ece": {
+          "value": 0.0868,
+          "ci": [
+            0.0782,
+            0.1529
+          ]
+        },
+        "calibration_intercept": {
+          "value": -0.0377,
+          "ci": [
+            -0.3703,
+            0.271
+          ]
+        },
+        "calibration_slope": {
+          "value": 1.5295,
+          "ci": [
+            1.1992,
+            2.0545
+          ]
+        },
+        "threshold": 0.4924,
+        "sensitivity": {
+          "value": 0.9136,
+          "ci": [
+            0.8462,
+            0.9643
+          ]
+        },
+        "specificity": {
+          "value": 0.7674,
+          "ci": [
+            0.6702,
+            0.8488
+          ]
+        },
+        "ppv": {
+          "value": 0.7872,
+          "ci": [
+            0.7008,
+            0.8614
+          ]
+        },
+        "npv": {
+          "value": 0.9041,
+          "ci": [
+            0.8312,
+            0.961
+          ]
+        },
+        "accuracy": {
+          "value": 0.8383,
+          "ci": [
+            0.7844,
+            0.8862
+          ]
+        },
+        "counts": {
+          "tp": 74,
+          "fp": 20,
+          "tn": 66,
+          "fn": 7
+        }
+      },
+      "vs_served": {
+        "auroc_difference": {
+          "value": -0.0041,
+          "ci": [
+            -0.0201,
+            0.0093
+          ]
+        },
+        "definition": "test AUROC of this model minus the served model's, paired bootstrap (same resamples)"
+      }
+    },
+    {
+      "family": "gradient_boosting",
+      "label": "Gradient boosting (histogram)",
+      "params": {
+        "max_depth": 2,
+        "max_iter": 100
+      },
+      "fixed_params": {
+        "learning_rate": 0.05,
+        "min_samples_leaf": 20,
+        "random_state": 42
+      },
+      "preprocessing": "raw codes (age in years; shape, margin and density as integer codes)",
+      "trained_on": "fit split (n=498)",
+      "cv": {
+        "cv_logloss": 0.5058,
+        "cv_logloss_se": 0.0291,
+        "cv_auroc": 0.8314
+      },
+      "cv_grid": [
+        {
+          "params": {
+            "max_depth": 2,
+            "max_iter": 100
+          },
+          "cv_logloss": 0.5058,
+          "cv_logloss_se": 0.0291,
+          "cv_auroc": 0.8314
+        },
+        {
+          "params": {
+            "max_depth": 2,
+            "max_iter": 200
+          },
+          "cv_logloss": 0.5177,
+          "cv_logloss_se": 0.0288,
+          "cv_auroc": 0.8273
+        },
+        {
+          "params": {
+            "max_depth": 3,
+            "max_iter": 100
+          },
+          "cv_logloss": 0.5228,
+          "cv_logloss_se": 0.0284,
+          "cv_auroc": 0.8192
+        },
+        {
+          "params": {
+            "max_depth": 3,
+            "max_iter": 200
+          },
+          "cv_logloss": 0.5423,
+          "cv_logloss_se": 0.0263,
+          "cv_auroc": 0.8115
+        }
+      ],
+      "oof": {
+        "auroc": 0.8261,
+        "brier": 0.1654
+      },
+      "calibration": {
+        "method": "none",
+        "params": {},
+        "cv_brier_by_method": {
+          "none": 0.1654,
+          "sigmoid": 0.167,
+          "isotonic": 0.17493
+        },
+        "fitted_on": "out-of-fold predictions, fit split"
+      },
+      "threshold": {
+        "value": 0.4521,
+        "method": "Youden's J on out-of-fold calibrated predictions (fit split)"
+      },
+      "high_sensitivity_threshold": {
+        "value": 0.1375,
+        "method": "highest threshold with out-of-fold sensitivity ≥ 95%"
+      },
+      "test": {
+        "n": 167,
+        "n_malignant": 81,
+        "auroc": {
+          "value": 0.8865,
+          "ci": [
+            0.8286,
+            0.9298
+          ]
+        },
+        "auprc": {
+          "value": 0.8569,
+          "ci": [
+            0.7747,
+            0.9196
+          ]
+        },
+        "brier": {
+          "value": 0.1321,
+          "ci": [
+            0.1063,
+            0.1627
+          ]
+        },
+        "ece": {
+          "value": 0.0845,
+          "ci": [
+            0.0805,
+            0.1563
+          ]
+        },
+        "calibration_intercept": {
+          "value": -0.0238,
+          "ci": [
+            -0.3838,
+            0.3034
+          ]
+        },
+        "calibration_slope": {
+          "value": 1.3307,
+          "ci": [
+            1.0098,
+            1.7897
+          ]
+        },
+        "threshold": 0.4521,
+        "sensitivity": {
+          "value": 0.9012,
+          "ci": [
+            0.8333,
+            0.961
+          ]
+        },
+        "specificity": {
+          "value": 0.7442,
+          "ci": [
+            0.647,
+            0.8261
+          ]
+        },
+        "ppv": {
+          "value": 0.7684,
+          "ci": [
+            0.6823,
+            0.8434
+          ]
+        },
+        "npv": {
+          "value": 0.8889,
+          "ci": [
+            0.8101,
+            0.9538
+          ]
+        },
+        "accuracy": {
+          "value": 0.8204,
+          "ci": [
+            0.7605,
+            0.8743
+          ]
+        },
+        "counts": {
+          "tp": 73,
+          "fp": 22,
+          "tn": 64,
+          "fn": 8
+        }
+      },
+      "vs_served": {
+        "auroc_difference": {
+          "value": -0.01,
+          "ci": [
+            -0.0293,
+            0.0063
+          ]
+        },
+        "definition": "test AUROC of this model minus the served model's, paired bootstrap (same resamples)"
+      }
+    },
+    {
+      "family": "svm_rbf",
+      "label": "Support vector machine (RBF)",
+      "params": {
+        "C": 0.3
+      },
+      "fixed_params": {
+        "kernel": "rbf",
+        "gamma": "scale",
+        "probability": true,
+        "random_state": 42
+      },
+      "preprocessing": "the logistic regression's preprocessing: standardised age + one-hot shape, margin, density",
+      "trained_on": "fit split (n=498)",
+      "cv": {
+        "cv_logloss": 0.5134,
+        "cv_logloss_se": 0.0254,
+        "cv_auroc": 0.8178
+      },
+      "cv_grid": [
+        {
+          "params": {
+            "C": 0.3
+          },
+          "cv_logloss": 0.5134,
+          "cv_logloss_se": 0.0254,
+          "cv_auroc": 0.8178
+        },
+        {
+          "params": {
+            "C": 1.0
+          },
+          "cv_logloss": 0.5176,
+          "cv_logloss_se": 0.0262,
+          "cv_auroc": 0.8101
+        },
+        {
+          "params": {
+            "C": 3.0
+          },
+          "cv_logloss": 0.5229,
+          "cv_logloss_se": 0.0278,
+          "cv_auroc": 0.7962
+        }
+      ],
+      "oof": {
+        "auroc": 0.8018,
+        "brier": 0.1664
+      },
+      "calibration": {
+        "method": "none",
+        "params": {},
+        "cv_brier_by_method": {
+          "none": 0.16635,
+          "sigmoid": 0.16803,
+          "isotonic": 0.17336
+        },
+        "fitted_on": "out-of-fold predictions, fit split"
+      },
+      "threshold": {
+        "value": 0.434,
+        "method": "Youden's J on out-of-fold calibrated predictions (fit split)"
+      },
+      "high_sensitivity_threshold": {
+        "value": 0.1318,
+        "method": "highest threshold with out-of-fold sensitivity ≥ 95%"
+      },
+      "test": {
+        "n": 167,
+        "n_malignant": 81,
+        "auroc": {
+          "value": 0.8856,
+          "ci": [
+            0.8262,
+            0.9291
+          ]
+        },
+        "auprc": {
+          "value": 0.8489,
+          "ci": [
+            0.7549,
+            0.9202
+          ]
+        },
+        "brier": {
+          "value": 0.137,
+          "ci": [
+            0.1082,
+            0.1702
+          ]
+        },
+        "ece": {
+          "value": 0.0763,
+          "ci": [
+            0.0492,
+            0.1337
+          ]
+        },
+        "calibration_intercept": {
+          "value": -0.0345,
+          "ci": [
+            -0.3819,
+            0.3032
+          ]
+        },
+        "calibration_slope": {
+          "value": 1.2515,
+          "ci": [
+            0.9863,
+            1.6204
+          ]
+        },
+        "threshold": 0.434,
+        "sensitivity": {
+          "value": 0.8765,
+          "ci": [
+            0.8,
+            0.9419
+          ]
+        },
+        "specificity": {
+          "value": 0.7674,
+          "ci": [
+            0.6702,
+            0.8488
+          ]
+        },
+        "ppv": {
+          "value": 0.7802,
+          "ci": [
+            0.69,
+            0.8556
+          ]
+        },
+        "npv": {
+          "value": 0.8684,
+          "ci": [
+            0.7848,
+            0.9385
+          ]
+        },
+        "accuracy": {
+          "value": 0.8204,
+          "ci": [
+            0.7605,
+            0.8743
+          ]
+        },
+        "counts": {
+          "tp": 71,
+          "fp": 20,
+          "tn": 66,
+          "fn": 10
+        }
+      },
+      "vs_served": {
+        "auroc_difference": {
+          "value": -0.0109,
+          "ci": [
+            -0.0298,
+            0.0066
+          ]
+        },
+        "definition": "test AUROC of this model minus the served model's, paired bootstrap (same resamples)"
+      }
+    },
+    {
+      "family": "knn",
+      "label": "k-nearest neighbours",
+      "params": {
+        "n_neighbors": 51
+      },
+      "fixed_params": {},
+      "preprocessing": "the logistic regression's preprocessing: standardised age + one-hot shape, margin, density",
+      "trained_on": "fit split (n=498)",
+      "cv": {
+        "cv_logloss": 0.4949,
+        "cv_logloss_se": 0.0325,
+        "cv_auroc": 0.8409
+      },
+      "cv_grid": [
+        {
+          "params": {
+            "n_neighbors": 15
+          },
+          "cv_logloss": 0.6413,
+          "cv_logloss_se": 0.0812,
+          "cv_auroc": 0.8247
+        },
+        {
+          "params": {
+            "n_neighbors": 31
+          },
+          "cv_logloss": 0.4994,
+          "cv_logloss_se": 0.0336,
+          "cv_auroc": 0.8378
+        },
+        {
+          "params": {
+            "n_neighbors": 51
+          },
+          "cv_logloss": 0.4949,
+          "cv_logloss_se": 0.0325,
+          "cv_auroc": 0.8409
+        }
+      ],
+      "oof": {
+        "auroc": 0.8366,
+        "brier": 0.1604
+      },
+      "calibration": {
+        "method": "none",
+        "params": {},
+        "cv_brier_by_method": {
+          "none": 0.1604,
+          "sigmoid": 0.16261,
+          "isotonic": 0.16616
+        },
+        "fitted_on": "out-of-fold predictions, fit split"
+      },
+      "threshold": {
+        "value": 0.5294,
+        "method": "Youden's J on out-of-fold calibrated predictions (fit split)"
+      },
+      "high_sensitivity_threshold": {
+        "value": 0.1569,
+        "method": "highest threshold with out-of-fold sensitivity ≥ 95%"
+      },
+      "test": {
+        "n": 167,
+        "n_malignant": 81,
+        "auroc": {
+          "value": 0.8987,
+          "ci": [
+            0.8475,
+            0.9395
+          ]
+        },
+        "auprc": {
+          "value": 0.8676,
+          "ci": [
+            0.7861,
+            0.9301
+          ]
+        },
+        "brier": {
+          "value": 0.1294,
+          "ci": [
+            0.1046,
+            0.1598
+          ]
+        },
+        "ece": {
+          "value": 0.0612,
+          "ci": [
+            0.0572,
+            0.1353
+          ]
+        },
+        "calibration_intercept": {
+          "value": -0.0871,
+          "ci": [
+            -0.4278,
+            0.2367
+          ]
+        },
+        "calibration_slope": {
+          "value": 1.4042,
+          "ci": [
+            1.1012,
+            1.9096
+          ]
+        },
+        "threshold": 0.5294,
+        "sensitivity": {
+          "value": 0.9012,
+          "ci": [
+            0.8333,
+            0.9605
+          ]
+        },
+        "specificity": {
+          "value": 0.7442,
+          "ci": [
+            0.6456,
+            0.8313
+          ]
+        },
+        "ppv": {
+          "value": 0.7684,
+          "ci": [
+            0.68,
+            0.8447
+          ]
+        },
+        "npv": {
+          "value": 0.8889,
+          "ci": [
+            0.8133,
+            0.9551
+          ]
+        },
+        "accuracy": {
+          "value": 0.8204,
+          "ci": [
+            0.7605,
+            0.8743
+          ]
+        },
+        "counts": {
+          "tp": 73,
+          "fp": 22,
+          "tn": 64,
+          "fn": 8
+        }
+      },
+      "vs_served": {
+        "auroc_difference": {
+          "value": 0.0022,
+          "ci": [
+            -0.0109,
+            0.0156
+          ]
+        },
+        "definition": "test AUROC of this model minus the served model's, paired bootstrap (same resamples)"
+      }
+    },
+    {
+      "family": "mlp",
+      "label": "Neural network (MLP)",
+      "params": {
+        "alpha": 0.1
+      },
+      "fixed_params": {
+        "hidden_layer_sizes": [
+          16
+        ],
+        "max_iter": 2000,
+        "random_state": 42
+      },
+      "preprocessing": "the logistic regression's preprocessing: standardised age + one-hot shape, margin, density",
+      "trained_on": "fit split (n=498)",
+      "cv": {
+        "cv_logloss": 0.5099,
+        "cv_logloss_se": 0.0397,
+        "cv_auroc": 0.8341
+      },
+      "cv_grid": [
+        {
+          "params": {
+            "alpha": 0.001
+          },
+          "cv_logloss": 0.5133,
+          "cv_logloss_se": 0.0399,
+          "cv_auroc": 0.8335
+        },
+        {
+          "params": {
+            "alpha": 0.01
+          },
+          "cv_logloss": 0.5132,
+          "cv_logloss_se": 0.0399,
+          "cv_auroc": 0.8335
+        },
+        {
+          "params": {
+            "alpha": 0.1
+          },
+          "cv_logloss": 0.5099,
+          "cv_logloss_se": 0.0397,
+          "cv_auroc": 0.8341
+        }
+      ],
+      "oof": {
+        "auroc": 0.8294,
+        "brier": 0.1665
+      },
+      "calibration": {
+        "method": "none",
+        "params": {},
+        "cv_brier_by_method": {
+          "none": 0.16647,
+          "sigmoid": 0.16795,
+          "isotonic": 0.17172
+        },
+        "fitted_on": "out-of-fold predictions, fit split"
+      },
+      "threshold": {
+        "value": 0.4068,
+        "method": "Youden's J on out-of-fold calibrated predictions (fit split)"
+      },
+      "high_sensitivity_threshold": {
+        "value": 0.1231,
+        "method": "highest threshold with out-of-fold sensitivity ≥ 95%"
+      },
+      "test": {
+        "n": 167,
+        "n_malignant": 81,
+        "auroc": {
+          "value": 0.8932,
+          "ci": [
+            0.8377,
+            0.9366
+          ]
+        },
+        "auprc": {
+          "value": 0.8652,
+          "ci": [
+            0.7809,
+            0.9283
+          ]
+        },
+        "brier": {
+          "value": 0.1274,
+          "ci": [
+            0.1023,
+            0.1587
+          ]
+        },
+        "ece": {
+          "value": 0.0537,
+          "ci": [
+            0.062,
+            0.1262
+          ]
+        },
+        "calibration_intercept": {
+          "value": -0.0478,
+          "ci": [
+            -0.4179,
+            0.2894
+          ]
+        },
+        "calibration_slope": {
+          "value": 1.3167,
+          "ci": [
+            1.016,
+            1.7802
+          ]
+        },
+        "threshold": 0.4068,
+        "sensitivity": {
+          "value": 0.9259,
+          "ci": [
+            0.8666,
+            0.9756
+          ]
+        },
+        "specificity": {
+          "value": 0.7442,
+          "ci": [
+            0.6456,
+            0.8313
+          ]
+        },
+        "ppv": {
+          "value": 0.7732,
+          "ci": [
+            0.6837,
+            0.8478
+          ]
+        },
+        "npv": {
+          "value": 0.9143,
+          "ci": [
+            0.8438,
+            0.9718
+          ]
+        },
+        "accuracy": {
+          "value": 0.8323,
+          "ci": [
+            0.7725,
+            0.8862
+          ]
+        },
+        "counts": {
+          "tp": 75,
+          "fp": 22,
+          "tn": 64,
+          "fn": 6
+        }
+      },
+      "vs_served": {
+        "auroc_difference": {
+          "value": -0.0033,
+          "ci": [
+            -0.0128,
+            0.0065
+          ]
+        },
+        "definition": "test AUROC of this model minus the served model's, paired bootstrap (same resamples)"
+      }
+    }
+  ],
+  "versions": {
+    "python": "3.13.7",
+    "scikit-learn": "1.7.2",
+    "numpy": "2.3.4"
+  }
+}

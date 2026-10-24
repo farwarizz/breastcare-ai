@@ -19,6 +19,7 @@ Extended Endpoints:
                                  real weights/dependencies are missing)
     POST /api/risk-profile     → simplified Gail / Tyrer-Cuzick approximations
     POST /api/compare-models   → compare the trained models that are available
+    POST /api/assess-models    → served, challenger and research models on one case (2.5.0)
     POST /api/batch-predict    → CSV batch prediction
     GET  /api/audit/history    → prediction audit trail
     GET  /api/audit/stats      → aggregate statistics
@@ -69,7 +70,7 @@ def _server_error(exc: Exception) -> HTTPException:
     return HTTPException(status_code=500, detail="Internal error while processing the request. "
                                                  "The server log has the details.")
 
-API_VERSION = "2.4.0"
+API_VERSION = "2.5.0"
 
 app = FastAPI(
     title="BreastCare AI",
@@ -583,6 +584,54 @@ def compare_models_endpoint(req: CompareRequest):
         raise _server_error(e)
 
 
+# ── Research comparison models (2.5.0) ────────────────────────────────────────
+# The served model's estimate is the assessment. /api/assess-models adds, for the same case, the
+# challenger and the research models trained by `python -m src.ml.zoo` (models/zoo/, metadata in
+# models/zoo_metadata.json) under the served model's protocol. They were added after the served
+# model was chosen and are never used to choose it.
+
+ASSESS_MODELS_NOTE = ("Only the served model's estimate is the assessment. The other models are research "
+                      "comparisons, without conformal sets or explanations, and were not chosen by their "
+                      "test results.")
+
+
+@app.post("/api/assess-models")
+def assess_models(req: AssessRequest):
+    """Every trained risk model on one case: served first, then the challenger (both through
+    predict_frame, the code path of /api/assess and /api/compare-models), then the research models
+    in models/zoo_metadata.json order (only served + challenger when the zoo is not installed)."""
+    features = {"age": req.age, "shape": req.shape, "margin": req.margin, "density": req.density}
+    try:
+        import pandas as pd
+        from src.ml.artifacts import model_meta
+        from src.ml.predict import predict_frame
+        from src.ml.zoo import predict_case
+
+        df = pd.DataFrame([features])
+        models = []
+        for which in ("served", "challenger"):
+            meta = model_meta(which)
+            row = predict_frame(df, which).iloc[0]
+            models.append({"family": meta["family"], "label": meta["label"], "role": which,
+                           "probability": float(row["probability"]),
+                           "threshold": meta["threshold"]["value"],
+                           "predicted_class": row["predicted_class"],
+                           "test_auroc": meta.get("test", {}).get("auroc")})
+        models += [{"family": m["family"], "label": m["label"], "role": "research",
+                    "probability": m["probability"], "threshold": m["threshold"],
+                    "predicted_class": m["predicted_class"], "test_auroc": m["test_auroc"]}
+                   for m in predict_case(features)]
+        return JSONResponse({
+            "inputs": features,
+            "models": models,
+            "above_threshold": {"k": sum(m["predicted_class"] == "Malignant" for m in models),
+                                "n": len(models)},
+            "note": ASSESS_MODELS_NOTE,
+        })
+    except Exception as e:
+        raise _server_error(e)
+
+
 # ── Batch Prediction ──────────────────────────────────────────────────────────
 
 @app.post("/api/batch-predict")
@@ -788,7 +837,7 @@ def health():
             "core": ["/api/assess", "/api/chat"],
             "extended": [
                 "/api/assess-image", "/api/risk-profile",
-                "/api/compare-models", "/api/batch-predict",
+                "/api/compare-models", "/api/assess-models", "/api/batch-predict",
                 "/api/audit/history", "/api/audit/stats",
                 "/api/report",
                 "/api/drift-report", "/api/global-shap",

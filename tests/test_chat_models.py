@@ -123,7 +123,7 @@ def test_router_is_installed_in_the_pipeline_and_the_client():
 
 def test_health_lists_the_gemini_models_with_exactly_one_evaluated():
     body = client.get("/health").json()
-    assert body["version"] == "2.4.0" and client.get("/openapi.json").json()["info"]["version"] == "2.4.0"
+    assert body["version"] == "2.5.0" and client.get("/openapi.json").json()["info"]["version"] == "2.5.0"
     llm = body["llm"]
     # the 2.3.1 fields are unchanged
     assert llm["provider"] == "gemini" and llm["model"] == GEMINI_MODEL

@@ -4,7 +4,8 @@ from saved artifacts (models/model_metadata.json, knowledge_base/index/).
 
 This is the single source of truth for numbers shown in the UI
 (GET /api/model-info) and in the docs (scripts/update_readme_metrics.py), so
-nothing displayed is typed by hand.
+nothing displayed is typed by hand. The research comparison models
+(models/zoo_metadata.json, written by src/ml/zoo.py) are served as `zoo`.
 """
 from __future__ import annotations
 
@@ -67,7 +68,17 @@ def evaluation_summaries() -> dict:
     return out
 
 
+def zoo_metadata() -> dict | None:
+    """The research comparison models written by `python -m src.ml.zoo` (models/zoo_metadata.json),
+    or None when they have not been trained. Their test results are reported, never used to choose
+    a model; the served model and model_metadata.json do not depend on them."""
+    from src.ml.zoo import ZOO_METADATA_PATH
+    if not ZOO_METADATA_PATH.exists():
+        return None
+    return json.loads(ZOO_METADATA_PATH.read_text(encoding="utf-8"))
+
+
 def get_model_info() -> dict:
     return {"metadata": load_metadata(), "knowledge_base": knowledge_base_stats(),
             "llm": {"model": GEMINI_MODEL, "judge_model": JUDGE_MODEL},
-            "evaluations": evaluation_summaries()}
+            "evaluations": evaluation_summaries(), "zoo": zoo_metadata()}
