@@ -192,17 +192,22 @@ def write_agreement_sheet(rows: list[dict], n: int = 30) -> None:
                         "yes" if r["faithful"] else "no", ""])
 
 
-def agreement() -> None:
-    with open(SHEET_PATH, encoding="utf-8") as f:
+def agreement(path: Path = SHEET_PATH) -> dict | None:
+    """Judge-human agreement on faithfulness, from the human column of the sheet or of its review
+    copy (evals/judge_agreement_sheet_HUMAN_REVIEW.csv). AI pre-labels are never counted."""
+    with open(path, encoding="utf-8") as f:
         rows = [r for r in csv.DictReader(f) if r["human_faithful (yes/no)"].strip()]
     if not rows:
-        print("No human labels yet: fill the last column of", SHEET_PATH)
-        return
+        print("No human labels yet: fill the column 'human_faithful (yes/no)' of", path)
+        return None
     agree = sum(r["judge_faithful"] == r["human_faithful (yes/no)"].strip().lower() for r in rows)
     print(f"judge–human agreement on faithfulness: {agree}/{len(rows)} ({agree / len(rows):.0%})")
+    return {"agree": agree, "n": len(rows)}
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--agreement", action="store_true")
-    agreement() if parser.parse_args().agreement else evaluate()
+    parser.add_argument("--sheet", type=Path, default=SHEET_PATH, help="sheet with a 'human_faithful (yes/no)' column")
+    args = parser.parse_args()
+    agreement(args.sheet) if args.agreement else evaluate()

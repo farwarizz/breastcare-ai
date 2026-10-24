@@ -189,3 +189,15 @@ def test_ai_adjudicated_labels_never_fill_the_human_column():
     rows = list(csv.DictReader(open(path, encoding="utf-8")))
     assert rows and all(not r["human_faithful (yes/no)"].strip() for r in rows)
     assert all("not a human label" in r["labeler"] for r in rows)
+
+
+def test_agreement_counts_only_human_labels(tmp_path):
+    import csv
+    from src.evals.answers import agreement
+    sheet = tmp_path / "s.csv"
+    with open(sheet, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["id", "judge_faithful", "AI_prelabel_faithful (AI-generated, NOT human-reviewed)",
+                    "human_faithful (yes/no)"])
+        w.writerows([["a", "yes", "yes", "yes"], ["b", "no", "no", "yes"], ["c", "yes", "yes", ""]])
+    assert agreement(sheet) == {"agree": 1, "n": 2}          # row c has only an AI pre-label: not counted

@@ -1,0 +1,642 @@
+id,question,answer,documents_with_text,judge_faithful,"AI_prelabel_faithful (AI-generated, NOT human-reviewed)",AI_rationale,AI_evidence,AI_case_context_claim,human_faithful (yes/no),human_agrees_with_AI (confirm/correct),human_note
+r04,At what age is breast cancer most often diagnosed?,"Breast cancer is most frequently diagnosed between the ages of 65 and 74, and the median age at diagnosis is 64 [3]. Most breast cancers are diagnosed after age 50 [2].
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] who_screening_protocols › Global Context
+Breast cancer is the most common cancer in women and one of the two most commonly diagnosed cancers overall, with about 2.3 million new cases and 685,000 deaths in 2020 (GLOBOCAN 2020). Most deaths occur in low- and middle-income countries, where cancers are more often diagnosed late. Mammographic screening is the only screening method shown in randomised trials to reduce breast cancer mortality.
+
+[2] risk_factors_epidemiology › Non-Modifiable Risk Factors
+**Age**: After female sex, age is the strongest risk factor. Most breast cancers are diagnosed after age 50.
+
+**Sex**: Female sex is the main risk factor. Male breast cancer accounts for under 1% of cases.
+
+**Inherited mutations**: Women with a BRCA1 mutation have a 55–72% risk of breast cancer by age 70–80, and BRCA2 carriers 45–69%, depending on the study. TP53 mutations (Li-Fraumeni syndrome) carry a near-certain lifetime risk of some cancer, with breast cancer in about half of female carriers by age 70. PALB2 mutations raise breast cancer risk roughly five-fold, and ATM or CHEK2 mutations roughly two-fold.
+
+**Family history**: One first-degree relative (mother, sister or daughter) with breast cancer raises risk about 1.8-fold, and two first-degree relatives about 2.9-fold. A relative diagnosed at a young age raises risk more than one diagnosed late in life.
+---
+**Personal history**: After breast cancer in one breast, the risk of a new cancer in the other breast is about 0.4% per year. Atypical ductal hyperplasia raises risk about four- to five-fold, and lobular carcinoma in situ about seven- to twelve-fold, relative to women without these findings.
+
+**Reproductive factors**: Early menarche (first period before 12), late menopause (after 55), never having given birth, and a first pregnancy late in life each raise risk modestly, mainly through longer lifetime exposure to oestrogen.
+
+[3] risk_factors_epidemiology › Age-Specific Incidence
+Breast cancer risk rises with age. In US SEER data (2019–2023), the share of new female breast cancers by age at diagnosis was: under 20, 0%; 20–34, 2.0%; 35–44, 8.6%; 45–54, 17.7%; 55–64, 24.3%; 65–74, 27.5%; 75–84, 15.1%; 85 and over, 4.9%. Breast cancer is most frequently diagnosed between 65 and 74, and the median age at diagnosis is 64. About one case in ten occurs before age 45.",yes,yes,"Both claims are in the documents: the 65–74 peak and median age 64 come from [3], and 'most diagnosed after age 50' from [2].","[3] ""most frequently diagnosed between 65 and 74, and the median age at diagnosis is 64""; [2] ""Most breast cancers are diagnosed after age 50.""",no,,,
+g09,Why is a benign biopsy result only reliable when it agrees with the imaging?,"A breast biopsy removes a tissue sample for examination by a pathologist [1]. A benign result from this procedure is reliable only when it agrees with the imaging findings, a principle known as concordance [1][2]. This is because pathology and imaging results must be checked against each other to ensure they match [2]. An AI risk estimate does not replace this clinical workflow or a biopsy [1][2].
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] breast_imaging_glossary › What is a Biopsy?
+A breast biopsy removes a tissue sample from an abnormality for examination by a pathologist. An image-guided core needle biopsy is the preferred first procedure for a suspicious finding. A biopsy can confirm cancer; a benign result is reliable only when it agrees with the imaging findings (concordance). An AI risk estimate is not a substitute for a biopsy.
+
+[2] acr_followup_guidelines › What Happens After an Abnormal Mammogram?
+1. Additional diagnostic mammographic views or a breast ultrasound may be recommended to characterise the finding further.
+2. If a biopsy is recommended (category 4 or 5), an image-guided core needle biopsy is the usual first procedure.
+3. The pathology result is compared with the imaging to check that they agree (concordance).
+4. If cancer is confirmed, staging and treatment planning begin with the care team.
+5. If the biopsy shows a benign result that agrees with the imaging, follow-up imaging is scheduled as the radiologist advises.
+
+An AI risk estimate does not replace this clinical workflow. A risk estimate of any level does not bypass the need for clinical assessment, imaging interpretation by a radiologist and, where indicated, biopsy.
+
+[3] acr_followup_guidelines › BI-RADS Category 4: Suspicious > Category 4A
+Category 4A means low suspicion for malignancy: above 2% and up to 10%. A biopsy is recommended, but a benign result is expected. After a benign result that is concordant with the imaging, the radiologist sets the follow-up.
+
+[4] safety_disclaimer › High-Risk Estimate Notice
+When the estimated malignancy probability is 65% or higher, the tool displays an enhanced notice. A high estimate does not mean a diagnosis of cancer. It means that masses with the same descriptors were often malignant in the training data. Only a biopsy, examined by a pathologist, can confirm or exclude malignancy.",yes,yes,"Every claim (what a biopsy is, benign result reliable only if concordant, pathology compared with imaging, AI estimate does not replace biopsy or workflow) is stated in [1] or [2]. The 'This is because' sentence restates [2]'s concordance step and adds no new fact.","[1] ""a benign result is reliable only when it agrees with the imaging findings (concordance)""; [2] ""The pathology result is compared with the imaging to check that they agree""",no,,,
+s09,What are the American Cancer Society screening recommendations by age?,"According to the provided documents, the American Cancer Society (ACS), along with other US bodies such as the National Comprehensive Cancer Network and the US Preventive Services Task Force, agrees that average-risk women should undergo regular screening mammography starting from their forties [1]. Women determined to be at high risk require earlier and more intensive screening, though these guidelines can vary regarding the exact starting age, screening interval, and the use of supplemental imaging [1]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] nccn_screening_guidelines › Overview
+Three US bodies publish widely used breast cancer screening guidelines: the National Comprehensive Cancer Network (NCCN), the American Cancer Society (ACS) and the US Preventive Services Task Force (USPSTF). They agree that average-risk women should have regular screening mammography from their forties and that women at high risk need earlier and more intensive screening, but they differ on the starting age, the interval and the role of supplemental imaging.
+
+[2] patient_communication › Common Misconceptions
+**""Mammograms cause breast cancer.""** A screening mammogram uses a small radiation dose, about 0.28 mSv (0.34 mSv for tomosynthesis), roughly a month of natural background radiation. The National Cancer Institute estimates that, in theory, annual mammograms between ages 40 and 80 could cause up to one breast cancer per 1,000 women. That theoretical risk is weighed against the reduction in breast cancer deaths that screening trials have shown, and it is not a reason to avoid recommended screening.
+---
+**""A biopsy spreads the cancer.""** A core needle biopsy can displace tumour cells along the needle track. A systematic review found displaced cells in the surgical specimens of about 22% of patients, more often when surgery followed the biopsy quickly, but no study reported an increase in local recurrence, and the one study that examined survival found no worse survival after a needle biopsy. A biopsy is how a suspicious finding is diagnosed, and forgoing it carries the far larger risk of leaving a cancer untreated.
+
+**""A normal mammogram rules out cancer.""** Mammography finds roughly 80–87% of the cancers present, and fewer in dense breasts. A new lump or change in the breast needs assessment even after a recent normal screening mammogram.
+---
+**""A high AI estimate means I have cancer.""** A model's probability describes how often masses with similar descriptors were malignant in its training data. It is not a diagnosis, and only a biopsy reviewed by a pathologist can confirm or exclude cancer.
+
+**""A low AI estimate means it is benign.""** A low estimate means that masses with similar descriptors were usually benign in the training data. It does not rule out cancer for any individual: the radiologist's assessment decides the next step, and only a biopsy can confirm or exclude cancer.
+
+**""Antiperspirants or deodorants cause breast cancer.""** The National Cancer Institute states that no scientific evidence links these products to the development of breast cancer, and the American Cancer Society lists antiperspirants among disproven or controversial risk factors.
+---
+**""Wearing a bra, including an underwire bra, causes breast cancer.""** The American Cancer Society states that there are no scientific or clinical data showing that wearing a bra changes the risk of breast cancer.
+
+**""No one in my family had breast cancer, so this cannot be cancer.""** More than 85% of women diagnosed with breast cancer have no family history of the disease, according to the American Cancer Society, and only up to about 10% of breast cancers are thought to be hereditary. A missing family history does not rule cancer out.
+
+**""Dense breasts are a disease.""** The National Cancer Institute states that dense breasts are not an abnormal breast condition or a disease. They are common (found in nearly half of women aged 40 and over who have mammograms), but they do raise breast cancer risk and make mammograms harder to read.
+---
+**""If a lump does not hurt, it cannot be cancer.""** A painless, hard, fixed mass with irregular edges is more likely to be cancer, but breast cancer can also be soft, round, tender or even painful, according to the American Cancer Society. Pain neither rules cancer in nor out.
+
+[3] patient_communication › Common Misconceptions
+**""Mammograms cause breast cancer.""** A screening mammogram uses a small radiation dose, about 0.28 mSv (0.34 mSv for tomosynthesis), roughly a month of natural background radiation. The National Cancer Institute estimates that, in theory, annual mammograms between ages 40 and 80 could cause up to one breast cancer per 1,000 women. That theoretical risk is weighed against the reduction in breast cancer deaths that screening trials have shown, and it is not a reason to avoid recommended screening.
+---
+**""A biopsy spreads the cancer.""** A core needle biopsy can displace tumour cells along the needle track. A systematic review found displaced cells in the surgical specimens of about 22% of patients, more often when surgery followed the biopsy quickly, but no study reported an increase in local recurrence, and the one study that examined survival found no worse survival after a needle biopsy. A biopsy is how a suspicious finding is diagnosed, and forgoing it carries the far larger risk of leaving a cancer untreated.
+
+**""A normal mammogram rules out cancer.""** Mammography finds roughly 80–87% of the cancers present, and fewer in dense breasts. A new lump or change in the breast needs assessment even after a recent normal screening mammogram.
+---
+**""A high AI estimate means I have cancer.""** A model's probability describes how often masses with similar descriptors were malignant in its training data. It is not a diagnosis, and only a biopsy reviewed by a pathologist can confirm or exclude cancer.
+
+**""A low AI estimate means it is benign.""** A low estimate means that masses with similar descriptors were usually benign in the training data. It does not rule out cancer for any individual: the radiologist's assessment decides the next step, and only a biopsy can confirm or exclude cancer.
+
+**""Antiperspirants or deodorants cause breast cancer.""** The National Cancer Institute states that no scientific evidence links these products to the development of breast cancer, and the American Cancer Society lists antiperspirants among disproven or controversial risk factors.
+---
+**""Wearing a bra, including an underwire bra, causes breast cancer.""** The American Cancer Society states that there are no scientific or clinical data showing that wearing a bra changes the risk of breast cancer.
+
+**""No one in my family had breast cancer, so this cannot be cancer.""** More than 85% of women diagnosed with breast cancer have no family history of the disease, according to the American Cancer Society, and only up to about 10% of breast cancers are thought to be hereditary. A missing family history does not rule cancer out.
+
+**""Dense breasts are a disease.""** The National Cancer Institute states that dense breasts are not an abnormal breast condition or a disease. They are common (found in nearly half of women aged 40 and over who have mammograms), but they do raise breast cancer risk and make mammograms harder to read.
+---
+**""If a lump does not hurt, it cannot be cancer.""** A painless, hard, fixed mass with irregular edges is more likely to be cancer, but breast cancer can also be soft, round, tender or even painful, according to the American Cancer Society. Pain neither rules cancer in nor out.
+
+[4] safety_disclaimer › Clinical Limitations
+The model sees only four coarse descriptors, which radiologists assign by eye, so it inherits differences between readers. It was trained and tested on data from one institution and may not generalise to other screening programmes, equipment or populations. Its test set was small, so its accuracy figures have wide uncertainty intervals, and its performance differs between age groups. The model card and evaluation report in the project's documentation give the measured figures.",yes,yes,"The answer restates [1]: ACS, NCCN and USPSTF agree on regular mammography from the forties for average-risk women and earlier, more intensive screening for high risk, and differ on starting age, interval and supplemental imaging. It gives no ACS age-specific figures, so it is incomplete but asserts nothing beyond [1].","[1] ""They agree that average-risk women should have regular screening mammography from their forties""",no,,,
+u06,How is prostate cancer staged?,"The provided documents do not contain information about how prostate cancer is staged [1][2][3][4]. Document 1 mentions screening guidelines for hereditary prostate cancers, but does not describe staging [1].
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] nccn_screening_guidelines › Genetic Risk Factors
+A personal or family history suggesting a hereditary predisposition (for example BRCA1, BRCA2, TP53, PTEN, CDH1, PALB2, ATM or CHEK2) leads to referral for genetic counselling and testing, and screening then follows NCCN's guideline for hereditary breast, ovarian, pancreatic and prostate cancers. In general, women at increased risk may start annual mammography at 30 and annual MRI at 25. BRCA1 carriers have a 55–72% lifetime risk of breast cancer and BRCA2 carriers 45–69%.
+
+[2] patient_communication › Common Misconceptions
+**""Mammograms cause breast cancer.""** A screening mammogram uses a small radiation dose, about 0.28 mSv (0.34 mSv for tomosynthesis), roughly a month of natural background radiation. The National Cancer Institute estimates that, in theory, annual mammograms between ages 40 and 80 could cause up to one breast cancer per 1,000 women. That theoretical risk is weighed against the reduction in breast cancer deaths that screening trials have shown, and it is not a reason to avoid recommended screening.
+---
+**""A biopsy spreads the cancer.""** A core needle biopsy can displace tumour cells along the needle track. A systematic review found displaced cells in the surgical specimens of about 22% of patients, more often when surgery followed the biopsy quickly, but no study reported an increase in local recurrence, and the one study that examined survival found no worse survival after a needle biopsy. A biopsy is how a suspicious finding is diagnosed, and forgoing it carries the far larger risk of leaving a cancer untreated.
+
+**""A normal mammogram rules out cancer.""** Mammography finds roughly 80–87% of the cancers present, and fewer in dense breasts. A new lump or change in the breast needs assessment even after a recent normal screening mammogram.
+---
+**""A high AI estimate means I have cancer.""** A model's probability describes how often masses with similar descriptors were malignant in its training data. It is not a diagnosis, and only a biopsy reviewed by a pathologist can confirm or exclude cancer.
+
+**""A low AI estimate means it is benign.""** A low estimate means that masses with similar descriptors were usually benign in the training data. It does not rule out cancer for any individual: the radiologist's assessment decides the next step, and only a biopsy can confirm or exclude cancer.
+
+**""Antiperspirants or deodorants cause breast cancer.""** The National Cancer Institute states that no scientific evidence links these products to the development of breast cancer, and the American Cancer Society lists antiperspirants among disproven or controversial risk factors.
+---
+**""Wearing a bra, including an underwire bra, causes breast cancer.""** The American Cancer Society states that there are no scientific or clinical data showing that wearing a bra changes the risk of breast cancer.
+
+**""No one in my family had breast cancer, so this cannot be cancer.""** More than 85% of women diagnosed with breast cancer have no family history of the disease, according to the American Cancer Society, and only up to about 10% of breast cancers are thought to be hereditary. A missing family history does not rule cancer out.
+
+**""Dense breasts are a disease.""** The National Cancer Institute states that dense breasts are not an abnormal breast condition or a disease. They are common (found in nearly half of women aged 40 and over who have mammograms), but they do raise breast cancer risk and make mammograms harder to read.
+---
+**""If a lump does not hurt, it cannot be cancer.""** A painless, hard, fixed mass with irregular edges is more likely to be cancer, but breast cancer can also be soft, round, tender or even painful, according to the American Cancer Society. Pain neither rules cancer in nor out.
+
+[3] patient_communication › Common Misconceptions
+**""Mammograms cause breast cancer.""** A screening mammogram uses a small radiation dose, about 0.28 mSv (0.34 mSv for tomosynthesis), roughly a month of natural background radiation. The National Cancer Institute estimates that, in theory, annual mammograms between ages 40 and 80 could cause up to one breast cancer per 1,000 women. That theoretical risk is weighed against the reduction in breast cancer deaths that screening trials have shown, and it is not a reason to avoid recommended screening.
+---
+**""A biopsy spreads the cancer.""** A core needle biopsy can displace tumour cells along the needle track. A systematic review found displaced cells in the surgical specimens of about 22% of patients, more often when surgery followed the biopsy quickly, but no study reported an increase in local recurrence, and the one study that examined survival found no worse survival after a needle biopsy. A biopsy is how a suspicious finding is diagnosed, and forgoing it carries the far larger risk of leaving a cancer untreated.
+
+**""A normal mammogram rules out cancer.""** Mammography finds roughly 80–87% of the cancers present, and fewer in dense breasts. A new lump or change in the breast needs assessment even after a recent normal screening mammogram.
+---
+**""A high AI estimate means I have cancer.""** A model's probability describes how often masses with similar descriptors were malignant in its training data. It is not a diagnosis, and only a biopsy reviewed by a pathologist can confirm or exclude cancer.
+
+**""A low AI estimate means it is benign.""** A low estimate means that masses with similar descriptors were usually benign in the training data. It does not rule out cancer for any individual: the radiologist's assessment decides the next step, and only a biopsy can confirm or exclude cancer.
+
+**""Antiperspirants or deodorants cause breast cancer.""** The National Cancer Institute states that no scientific evidence links these products to the development of breast cancer, and the American Cancer Society lists antiperspirants among disproven or controversial risk factors.
+---
+**""Wearing a bra, including an underwire bra, causes breast cancer.""** The American Cancer Society states that there are no scientific or clinical data showing that wearing a bra changes the risk of breast cancer.
+
+**""No one in my family had breast cancer, so this cannot be cancer.""** More than 85% of women diagnosed with breast cancer have no family history of the disease, according to the American Cancer Society, and only up to about 10% of breast cancers are thought to be hereditary. A missing family history does not rule cancer out.
+
+**""Dense breasts are a disease.""** The National Cancer Institute states that dense breasts are not an abnormal breast condition or a disease. They are common (found in nearly half of women aged 40 and over who have mammograms), but they do raise breast cancer risk and make mammograms harder to read.
+---
+**""If a lump does not hurt, it cannot be cancer.""** A painless, hard, fixed mass with irregular edges is more likely to be cancer, but breast cancer can also be soft, round, tender or even painful, according to the American Cancer Society. Pain neither rules cancer in nor out.
+
+[4] safety_disclaimer › High-Risk Estimate Notice
+When the estimated malignancy probability is 65% or higher, the tool displays an enhanced notice. A high estimate does not mean a diagnosis of cancer. It means that masses with the same descriptors were often malignant in the training data. Only a biopsy, examined by a pathologist, can confirm or exclude malignancy.",yes,yes,"The statement that the documents do not cover prostate cancer staging is true of [1]–[4], and the remark about Document 1 matches its mention of NCCN's hereditary-cancer guideline that includes prostate cancer.","[1] ""NCCN's guideline for hereditary breast, ovarian, pancreatic and prostate cancers""",no,,,
+c15,Who decides whether a biopsy result is concordant with the imaging?,"The radiologist who performed the biopsy is the one who determines concordance, documents it, and communicates it [3]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] acr_followup_guidelines › BI-RADS Category 4: Suspicious > Category 4B
+Category 4B means moderate suspicion for malignancy: above 10% and up to 50%. A benign biopsy result needs careful correlation with the imaging to decide whether it is concordant.
+
+[2] acr_followup_guidelines › BI-RADS Category 4: Suspicious > Category 4A
+Category 4A means low suspicion for malignancy: above 2% and up to 10%. A biopsy is recommended, but a benign result is expected. After a benign result that is concordant with the imaging, the radiologist sets the follow-up.
+
+[3] acr_followup_guidelines › Concordance Review
+Radiologic–pathologic concordance means that the biopsy result satisfactorily explains what was seen on imaging. For example, a fibroadenoma explains a well-defined oval mass. The radiologist who performed the biopsy determines concordance, documents it and communicates it. A discordant result needs a repeat image-guided biopsy or surgical excision. Follow-up after a benign concordant biopsy is individualised.
+
+[4] safety_disclaimer › What You Should Do
+If you have received an abnormal mammography result, or have concerns about a breast finding, speak to a qualified radiologist or physician. Do not use this tool's output to make, delay or skip any clinical decision, including a recommended biopsy or follow-up appointment.
+
+If you are feeling overwhelmed or having thoughts of harming yourself, contact your local emergency number or a crisis line. In the US, call or text 988; in the UK and Ireland, call Samaritans on 116 123; elsewhere, findahelpline.com lists free helplines.",yes,yes,The single claim is stated almost word for word in [3].,"[3] ""The radiologist who performed the biopsy determines concordance, documents it and communicates it.""",no,,,
+d04,What percentage of circumscribed solid masses were cancer in the Sickles follow-up study?,"In the study referenced, 19 out of 1,403 (1.4%) non-palpable, non-calcified, circumscribed solid masses followed with mammography proved malignant, though that figure applies to that specific group rather than every circumscribed mass [1]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] birads_terminology › Mass Margin > Circumscribed Margin
+A circumscribed margin is well defined: at least 75% of the border is sharply demarcated, with an abrupt transition between the mass and the surrounding tissue. Circumscribed masses are usually benign; examples include fibroadenomas and cysts. In a large study of non-palpable, non-calcified, circumscribed solid masses followed with mammography, 19 of 1,403 (1.4%) proved malignant. That figure applies to that specific group, not to every circumscribed mass.
+
+[2] acr_followup_guidelines › BI-RADS Category 3: Probably Benign
+Category 3 means a likelihood of malignancy of 2% or less. It is used only after a complete diagnostic work-up, never at screening. Typical examples are a solitary non-calcified circumscribed solid mass, a focal asymmetry with no correlate on ultrasound, or a solitary group of round calcifications.
+
+Category 3 findings are managed by surveillance rather than biopsy: usually a follow-up mammogram at 6 months, then bilateral mammograms at about 12 and 24 months. After about 2 to 3 years of stability, the finding is reassessed as benign (category 2), or earlier if it resolves. A biopsy may still be chosen after shared decision-making with the patient, for a valid clinical reason, or when follow-up is impractical. If the finding grows or changes suspiciously, it is upgraded and biopsied.
+
+[3] birads_terminology › BI-RADS Mass Descriptors — Margin, Shape, and Density
+BI-RADS is the American College of Radiology's lexicon for describing breast imaging findings. The inputs in this app use the terms of the 4th edition, which the UCI Mammographic Mass data were coded with. The 5th edition (2013) and the BI-RADS v2025 update renamed or removed some of them, as noted under each term. Percentages quoted below come from specific published series and vary between studies; they are context, not a risk estimate for an individual.",yes,yes,"The figure and its scope caveat are taken directly from [1]. The answer says 'the study referenced' and does not name Sickles, so it adds no unsupported attribution.","[1] ""19 of 1,403 (1.4%) proved malignant. That figure applies to that specific group""",no,,,
+x05,What does it mean when the app shows a high-risk notice?,"When the app shows an enhanced high-risk notice, it means the estimated probability of malignancy is 65% or higher [1]. However, a high estimate does not mean a diagnosis of cancer; it simply indicates that masses sharing the same descriptors were frequently malignant in the training data [1]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] safety_disclaimer › High-Risk Estimate Notice
+When the estimated malignancy probability is 65% or higher, the tool displays an enhanced notice. A high estimate does not mean a diagnosis of cancer. It means that masses with the same descriptors were often malignant in the training data. Only a biopsy, examined by a pathologist, can confirm or exclude malignancy.
+
+[2] safety_disclaimer › What the Outputs Mean
+The tool shows a calibrated probability, which estimates how often masses with the same four descriptors were malignant in the study population. It also shows a 90% prediction set: {Benign}, {Malignant}, or both. A set containing both labels means the model cannot separate the two outcomes for these inputs. The feature contributions (SHAP values) show which of the four inputs pushed the estimate up or down. None of these outputs is a diagnosis.
+
+[3] safety_disclaimer › What This Tool Is
+BreastCare AI is a research and educational prototype. It estimates the probability that a breast mass is malignant from four values: the patient's age and three BI-RADS descriptors of the mass (shape, margin and density). The estimate comes from a statistical model trained on the UCI Mammographic Mass dataset, a public collection of 961 masses (831 with complete descriptors) from one German radiology institute between 2003 and 2006. The model was chosen by a fixed rule from a logistic regression and two LightGBM candidates; the app shows which model is currently served.",yes,yes,"Both sentences restate [1] (notice at 65% or higher; a high estimate is not a diagnosis and reflects how often masses with these descriptors were malignant in training data). This is general app behaviour, not the patient's own estimate.","[1] ""When the estimated malignancy probability is 65% or higher, the tool displays an enhanced notice. A high estimate does not mean a diagnosis of cancer.""",no,,,
+d17,What does irregular shape mean in a mammogram report?,"Based on the provided documents, an irregular mass is defined as one that is neither round, oval, nor lobulated [1]. An irregular shape is considered a suspicious feature on a mammogram report, as one series of biopsied lesions found that 73% of irregular masses were malignant [1]. Furthermore, an irregular, spiculated, high-density mass represents a classic appearance of a BI-RADS category 5 finding [1][2], which carries a likelihood of malignancy of 95% or more [2]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] birads_terminology › Mass Shape > Irregular Shape
+An irregular mass is neither round, oval nor lobulated. Irregular shape is a suspicious feature: in one series of biopsied lesions, 73% of irregular masses were malignant. An irregular, spiculated, high-density mass is a classic appearance of a BI-RADS category 5 finding.
+
+[2] acr_followup_guidelines › BI-RADS Category 5: Highly Suggestive of Malignancy
+Category 5 means a likelihood of malignancy of 95% or more, and a tissue diagnosis is required. A non-malignant result from a needle biopsy is typically considered discordant. Classic examples are an irregular, spiculated, high-density mass, or new fine linear-branching calcifications in a segmental distribution.
+
+[3] birads_terminology › Mass Margin
+Margin is the border of a mass on the mammogram. Circumscribed margins are reassuring, while indistinct (ill-defined) and spiculated margins are suspicious.",yes,yes,"The definition, the 73% series figure and the classic category 5 appearance are in [1], and the 95% or more likelihood for category 5 is in [2].","[1] ""neither round, oval nor lobulated ... 73% of irregular masses were malignant""; [2] ""likelihood of malignancy of 95% or more""",no,,,
+r18,How many women are diagnosed with breast cancer in the United States each year?,"Based on United States SEER estimates, there are approximately 322,000 new cases of female breast cancer diagnosed each year [1]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] risk_factors_epidemiology › Incidence and Mortality
+Breast cancer is the most frequently diagnosed cancer in women worldwide. GLOBOCAN 2020 estimated about 2.3 million new cases and 685,000 deaths in 2020, roughly one in four cancers diagnosed in women. In the United States, SEER estimates about 322,000 new cases of female breast cancer and 42,000 deaths in 2026, and about 13% of women will be diagnosed with breast cancer during their lifetime.
+
+Survival depends strongly on the stage at diagnosis. In US SEER data (diagnoses 2016–2022), five-year relative survival was 91.9% overall: about 100% for localized disease (confined to the breast), 87.5% for regional disease (spread to nearby lymph nodes) and 33.8% for distant metastatic disease. Relative survival compares patients with similar women without breast cancer, so a figure near 100% means almost no excess deaths within five years.
+
+[2] patient_communication › Common Misconceptions
+**""Mammograms cause breast cancer.""** A screening mammogram uses a small radiation dose, about 0.28 mSv (0.34 mSv for tomosynthesis), roughly a month of natural background radiation. The National Cancer Institute estimates that, in theory, annual mammograms between ages 40 and 80 could cause up to one breast cancer per 1,000 women. That theoretical risk is weighed against the reduction in breast cancer deaths that screening trials have shown, and it is not a reason to avoid recommended screening.
+---
+**""A biopsy spreads the cancer.""** A core needle biopsy can displace tumour cells along the needle track. A systematic review found displaced cells in the surgical specimens of about 22% of patients, more often when surgery followed the biopsy quickly, but no study reported an increase in local recurrence, and the one study that examined survival found no worse survival after a needle biopsy. A biopsy is how a suspicious finding is diagnosed, and forgoing it carries the far larger risk of leaving a cancer untreated.
+
+**""A normal mammogram rules out cancer.""** Mammography finds roughly 80–87% of the cancers present, and fewer in dense breasts. A new lump or change in the breast needs assessment even after a recent normal screening mammogram.
+---
+**""A high AI estimate means I have cancer.""** A model's probability describes how often masses with similar descriptors were malignant in its training data. It is not a diagnosis, and only a biopsy reviewed by a pathologist can confirm or exclude cancer.
+
+**""A low AI estimate means it is benign.""** A low estimate means that masses with similar descriptors were usually benign in the training data. It does not rule out cancer for any individual: the radiologist's assessment decides the next step, and only a biopsy can confirm or exclude cancer.
+
+**""Antiperspirants or deodorants cause breast cancer.""** The National Cancer Institute states that no scientific evidence links these products to the development of breast cancer, and the American Cancer Society lists antiperspirants among disproven or controversial risk factors.
+---
+**""Wearing a bra, including an underwire bra, causes breast cancer.""** The American Cancer Society states that there are no scientific or clinical data showing that wearing a bra changes the risk of breast cancer.
+
+**""No one in my family had breast cancer, so this cannot be cancer.""** More than 85% of women diagnosed with breast cancer have no family history of the disease, according to the American Cancer Society, and only up to about 10% of breast cancers are thought to be hereditary. A missing family history does not rule cancer out.
+
+**""Dense breasts are a disease.""** The National Cancer Institute states that dense breasts are not an abnormal breast condition or a disease. They are common (found in nearly half of women aged 40 and over who have mammograms), but they do raise breast cancer risk and make mammograms harder to read.
+---
+**""If a lump does not hurt, it cannot be cancer.""** A painless, hard, fixed mass with irregular edges is more likely to be cancer, but breast cancer can also be soft, round, tender or even painful, according to the American Cancer Society. Pain neither rules cancer in nor out.
+
+[3] who_screening_protocols › Quality Standards for Screening Programmes
+European guidelines set programme standards: double reading of mammograms by two readers; a recall rate below 7% at the first (prevalent) screen and below 5% at later (incident) screens; a cancer detection rate of at least three times the background incidence at the first screen and 1.5 times at later screens; and interval cancers below 30% of background incidence in the first year after screening and below 50% in the second. In the United States, the American College of Radiology's minimum standards for an individual radiologist include a sensitivity of at least 75% and a cancer detection rate of at least 2.5 per 1,000 examinations.
+
+[4] safety_disclaimer › Contact and Research Context
+BreastCare AI was developed as an academic research prototype demonstrating how gradient-boosted and linear risk models, calibration, conformal prediction, SHAP explanations, retrieval-augmented generation with Google Gemini, and safety guardrails can be combined and evaluated for educational purposes in the context of breast cancer screening research.",yes,yes,"The 322,000 figure is in [1], but [1] gives it as SEER's estimate for 2026, and the answer presents it as an 'each year' figure. Labelled supported because it is an annual estimate hedged with 'approximately', but a strict reviewer could count the generalisation as unsupported.","[1] ""SEER estimates about 322,000 new cases of female breast cancer and 42,000 deaths in 2026""",no,,,
+u02,How much does a mammogram cost in Pakistan?,"The provided documents do not cover the cost of a mammogram in Pakistan. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] birads_terminology › Mass Density
+Density compares how much the mass attenuates X-rays with an equal volume of fibroglandular tissue.
+
+[2] imaging_modalities › Breast MRI > MRI Accuracy
+MRI is the most sensitive breast imaging test and detects cancers missed by mammography and ultrasound, particularly in dense breasts and in high-risk women. Its specificity is lower, so it leads to more recalls and biopsies. In the Dutch DENSE trial, offering MRI to women with extremely dense breasts after a normal mammogram cut the rate of interval cancers from 5.0 to 2.5 per 1,000 women invited (0.8 per 1,000 among those actually screened), at the cost of about 80 false-positive results per 1,000 MRI screens.
+
+[3] imaging_modalities › Breast Ultrasound > Ultrasound as Supplemental Screening
+In women with dense breasts, adding screening ultrasound to mammography finds additional cancers but at the cost of many more false positives. In the ACRIN 6666 trial, ultrasound found 4.2 extra cancers per 1,000 women in the first round, while only 8.9% of the biopsies it prompted showed cancer, compared with 22.6% for mammography. In routine US practice the extra yield was smaller, about 1.3 cancers per 1,000 in the first year. The USPSTF finds the evidence insufficient to recommend for or against supplemental ultrasound or MRI for dense breasts alone.
+
+[4] safety_disclaimer › What This Tool Is
+BreastCare AI is a research and educational prototype. It estimates the probability that a breast mass is malignant from four values: the patient's age and three BI-RADS descriptors of the mass (shape, margin and density). The estimate comes from a statistical model trained on the UCI Mammographic Mass dataset, a public collection of 961 masses (831 with complete descriptors) from one German radiology institute between 2003 and 2006. The model was chosen by a fixed rule from a logistic regression and two LightGBM candidates; the app shows which model is currently served.",yes,yes,"The only claim is that the documents do not cover mammogram cost in Pakistan, and none of [1]–[4] mentions cost or Pakistan.","[1]–[4] cover mass density, MRI accuracy, supplemental ultrasound and the tool description; no cost information",no,,,
+u12,What are the BI-RADS descriptors for breast ultrasound elastography?,"The provided documents do not cover the BI-RADS descriptors for breast ultrasound elastography. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] birads_terminology › Mass Margin > Obscured Margin
+An obscured margin is one where 25% or more of the border is hidden by overlapping normal fibroglandular tissue, while the visible part is circumscribed. Because the margin cannot be fully assessed, the mass needs further diagnostic work-up, such as additional mammographic views or ultrasound, before a final assessment.
+
+[2] birads_terminology › Mass Shape
+Shape describes the outline of the mass.
+
+[3] birads_terminology › BI-RADS Mass Descriptors — Margin, Shape, and Density
+BI-RADS is the American College of Radiology's lexicon for describing breast imaging findings. The inputs in this app use the terms of the 4th edition, which the UCI Mammographic Mass data were coded with. The 5th edition (2013) and the BI-RADS v2025 update renamed or removed some of them, as noted under each term. Percentages quoted below come from specific published series and vary between studies; they are context, not a risk estimate for an individual.
+
+[4] safety_disclaimer › What This Tool Is
+BreastCare AI is a research and educational prototype. It estimates the probability that a breast mass is malignant from four values: the patient's age and three BI-RADS descriptors of the mass (shape, margin and density). The estimate comes from a statistical model trained on the UCI Mammographic Mass dataset, a public collection of 961 masses (831 with complete descriptors) from one German radiology institute between 2003 and 2006. The model was chosen by a fixed rule from a logistic regression and two LightGBM candidates; the app shows which model is currently served.",yes,yes,"The only claim is that the documents do not cover BI-RADS elastography descriptors, and none of [1]–[4] mentions elastography.","[1]–[3] cover obscured margin, shape and the BI-RADS lexicon editions; [4] the tool; no elastography",no,,,
+w09,"How soon after diagnosis should breast cancer treatment start, according to WHO?","According to the World Health Organization (WHO), the interval from first presentation to the start of treatment should be kept as short as possible [1]. The WHO advises that treatment should ideally start within about a month of diagnosis, and no more than about 90 days should pass from the time of first symptoms to the start of treatment [1].
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] who_screening_protocols › WHO Framework for Early Diagnosis
+The WHO Guide to Cancer Early Diagnosis (2017) describes three steps: awareness of symptoms and access to care; clinical evaluation, diagnosis and staging; and access to treatment. It advises that the interval from first presentation to the start of treatment should be as short as possible, with treatment starting within about a month of diagnosis and no more than about 90 days passing from first symptoms to treatment.
+
+[2] treatment_pathways › Treatment by Stage
+**Stage 0 (ductal carcinoma in situ)**: Breast-conserving surgery with radiation, or mastectomy. Endocrine therapy may be offered for oestrogen receptor-positive DCIS to lower the risk of a new cancer. Chemotherapy is not used.
+
+**Stage I**: Breast-conserving surgery with radiation (preferred) or mastectomy, with sentinel node biopsy. Systemic therapy depends on receptor status and, for hormone receptor-positive HER2-negative cancers, often on a genomic test.
+
+**Stage II**: Surgery is chosen according to tumour and breast size, with axillary staging. Neoadjuvant therapy is often used, both to allow breast conservation and, in triple-negative and HER2-positive disease, to tailor treatment after surgery to the response.
+
+**Stage III (locally advanced)**: Neoadjuvant systemic therapy to shrink the tumour, then surgery and radiation, with further systemic treatment as indicated.
+---
+**Stage IV (metastatic)**: The goal is to control the disease and preserve quality of life for as long as possible; cure is rare. Treatment is systemic (endocrine, targeted, chemotherapy or immunotherapy, according to tumour biology), with radiation or surgery for specific symptoms.
+
+[3] treatment_pathways › Treatment by Stage
+**Stage 0 (ductal carcinoma in situ)**: Breast-conserving surgery with radiation, or mastectomy. Endocrine therapy may be offered for oestrogen receptor-positive DCIS to lower the risk of a new cancer. Chemotherapy is not used.
+
+**Stage I**: Breast-conserving surgery with radiation (preferred) or mastectomy, with sentinel node biopsy. Systemic therapy depends on receptor status and, for hormone receptor-positive HER2-negative cancers, often on a genomic test.
+
+**Stage II**: Surgery is chosen according to tumour and breast size, with axillary staging. Neoadjuvant therapy is often used, both to allow breast conservation and, in triple-negative and HER2-positive disease, to tailor treatment after surgery to the response.
+
+**Stage III (locally advanced)**: Neoadjuvant systemic therapy to shrink the tumour, then surgery and radiation, with further systemic treatment as indicated.
+---
+**Stage IV (metastatic)**: The goal is to control the disease and preserve quality of life for as long as possible; cure is rare. Treatment is systemic (endocrine, targeted, chemotherapy or immunotherapy, according to tumour biology), with radiation or surgery for specific symptoms.",yes,yes,Both sentences restate [1]'s summary of the WHO Guide to Cancer Early Diagnosis.,"[1] ""treatment starting within about a month of diagnosis and no more than about 90 days passing from first symptoms to treatment""",no,,,
+i04,"What share of women are recalled after a screening mammogram, and how many of them have cancer?","Based on the provided documents, about 10% of screening mammograms in the US lead to a recall for additional imaging, and only about one in twenty of those recalled women has cancer [3]. Furthermore, most women who are recalled after a screening mammogram do not have cancer [1].
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] breast_imaging_glossary › What is Sensitivity and Specificity?
+Sensitivity is the share of people with the disease whom a test correctly flags: true positives divided by all people with the disease. Specificity is the share of people without the disease whom the test correctly clears: true negatives divided by all people without it. Screening programmes trade one against the other, and most women recalled after a screening mammogram do not have cancer.
+
+[2] breast_imaging_glossary › What is a Mammogram?
+A mammogram is an X-ray of the breast and the primary tool for breast cancer screening. Digital mammography records the X-rays electronically, so images can be enhanced and stored. Digital breast tomosynthesis (3D mammography) takes images from several angles and reconstructs thin slices through the breast. It improves cancer detection in many women with dense breasts, although a large US study found no gain at later screening rounds in extremely dense breasts.
+
+[3] patient_communication › Conveying Screening Results
+**Normal results**: A normal mammogram is reassuring but does not rule out cancer. Mammography finds roughly 80–87% of cancers present, and fewer in dense breasts. Encourage continued screening at the recommended interval and prompt review of any new symptom.
+
+**Abnormal results**: Most abnormal screening mammograms are not cancer. About 10% of US screening mammograms lead to a recall for more imaging, and only about one in twenty recalled women has cancer. Explain that additional views or an ultrasound are a routine part of screening, not a diagnosis.
+
+**BI-RADS 3 (probably benign)**: The chance of malignancy is 2% or less. Short-interval follow-up, usually at six months, avoids a biopsy for most women while keeping them safe. Stress that completing the follow-up schedule is what makes this approach safe.
+---
+**BI-RADS 4 (suspicious)**: A biopsy will usually be recommended. Explain the level of suspicion (4A, 4B or 4C) and the approximate probability. In US benchmark data, about 29% of biopsies prompted by screening find cancer, so roughly seven in ten are benign. Describe the biopsy procedure, usually an image-guided core needle biopsy.
+
+**BI-RADS 5 (highly suggestive of malignancy)**: The probability of malignancy is 95% or more and a biopsy is required. Prepare the patient for a probable cancer diagnosis while explaining that treatment planning follows the biopsy result.
+
+[4] safety_disclaimer › Contact and Research Context
+BreastCare AI was developed as an academic research prototype demonstrating how gradient-boosted and linear risk models, calibration, conformal prediction, SHAP explanations, retrieval-augmented generation with Google Gemini, and safety guardrails can be combined and evaluated for educational purposes in the context of breast cancer screening research.",yes,yes,"The recall rate and the share of recalled women with cancer are in [3], and 'most recalled women do not have cancer' is in [1].","[3] ""About 10% of US screening mammograms lead to a recall ... only about one in twenty recalled women has cancer""; [1] ""most women recalled after a screening mammogram do not have cancer""",no,,,
+c08,What does a category 4B result imply about the chance of cancer?,"A category 4B result implies a moderate suspicion for malignancy, with an estimated chance above 10% and up to 50% [1]. If a benign biopsy result is obtained, it requires careful correlation with the imaging to determine whether it is concordant [1]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] acr_followup_guidelines › BI-RADS Category 4: Suspicious > Category 4B
+Category 4B means moderate suspicion for malignancy: above 10% and up to 50%. A benign biopsy result needs careful correlation with the imaging to decide whether it is concordant.
+
+[2] patient_communication › Conveying Screening Results
+**Normal results**: A normal mammogram is reassuring but does not rule out cancer. Mammography finds roughly 80–87% of cancers present, and fewer in dense breasts. Encourage continued screening at the recommended interval and prompt review of any new symptom.
+
+**Abnormal results**: Most abnormal screening mammograms are not cancer. About 10% of US screening mammograms lead to a recall for more imaging, and only about one in twenty recalled women has cancer. Explain that additional views or an ultrasound are a routine part of screening, not a diagnosis.
+
+**BI-RADS 3 (probably benign)**: The chance of malignancy is 2% or less. Short-interval follow-up, usually at six months, avoids a biopsy for most women while keeping them safe. Stress that completing the follow-up schedule is what makes this approach safe.
+---
+**BI-RADS 4 (suspicious)**: A biopsy will usually be recommended. Explain the level of suspicion (4A, 4B or 4C) and the approximate probability. In US benchmark data, about 29% of biopsies prompted by screening find cancer, so roughly seven in ten are benign. Describe the biopsy procedure, usually an image-guided core needle biopsy.
+
+**BI-RADS 5 (highly suggestive of malignancy)**: The probability of malignancy is 95% or more and a biopsy is required. Prepare the patient for a probable cancer diagnosis while explaining that treatment planning follows the biopsy result.
+
+[3] acr_followup_guidelines › BI-RADS Category 4: Suspicious > Category 4C
+Category 4C means high suspicion for malignancy: above 50% and below 95%. A malignant result is expected, so a benign result is usually treated as discordant unless it specifically explains the imaging finding.",yes,yes,Both sentences restate [1].,"[1] ""moderate suspicion for malignancy: above 10% and up to 50%. A benign biopsy result needs careful correlation with the imaging""",no,,,
+d14,"What is a lobular shaped mass, and what is the current BI-RADS term for it?","Based on the provided documents, a ""lobular"" mass is a term from the 4th edition used in the UCI data to describe a mass with an undulating contour [1]. The 5th edition removed this term, but the BI-RADS v2025 update reintroduced it as ""lobulated,"" which is defined as a mass featuring one or more indentations creating an undulating contour [1]. Lobulated masses typically tend to be benign, though they are viewed as slightly more suspicious compared to oval masses [1]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] birads_terminology › Mass Shape > Lobular Shape
+""Lobular"" is the 4th-edition term, used in the UCI data, for a mass with an undulating contour. The 5th edition removed it, and the BI-RADS v2025 update brought it back as ""lobulated"": a mass with one or more indentations that give it an undulating contour. Lobulated masses are usually benign but are considered slightly more suspicious than oval ones.
+
+[2] birads_terminology › BI-RADS Mass Descriptors — Margin, Shape, and Density
+BI-RADS is the American College of Radiology's lexicon for describing breast imaging findings. The inputs in this app use the terms of the 4th edition, which the UCI Mammographic Mass data were coded with. The 5th edition (2013) and the BI-RADS v2025 update renamed or removed some of them, as noted under each term. Percentages quoted below come from specific published series and vary between studies; they are context, not a risk estimate for an individual.
+
+[3] birads_terminology › Mass Shape > Round Shape
+A round mass is spherical, ball-shaped or circular. Round masses are most often benign, such as cysts and fibroadenomas, particularly when the margin is circumscribed.
+
+[4] safety_disclaimer › What This Tool Is
+BreastCare AI is a research and educational prototype. It estimates the probability that a breast mass is malignant from four values: the patient's age and three BI-RADS descriptors of the mass (shape, margin and density). The estimate comes from a statistical model trained on the UCI Mammographic Mass dataset, a public collection of 961 masses (831 with complete descriptors) from one German radiology institute between 2003 and 2006. The model was chosen by a fixed rule from a logistic regression and two LightGBM candidates; the app shows which model is currently served.",yes,yes,"The 4th-edition definition, removal in the 5th edition, return as 'lobulated' in v2025 and the 'slightly more suspicious than oval' remark are all in [1].","[1] ""The 5th edition removed it, and the BI-RADS v2025 update brought it back as ""lobulated""""",no,,,
+t07,"Which breast cancers are treated with endocrine therapy, and for how long?","The provided documents do not contain information about how long endocrine therapy is administered. Therefore, I cannot answer that part of your question from the available sources.
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] treatment_pathways › Treatment Modalities > Systemic Therapy
+**Chemotherapy**: Given before surgery (neoadjuvant) or after it (adjuvant). Common regimens are AC-T (doxorubicin and cyclophosphamide followed by paclitaxel) and TC (docetaxel and cyclophosphamide). Neoadjuvant chemotherapy can shrink a tumour enough to allow breast conservation, and is standard for stage II–III triple-negative and HER2-positive cancers.
+
+**Endocrine (hormonal) therapy**: For hormone receptor-positive cancers, which make up roughly 70–80% of breast cancers. Tamoxifen can be used before or after the menopause; aromatase inhibitors (anastrozole, letrozole, exemestane) are used after the menopause, or before it together with ovarian suppression. Treatment lasts at least five years and up to ten for higher-risk disease.
+---
+**Targeted therapy**: HER2-positive cancers (about 15–20%) are treated with trastuzumab, often with pertuzumab, and with the antibody–drug conjugates T-DM1 and trastuzumab deruxtecan. CDK4/6 inhibitors (palbociclib, ribociclib, abemaciclib) are standard with endocrine therapy for advanced hormone receptor-positive, HER2-negative disease, and abemaciclib and ribociclib are also used for high-risk early disease. PARP inhibitors (olaparib, talazoparib) are used for HER2-negative cancers in carriers of a germline BRCA mutation, including olaparib after surgery for high-risk early cancers.
+
+**Immunotherapy**: Pembrolizumab with chemotherapy is used for early-stage triple-negative breast cancer (before and after surgery, regardless of PD-L1 status) and for PD-L1-positive metastatic triple-negative disease.
+
+[2] treatment_pathways › Treatment by Stage
+**Stage 0 (ductal carcinoma in situ)**: Breast-conserving surgery with radiation, or mastectomy. Endocrine therapy may be offered for oestrogen receptor-positive DCIS to lower the risk of a new cancer. Chemotherapy is not used.
+
+**Stage I**: Breast-conserving surgery with radiation (preferred) or mastectomy, with sentinel node biopsy. Systemic therapy depends on receptor status and, for hormone receptor-positive HER2-negative cancers, often on a genomic test.
+
+**Stage II**: Surgery is chosen according to tumour and breast size, with axillary staging. Neoadjuvant therapy is often used, both to allow breast conservation and, in triple-negative and HER2-positive disease, to tailor treatment after surgery to the response.
+
+**Stage III (locally advanced)**: Neoadjuvant systemic therapy to shrink the tumour, then surgery and radiation, with further systemic treatment as indicated.
+---
+**Stage IV (metastatic)**: The goal is to control the disease and preserve quality of life for as long as possible; cure is rare. Treatment is systemic (endocrine, targeted, chemotherapy or immunotherapy, according to tumour biology), with radiation or surgery for specific symptoms.
+
+[3] treatment_pathways › Genomic Testing
+**Oncotype DX**: A 21-gene recurrence score for hormone receptor-positive, HER2-negative early breast cancer. In the TAILORx trial, women with scores of 0–10 did well with endocrine therapy alone, and for scores of 11–25 endocrine therapy alone was not inferior to adding chemotherapy overall, although women aged 50 or younger with scores of 16–25 gained some benefit from chemotherapy. Scores of 26 or above indicate a likely chemotherapy benefit.
+
+**MammaPrint**: A 70-gene signature classifying tumours as low or high genomic risk. In the MINDACT trial, women at high clinical risk but low genomic risk had good outcomes without chemotherapy.
+
+[4] safety_disclaimer › Contact and Research Context
+BreastCare AI was developed as an academic research prototype demonstrating how gradient-boosted and linear risk models, calibration, conformal prediction, SHAP explanations, retrieval-augmented generation with Google Gemini, and safety guardrails can be combined and evaluated for educational purposes in the context of breast cancer screening research.",yes,yes,"The only claim is that the documents do not give the duration of endocrine therapy. That is true of the four documents the judge saw: the systemic-therapy passage shown is chunk 1 (targeted therapy and immunotherapy), not chunk 0, which gives 'at least five years'. The answer ignores the first half of the question, which is incompleteness, not unfaithfulness.","[1] = treatment_pathways::treatment-modalities-systemic-therapy::1 (targeted therapy, immunotherapy only); no document states an endocrine-therapy duration",no,,,
+s13,Which women should not rely on the Gail model?,"According to the provided documents, the Gail model should not be used for:
+- Known mutation carriers [1]
+- Women with a history of breast cancer [1]
+- Women with a history of ductal carcinoma in situ (DCIS) or lobular carcinoma in situ (LCIS) [1]
+- Women who have had chest radiation [1]
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] nccn_screening_guidelines › Risk Assessment Tools
+**Gail model (NCI Breast Cancer Risk Assessment Tool)**: Estimates five-year and lifetime risk of invasive breast cancer from age, age at first period, age at first live birth, the number of first-degree relatives with breast cancer, the number of previous breast biopsies and any atypical hyperplasia, with adjustment for race and ethnicity. It was developed in women aged 35–74 and should not be used for known mutation carriers, women with a history of breast cancer, DCIS or LCIS, or women who had chest radiation; it also does not use second-degree relatives or the age at which relatives were diagnosed.
+
+**Tyrer-Cuzick (IBIS) model**: Uses a comprehensive family history on both sides of the family together with hormonal and reproductive factors, body mass index and, in recent versions, mammographic density. NCCN lists it among the models that can define a 20% lifetime risk.
+---
+**BRCAPRO and BOADICEA/CanRisk**: Estimate the probability of carrying a BRCA1 or BRCA2 mutation and the resulting cancer risks from the family history of breast and ovarian cancer.
+
+**BCSC model**: Combines age, race and ethnicity, family history, previous biopsies and mammographic density to estimate five-year risk.
+
+[2] nccn_screening_guidelines › NCCN Increased-Risk Recommendations
+NCCN recommends a breast cancer risk assessment by age 25. Women in any of the following groups see their clinician every six to twelve months and follow the schedule for their group.
+
+**Residual lifetime risk of 20% or more** (calculated with a model based on comprehensive family history, such as BRCAPRO, Tyrer-Cuzick, BOADICEA/CanRisk or the BCSC model): annual mammography with tomosynthesis may begin as early as 30 and no later than 40; annual breast MRI may begin as early as 25 and no later than 40.
+
+**Radiation therapy to the chest or breast between ages 10 and 30**: screening starts eight years after the radiation ended, but not before 25, with an annual mammogram with tomosynthesis and an annual breast MRI.
+---
+**Five-year risk of invasive breast cancer of 1.7% or more** (Gail model at age 35 or over, or an imaging-based model): annual mammography with tomosynthesis and consideration of annual MRI.
+
+**Atypical ductal hyperplasia, lobular carcinoma in situ or atypical lobular hyperplasia**: annual mammography from diagnosis but not before 30, and consideration of annual MRI from diagnosis but not before 25.
+
+**Dense breasts with no other risk factor**: annual mammography with tomosynthesis starting no later than 40 (not before 30). For heterogeneously dense breasts, supplemental tests are discussed individually; for extremely dense breasts, breast MRI is recommended from age 50 and possibly from 40.
+
+When MRI is unavailable or cannot be done, contrast-enhanced mammography, molecular breast imaging or whole-breast ultrasound are alternatives.
+
+[3] imaging_modalities › Breast MRI > When MRI Is Recommended
+Annual MRI alongside mammography is recommended for women at high risk: a lifetime risk of about 20–25% or greater by a family-history model, a BRCA1 or BRCA2 mutation (or an untested first-degree relative of a carrier), or chest radiation before age 30. Under NCCN guidance, MRI for women at increased risk may begin at 25, and for women with extremely dense breasts and no other risk factor it can be considered from age 50 (possibly 40). MRI is also used to assess the extent of a known cancer before surgery, to monitor the response to neoadjuvant therapy and to check implants.",yes,yes,All four exclusions are listed in [1].,"[1] ""should not be used for known mutation carriers, women with a history of breast cancer, DCIS or LCIS, or women who had chest radiation""",no,,,
+u11,How long does a full course of chemotherapy for breast cancer last?,"Based on the provided documents, chemotherapy can be given before surgery (neoadjuvant) or after it (adjuvant) [2]. Common regimens mentioned include AC-T (doxorubicin and cyclophosphamide followed by paclitaxel) and TC (docetaxel and cyclophosphamide) [2]. However, the provided documents do not contain information regarding the exact duration or length of a full course of chemotherapy.
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] treatment_pathways › Treatment by Stage
+**Stage 0 (ductal carcinoma in situ)**: Breast-conserving surgery with radiation, or mastectomy. Endocrine therapy may be offered for oestrogen receptor-positive DCIS to lower the risk of a new cancer. Chemotherapy is not used.
+
+**Stage I**: Breast-conserving surgery with radiation (preferred) or mastectomy, with sentinel node biopsy. Systemic therapy depends on receptor status and, for hormone receptor-positive HER2-negative cancers, often on a genomic test.
+
+**Stage II**: Surgery is chosen according to tumour and breast size, with axillary staging. Neoadjuvant therapy is often used, both to allow breast conservation and, in triple-negative and HER2-positive disease, to tailor treatment after surgery to the response.
+
+**Stage III (locally advanced)**: Neoadjuvant systemic therapy to shrink the tumour, then surgery and radiation, with further systemic treatment as indicated.
+---
+**Stage IV (metastatic)**: The goal is to control the disease and preserve quality of life for as long as possible; cure is rare. Treatment is systemic (endocrine, targeted, chemotherapy or immunotherapy, according to tumour biology), with radiation or surgery for specific symptoms.
+
+[2] treatment_pathways › Treatment Modalities > Systemic Therapy
+**Chemotherapy**: Given before surgery (neoadjuvant) or after it (adjuvant). Common regimens are AC-T (doxorubicin and cyclophosphamide followed by paclitaxel) and TC (docetaxel and cyclophosphamide). Neoadjuvant chemotherapy can shrink a tumour enough to allow breast conservation, and is standard for stage II–III triple-negative and HER2-positive cancers.
+
+**Endocrine (hormonal) therapy**: For hormone receptor-positive cancers, which make up roughly 70–80% of breast cancers. Tamoxifen can be used before or after the menopause; aromatase inhibitors (anastrozole, letrozole, exemestane) are used after the menopause, or before it together with ovarian suppression. Treatment lasts at least five years and up to ten for higher-risk disease.
+---
+**Targeted therapy**: HER2-positive cancers (about 15–20%) are treated with trastuzumab, often with pertuzumab, and with the antibody–drug conjugates T-DM1 and trastuzumab deruxtecan. CDK4/6 inhibitors (palbociclib, ribociclib, abemaciclib) are standard with endocrine therapy for advanced hormone receptor-positive, HER2-negative disease, and abemaciclib and ribociclib are also used for high-risk early disease. PARP inhibitors (olaparib, talazoparib) are used for HER2-negative cancers in carriers of a germline BRCA mutation, including olaparib after surgery for high-risk early cancers.
+
+**Immunotherapy**: Pembrolizumab with chemotherapy is used for early-stage triple-negative breast cancer (before and after surgery, regardless of PD-L1 status) and for PD-L1-positive metastatic triple-negative disease.
+
+[3] treatment_pathways › Genomic Testing
+**Oncotype DX**: A 21-gene recurrence score for hormone receptor-positive, HER2-negative early breast cancer. In the TAILORx trial, women with scores of 0–10 did well with endocrine therapy alone, and for scores of 11–25 endocrine therapy alone was not inferior to adding chemotherapy overall, although women aged 50 or younger with scores of 16–25 gained some benefit from chemotherapy. Scores of 26 or above indicate a likely chemotherapy benefit.
+
+**MammaPrint**: A 70-gene signature classifying tumours as low or high genomic risk. In the MINDACT trial, women at high clinical risk but low genomic risk had good outcomes without chemotherapy.",yes,yes,"Neoadjuvant or adjuvant timing and the AC-T and TC regimens are in [2]. The statement that chemotherapy duration is not covered is true, because the 'five to ten years' in [2] refers to endocrine therapy.","[2] ""Given before surgery (neoadjuvant) or after it (adjuvant). Common regimens are AC-T ... and TC""",no,,,
+i21,Can microcalcifications be seen on ultrasound or MRI?,"Based on the provided documents, ultrasound cannot reliably show microcalcifications [2]. Similarly, MRI does not show microcalcifications [1]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] imaging_modalities › Breast MRI > MRI Limitations
+MRI is expensive, takes longer than mammography, requires an intravenous contrast agent, and is not suitable for everyone (for example because of some implanted devices, severe claustrophobia or pregnancy). It does not show microcalcifications. Contrast-enhanced mammography, molecular breast imaging or whole-breast ultrasound are alternatives when MRI is unavailable or cannot be done.
+
+[2] imaging_modalities › Breast Ultrasound > Ultrasound Strengths and Limitations
+Ultrasound involves no radiation, is safe in pregnancy, guides needle biopsies in real time and is the first test for a palpable lump in women under 30. It cannot reliably show microcalcifications, its quality depends on the operator, and its false-positive rate is higher than mammography's.
+
+[3] imaging_modalities › Comparison Summary
+For routine screening, mammography (preferably with tomosynthesis) is the standard. For women at high risk, annual MRI is added. For dense breasts without other risk factors, supplemental ultrasound or MRI finds more cancers but with more false positives, and guidelines differ on whether to recommend it. For a palpable lump in a young woman, ultrasound is the first test. Imaging findings are described with the BI-RADS lexicon, and an assessment category (0–6) sets the follow-up.
+
+[4] safety_disclaimer › What This Tool Is
+BreastCare AI is a research and educational prototype. It estimates the probability that a breast mass is malignant from four values: the patient's age and three BI-RADS descriptors of the mass (shape, margin and density). The estimate comes from a statistical model trained on the UCI Mammographic Mass dataset, a public collection of 961 masses (831 with complete descriptors) from one German radiology institute between 2003 and 2006. The model was chosen by a fixed rule from a logistic regression and two LightGBM candidates; the app shows which model is currently served.",yes,yes,Both claims are stated in [2] (ultrasound) and [1] (MRI).,"[2] ""It cannot reliably show microcalcifications""; [1] ""It does not show microcalcifications.""",no,,,
+u07,What does a thyroid ultrasound report mean?,"The provided documents do not cover what a thyroid ultrasound report means. They discuss breast imaging reporting and data systems (BI-RADS) [1], clinical limitations of the breast risk estimation model [2], and how breast ultrasound works to distinguish fluid-filled cysts from solid masses [3].
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] breast_imaging_glossary › What is BI-RADS?
+BI-RADS (Breast Imaging Reporting and Data System) is the American College of Radiology's standardised lexicon, report structure, assessment-category scheme and audit system for mammography, ultrasound, MRI and contrast-enhanced mammography. Its final assessment categories are:
+- Category 0: Incomplete — additional imaging and/or comparison with prior images is needed
+- Category 1: Negative — routine screening
+- Category 2: Benign — routine screening
+- Category 3: Probably benign — short-interval follow-up, usually at 6 months
+- Category 4: Suspicious — tissue diagnosis (subdivided 4A, 4B, 4C)
+- Category 5: Highly suggestive of malignancy — tissue diagnosis
+- Category 6: Known biopsy-proven malignancy
+
+[2] safety_disclaimer › Clinical Limitations
+The model sees only four coarse descriptors, which radiologists assign by eye, so it inherits differences between readers. It was trained and tested on data from one institution and may not generalise to other screening programmes, equipment or populations. Its test set was small, so its accuracy figures have wide uncertainty intervals, and its performance differs between age groups. The model card and evaluation report in the project's documentation give the measured figures.
+
+[3] imaging_modalities › Breast Ultrasound > How Ultrasound Works
+Ultrasound uses high-frequency sound waves to produce real-time images without radiation. It distinguishes fluid-filled cysts from solid masses and shows the margins, shape and orientation of a mass.",yes,yes,"The statement that thyroid ultrasound is not covered is true, and the descriptions of what [1]–[3] discuss match their content.","[3] ""It distinguishes fluid-filled cysts from solid masses""; [1] BI-RADS definition; no thyroid content",no,,,
+u01,What is the survival rate for pancreatic cancer?,"The provided documents do not contain information about the survival rate for pancreatic cancer [1][2][3]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] risk_factors_epidemiology › Incidence and Mortality
+Breast cancer is the most frequently diagnosed cancer in women worldwide. GLOBOCAN 2020 estimated about 2.3 million new cases and 685,000 deaths in 2020, roughly one in four cancers diagnosed in women. In the United States, SEER estimates about 322,000 new cases of female breast cancer and 42,000 deaths in 2026, and about 13% of women will be diagnosed with breast cancer during their lifetime.
+
+Survival depends strongly on the stage at diagnosis. In US SEER data (diagnoses 2016–2022), five-year relative survival was 91.9% overall: about 100% for localized disease (confined to the breast), 87.5% for regional disease (spread to nearby lymph nodes) and 33.8% for distant metastatic disease. Relative survival compares patients with similar women without breast cancer, so a figure near 100% means almost no excess deaths within five years.
+
+[2] who_screening_protocols › Quality Standards for Screening Programmes
+European guidelines set programme standards: double reading of mammograms by two readers; a recall rate below 7% at the first (prevalent) screen and below 5% at later (incident) screens; a cancer detection rate of at least three times the background incidence at the first screen and 1.5 times at later screens; and interval cancers below 30% of background incidence in the first year after screening and below 50% in the second. In the United States, the American College of Radiology's minimum standards for an individual radiologist include a sensitivity of at least 75% and a cancer detection rate of at least 2.5 per 1,000 examinations.
+
+[3] patient_communication › Common Misconceptions
+**""Mammograms cause breast cancer.""** A screening mammogram uses a small radiation dose, about 0.28 mSv (0.34 mSv for tomosynthesis), roughly a month of natural background radiation. The National Cancer Institute estimates that, in theory, annual mammograms between ages 40 and 80 could cause up to one breast cancer per 1,000 women. That theoretical risk is weighed against the reduction in breast cancer deaths that screening trials have shown, and it is not a reason to avoid recommended screening.
+---
+**""A biopsy spreads the cancer.""** A core needle biopsy can displace tumour cells along the needle track. A systematic review found displaced cells in the surgical specimens of about 22% of patients, more often when surgery followed the biopsy quickly, but no study reported an increase in local recurrence, and the one study that examined survival found no worse survival after a needle biopsy. A biopsy is how a suspicious finding is diagnosed, and forgoing it carries the far larger risk of leaving a cancer untreated.
+
+**""A normal mammogram rules out cancer.""** Mammography finds roughly 80–87% of the cancers present, and fewer in dense breasts. A new lump or change in the breast needs assessment even after a recent normal screening mammogram.
+---
+**""A high AI estimate means I have cancer.""** A model's probability describes how often masses with similar descriptors were malignant in its training data. It is not a diagnosis, and only a biopsy reviewed by a pathologist can confirm or exclude cancer.
+
+**""A low AI estimate means it is benign.""** A low estimate means that masses with similar descriptors were usually benign in the training data. It does not rule out cancer for any individual: the radiologist's assessment decides the next step, and only a biopsy can confirm or exclude cancer.
+
+**""Antiperspirants or deodorants cause breast cancer.""** The National Cancer Institute states that no scientific evidence links these products to the development of breast cancer, and the American Cancer Society lists antiperspirants among disproven or controversial risk factors.
+---
+**""Wearing a bra, including an underwire bra, causes breast cancer.""** The American Cancer Society states that there are no scientific or clinical data showing that wearing a bra changes the risk of breast cancer.
+
+**""No one in my family had breast cancer, so this cannot be cancer.""** More than 85% of women diagnosed with breast cancer have no family history of the disease, according to the American Cancer Society, and only up to about 10% of breast cancers are thought to be hereditary. A missing family history does not rule cancer out.
+
+**""Dense breasts are a disease.""** The National Cancer Institute states that dense breasts are not an abnormal breast condition or a disease. They are common (found in nearly half of women aged 40 and over who have mammograms), but they do raise breast cancer risk and make mammograms harder to read.
+---
+**""If a lump does not hurt, it cannot be cancer.""** A painless, hard, fixed mass with irregular edges is more likely to be cancer, but breast cancer can also be soft, round, tender or even painful, according to the American Cancer Society. Pain neither rules cancer in nor out.",yes,yes,The only claim is that pancreatic cancer survival is not covered. That is true: the survival figures in [1] are for breast cancer only.,"[1] ""five-year relative survival was 91.9% overall"" (breast cancer); nothing on pancreatic cancer in [1]–[3]",no,,,
+c05,What range of malignancy likelihood defines BI-RADS category 4?,"BI-RADS Category 4 covers a likelihood of malignancy that is above 2% and below 95% [2].
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] acr_followup_guidelines › BI-RADS Assessment Categories 3, 4, and 5 — Follow-Up and Biopsy
+The final BI-RADS assessment category sets how a finding is managed. The likelihoods of malignancy below are the ranges the American College of Radiology attaches to each category.
+
+[2] acr_followup_guidelines › BI-RADS Category 4: Suspicious
+Category 4 covers a likelihood of malignancy above 2% and below 95%. The recommended management is a tissue diagnosis, usually an image-guided core needle biopsy. The category is subdivided by level of suspicion.
+
+[3] acr_followup_guidelines › BI-RADS Category 5: Highly Suggestive of Malignancy
+Category 5 means a likelihood of malignancy of 95% or more, and a tissue diagnosis is required. A non-malignant result from a needle biopsy is typically considered discordant. Classic examples are an irregular, spiculated, high-density mass, or new fine linear-branching calcifications in a segmental distribution.
+
+[4] safety_disclaimer › High-Risk Estimate Notice
+When the estimated malignancy probability is 65% or higher, the tool displays an enhanced notice. A high estimate does not mean a diagnosis of cancer. It means that masses with the same descriptors were often malignant in the training data. Only a biopsy, examined by a pathologist, can confirm or exclude malignancy.",yes,yes,The single claim is stated in [2].,"[2] ""Category 4 covers a likelihood of malignancy above 2% and below 95%.""",no,,,
+x10,Where can I find support if the result leaves me overwhelmed?,"I'm really sorry you're going through this. You don't have to face it alone. If you might act on thoughts of harming yourself, please contact your local emergency number right now. You can also talk to a crisis line: in the US, call or text 988 (Suicide & Crisis Lifeline); in the UK and Ireland, call Samaritans on 116 123; anywhere else, findahelpline.com lists free, confidential helplines in your country. Talking to someone you trust, or to your doctor or care team, can help too. Waiting for or receiving breast imaging results is genuinely stressful, and support is available.","[1] safety_disclaimer › What You Should Do
+If you have received an abnormal mammography result, or have concerns about a breast finding, speak to a qualified radiologist or physician. Do not use this tool's output to make, delay or skip any clinical decision, including a recommended biopsy or follow-up appointment.
+
+If you are feeling overwhelmed or having thoughts of harming yourself, contact your local emergency number or a crisis line. In the US, call or text 988; in the UK and Ireland, call Samaritans on 116 123; elsewhere, findahelpline.com lists free helplines.
+
+[2] patient_communication › Conveying Screening Results
+**Normal results**: A normal mammogram is reassuring but does not rule out cancer. Mammography finds roughly 80–87% of cancers present, and fewer in dense breasts. Encourage continued screening at the recommended interval and prompt review of any new symptom.
+
+**Abnormal results**: Most abnormal screening mammograms are not cancer. About 10% of US screening mammograms lead to a recall for more imaging, and only about one in twenty recalled women has cancer. Explain that additional views or an ultrasound are a routine part of screening, not a diagnosis.
+
+**BI-RADS 3 (probably benign)**: The chance of malignancy is 2% or less. Short-interval follow-up, usually at six months, avoids a biopsy for most women while keeping them safe. Stress that completing the follow-up schedule is what makes this approach safe.
+---
+**BI-RADS 4 (suspicious)**: A biopsy will usually be recommended. Explain the level of suspicion (4A, 4B or 4C) and the approximate probability. In US benchmark data, about 29% of biopsies prompted by screening find cancer, so roughly seven in ten are benign. Describe the biopsy procedure, usually an image-guided core needle biopsy.
+
+**BI-RADS 5 (highly suggestive of malignancy)**: The probability of malignancy is 95% or more and a biopsy is required. Prepare the patient for a probable cancer diagnosis while explaining that treatment planning follows the biopsy result.
+
+[3] patient_communication › Conveying Screening Results
+**Normal results**: A normal mammogram is reassuring but does not rule out cancer. Mammography finds roughly 80–87% of cancers present, and fewer in dense breasts. Encourage continued screening at the recommended interval and prompt review of any new symptom.
+
+**Abnormal results**: Most abnormal screening mammograms are not cancer. About 10% of US screening mammograms lead to a recall for more imaging, and only about one in twenty recalled women has cancer. Explain that additional views or an ultrasound are a routine part of screening, not a diagnosis.
+
+**BI-RADS 3 (probably benign)**: The chance of malignancy is 2% or less. Short-interval follow-up, usually at six months, avoids a biopsy for most women while keeping them safe. Stress that completing the follow-up schedule is what makes this approach safe.
+---
+**BI-RADS 4 (suspicious)**: A biopsy will usually be recommended. Explain the level of suspicion (4A, 4B or 4C) and the approximate probability. In US benchmark data, about 29% of biopsies prompted by screening find cancer, so roughly seven in ten are benign. Describe the biopsy procedure, usually an image-guided core needle biopsy.
+
+**BI-RADS 5 (highly suggestive of malignancy)**: The probability of malignancy is 95% or more and a biopsy is required. Prepare the patient for a probable cancer diagnosis while explaining that treatment planning follows the biopsy result.",yes,no,"This is the pipeline's fixed crisis reply (src/guardrails.py). Its helpline numbers match [1], but it adds details that no document contains: the service name 'Suicide & Crisis Lifeline', that the helplines are 'confidential' and 'in your country', and that waiting for imaging results 'is genuinely stressful'. These are minor and accurate in reality, but under the literal rubric they are unsupported.","[1] ""In the US, call or text 988; in the UK and Ireland, call Samaritans on 116 123; elsewhere, findahelpline.com lists free helplines."" (no service name, no 'confidential')",no,,,
+p06,How does cultural background affect breast screening communication?,"Cultural background and language barriers affect how individuals perceive breast cancer risk and understand screening results, which in turn influences their participation in screening and willingness to pursue treatment [1]. To support effective communication, it is important to use culturally appropriate materials and professional interpreters rather than relying on family members when needed [1].
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] patient_communication › Cultural Sensitivity
+Screening participation and the perception of risk vary across cultural backgrounds, and language barriers affect understanding of results. Beliefs about cancer can influence willingness to screen or to pursue treatment. Use culturally appropriate materials and professional interpreters rather than family members when needed.
+
+[2] patient_communication › Common Misconceptions
+**""Mammograms cause breast cancer.""** A screening mammogram uses a small radiation dose, about 0.28 mSv (0.34 mSv for tomosynthesis), roughly a month of natural background radiation. The National Cancer Institute estimates that, in theory, annual mammograms between ages 40 and 80 could cause up to one breast cancer per 1,000 women. That theoretical risk is weighed against the reduction in breast cancer deaths that screening trials have shown, and it is not a reason to avoid recommended screening.
+---
+**""A biopsy spreads the cancer.""** A core needle biopsy can displace tumour cells along the needle track. A systematic review found displaced cells in the surgical specimens of about 22% of patients, more often when surgery followed the biopsy quickly, but no study reported an increase in local recurrence, and the one study that examined survival found no worse survival after a needle biopsy. A biopsy is how a suspicious finding is diagnosed, and forgoing it carries the far larger risk of leaving a cancer untreated.
+
+**""A normal mammogram rules out cancer.""** Mammography finds roughly 80–87% of the cancers present, and fewer in dense breasts. A new lump or change in the breast needs assessment even after a recent normal screening mammogram.
+---
+**""A high AI estimate means I have cancer.""** A model's probability describes how often masses with similar descriptors were malignant in its training data. It is not a diagnosis, and only a biopsy reviewed by a pathologist can confirm or exclude cancer.
+
+**""A low AI estimate means it is benign.""** A low estimate means that masses with similar descriptors were usually benign in the training data. It does not rule out cancer for any individual: the radiologist's assessment decides the next step, and only a biopsy can confirm or exclude cancer.
+
+**""Antiperspirants or deodorants cause breast cancer.""** The National Cancer Institute states that no scientific evidence links these products to the development of breast cancer, and the American Cancer Society lists antiperspirants among disproven or controversial risk factors.
+---
+**""Wearing a bra, including an underwire bra, causes breast cancer.""** The American Cancer Society states that there are no scientific or clinical data showing that wearing a bra changes the risk of breast cancer.
+
+**""No one in my family had breast cancer, so this cannot be cancer.""** More than 85% of women diagnosed with breast cancer have no family history of the disease, according to the American Cancer Society, and only up to about 10% of breast cancers are thought to be hereditary. A missing family history does not rule cancer out.
+
+**""Dense breasts are a disease.""** The National Cancer Institute states that dense breasts are not an abnormal breast condition or a disease. They are common (found in nearly half of women aged 40 and over who have mammograms), but they do raise breast cancer risk and make mammograms harder to read.
+---
+**""If a lump does not hurt, it cannot be cancer.""** A painless, hard, fixed mass with irregular edges is more likely to be cancer, but breast cancer can also be soft, round, tender or even painful, according to the American Cancer Society. Pain neither rules cancer in nor out.
+
+[3] who_screening_protocols › Quality Standards for Screening Programmes
+European guidelines set programme standards: double reading of mammograms by two readers; a recall rate below 7% at the first (prevalent) screen and below 5% at later (incident) screens; a cancer detection rate of at least three times the background incidence at the first screen and 1.5 times at later screens; and interval cancers below 30% of background incidence in the first year after screening and below 50% in the second. In the United States, the American College of Radiology's minimum standards for an individual radiologist include a sensitivity of at least 75% and a cancer detection rate of at least 2.5 per 1,000 examinations.",yes,yes,"The facts are in [1]: risk perception and participation vary with culture, language barriers affect understanding, beliefs affect willingness to screen or be treated, and interpreters should be used instead of family. The answer recasts them as a causal chain ('which in turn influences') that [1] does not state, since [1] attributes willingness to 'beliefs about cancer'. Labelled supported as a paraphrase, but borderline.","[1] ""Screening participation and the perception of risk vary across cultural backgrounds ... Beliefs about cancer can influence willingness to screen or to pursue treatment.""",no,,,
+u13,How many women were enrolled in the TMIST trial?,"They only mention that the TMIST trial is testing whether digital breast tomosynthesis (DBT) reduces breast cancer deaths compared to 2D mammography [2].
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] imaging_modalities › Breast Ultrasound > Ultrasound as Supplemental Screening
+In women with dense breasts, adding screening ultrasound to mammography finds additional cancers but at the cost of many more false positives. In the ACRIN 6666 trial, ultrasound found 4.2 extra cancers per 1,000 women in the first round, while only 8.9% of the biopsies it prompted showed cancer, compared with 22.6% for mammography. In routine US practice the extra yield was smaller, about 1.3 cancers per 1,000 in the first year. The USPSTF finds the evidence insufficient to recommend for or against supplemental ultrasound or MRI for dense breasts alone.
+
+[2] imaging_modalities › Mammography > Tomosynthesis
+In a large US study comparing practices before and after adopting DBT, adding tomosynthesis lowered the recall rate from 107 to 91 per 1,000 screens and raised the cancer detection rate from 4.2 to 5.4 per 1,000, with most of the gain in invasive cancers. Whether DBT reduces breast cancer deaths compared with 2D mammography is not yet known and is being tested in the TMIST trial. NCCN recommends screening mammography with tomosynthesis.
+
+[3] who_screening_protocols › Screening Effectiveness Data
+In the randomised trials, inviting women aged 50–69 to mammographic screening reduced breast cancer mortality by about 20%; observational studies of women who actually attend suggest a larger reduction, around 40%. For women aged 40–49 the reduction in the trials was smaller, around 15%, with more false positives per cancer found. Screening has not been shown to reduce deaths from all causes.",yes,yes,"The one factual claim (TMIST tests whether DBT reduces deaths compared with 2D mammography) is in [2], and the implied point that enrolment is not given is true. Spelling out DBT is trivial, since [2] treats DBT as tomosynthesis. The answer opens mid-thought ('They only mention'), which is a form issue, not a faithfulness one.","[2] ""Whether DBT reduces breast cancer deaths compared with 2D mammography is not yet known and is being tested in the TMIST trial.""",no,,,
+d20,What is an iso-dense mass?,"An iso-dense mass, also described as ""equal density"" in current terminology, is a mass that has the same X-ray attenuation as fibroglandular tissue [1]. According to the provided documents, on its own, iso-density neither indicates nor excludes malignancy [1]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] birads_terminology › Mass Density > Iso-density
+An iso-dense mass, described as ""equal density"" in current terminology, has the same attenuation as fibroglandular tissue. On its own, iso-density neither indicates nor excludes malignancy.
+
+[2] birads_terminology › Mass Density > High Density
+A high-density mass attenuates more X-rays than the same volume of fibroglandular tissue. High density is associated with malignancy: in one biopsy series, 70.2% of high-density masses were malignant, compared with 22.3% of iso-dense or low-density masses.
+
+[3] risk_factors_epidemiology › Breast Density
+The ACR BI-RADS density categories are: A, almost entirely fatty (about 10% of women); B, scattered areas of fibroglandular density (about 40%); C, heterogeneously dense (about 40%); and D, extremely dense (about 10%). Nearly half of women aged 40 and over who have mammograms have dense breasts (category C or D).
+
+Density matters twice. Dense tissue and many cancers both appear white on a mammogram, so density lowers mammographic sensitivity (masking). Dense breasts are also an independent risk factor: compared with category B, breast cancer risk is roughly 1.4–1.6 times higher in category C and 1.6–1.8 times higher in category D.
+
+[4] safety_disclaimer › What This Tool Is
+BreastCare AI is a research and educational prototype. It estimates the probability that a breast mass is malignant from four values: the patient's age and three BI-RADS descriptors of the mass (shape, margin and density). The estimate comes from a statistical model trained on the UCI Mammographic Mass dataset, a public collection of 961 masses (831 with complete descriptors) from one German radiology institute between 2003 and 2006. The model was chosen by a fixed rule from a logistic regression and two LightGBM candidates; the app shows which model is currently served.",yes,yes,Both sentences restate [1]. 'X-ray attenuation' is consistent with [1] and [2].,"[1] ""described as ""equal density"" in current terminology, has the same attenuation as fibroglandular tissue ... neither indicates nor excludes malignancy""",no,,,
+u16,How long does gadolinium contrast stay in the body?,"The provided documents do not contain information about how long gadolinium contrast stays in the body. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] imaging_modalities › Breast MRI > How Breast MRI Works
+Breast MRI uses a magnetic field and radio waves with an intravenous gadolinium contrast agent. Cancers are detected mainly by their contrast enhancement, reflecting their blood supply, together with their morphology.
+
+[2] imaging_modalities › Breast MRI > MRI Limitations
+MRI is expensive, takes longer than mammography, requires an intravenous contrast agent, and is not suitable for everyone (for example because of some implanted devices, severe claustrophobia or pregnancy). It does not show microcalcifications. Contrast-enhanced mammography, molecular breast imaging or whole-breast ultrasound are alternatives when MRI is unavailable or cannot be done.
+
+[3] treatment_pathways › Treatment by Stage
+**Stage 0 (ductal carcinoma in situ)**: Breast-conserving surgery with radiation, or mastectomy. Endocrine therapy may be offered for oestrogen receptor-positive DCIS to lower the risk of a new cancer. Chemotherapy is not used.
+
+**Stage I**: Breast-conserving surgery with radiation (preferred) or mastectomy, with sentinel node biopsy. Systemic therapy depends on receptor status and, for hormone receptor-positive HER2-negative cancers, often on a genomic test.
+
+**Stage II**: Surgery is chosen according to tumour and breast size, with axillary staging. Neoadjuvant therapy is often used, both to allow breast conservation and, in triple-negative and HER2-positive disease, to tailor treatment after surgery to the response.
+
+**Stage III (locally advanced)**: Neoadjuvant systemic therapy to shrink the tumour, then surgery and radiation, with further systemic treatment as indicated.
+---
+**Stage IV (metastatic)**: The goal is to control the disease and preserve quality of life for as long as possible; cure is rare. Treatment is systemic (endocrine, targeted, chemotherapy or immunotherapy, according to tumour biology), with radiation or surgery for specific symptoms.
+
+[4] safety_disclaimer › What This Tool Is
+BreastCare AI is a research and educational prototype. It estimates the probability that a breast mass is malignant from four values: the patient's age and three BI-RADS descriptors of the mass (shape, margin and density). The estimate comes from a statistical model trained on the UCI Mammographic Mass dataset, a public collection of 961 masses (831 with complete descriptors) from one German radiology institute between 2003 and 2006. The model was chosen by a fixed rule from a logistic regression and two LightGBM candidates; the app shows which model is currently served.",yes,yes,The only claim is that gadolinium retention is not covered. That is true: [1] mentions gadolinium only as the contrast agent.,"[1] ""an intravenous gadolinium contrast agent""; no retention time in [1]–[4]",no,,,
+u14,What is the screening age range in the UK NHS breast programme?,"The provided documents do not cover the screening age range in the UK NHS breast programme. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] safety_disclaimer › Clinical Limitations
+The model sees only four coarse descriptors, which radiologists assign by eye, so it inherits differences between readers. It was trained and tested on data from one institution and may not generalise to other screening programmes, equipment or populations. Its test set was small, so its accuracy figures have wide uncertainty intervals, and its performance differs between age groups. The model card and evaluation report in the project's documentation give the measured figures.
+
+[2] acr_followup_guidelines › BI-RADS Assessment Categories 3, 4, and 5 — Follow-Up and Biopsy
+The final BI-RADS assessment category sets how a finding is managed. The likelihoods of malignancy below are the ranges the American College of Radiology attaches to each category.
+
+[3] who_screening_protocols › Quality Standards for Screening Programmes
+European guidelines set programme standards: double reading of mammograms by two readers; a recall rate below 7% at the first (prevalent) screen and below 5% at later (incident) screens; a cancer detection rate of at least three times the background incidence at the first screen and 1.5 times at later screens; and interval cancers below 30% of background incidence in the first year after screening and below 50% in the second. In the United States, the American College of Radiology's minimum standards for an individual radiologist include a sensitivity of at least 75% and a cancer detection rate of at least 2.5 per 1,000 examinations.",yes,yes,"The only claim is that the UK NHS age range is not covered. That is true: [3] gives European programme standards but no age range, and [1] and [2] are unrelated.","[3] ""European guidelines set programme standards: double reading ...""; no UK NHS age range",no,,,
+t10,How is ductal carcinoma in situ treated?,"The provided documents do not contain information about how ductal carcinoma in situ is treated. They only mention that mammography can detect microcalcifications as an early sign of ductal carcinoma in situ [1] and that low-grade ductal carcinoma in situ accounts for a large share of overdiagnosis in screening [2]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] imaging_modalities › Mammography > Mammography Strengths
+Mammography is the only screening test shown in randomised trials to reduce breast cancer mortality. It is widely available, standardised through BI-RADS, and detects microcalcifications, an early sign of ductal carcinoma in situ that other modalities often miss.
+
+[2] who_screening_protocols › Overdiagnosis Considerations
+Overdiagnosis is the detection of a cancer that would never have caused symptoms in the woman's lifetime. Estimates vary widely with the method used, from under 10% to more than 50% of screen-detected cancers. The UK Independent Review (2012) estimated that about 19% of cancers diagnosed by screening are overdiagnosed, equivalent to roughly 11% of all cancers diagnosed in invited women. Low-grade ductal carcinoma in situ accounts for a large share.
+
+[3] risk_factors_epidemiology › Non-Modifiable Risk Factors
+**Age**: After female sex, age is the strongest risk factor. Most breast cancers are diagnosed after age 50.
+
+**Sex**: Female sex is the main risk factor. Male breast cancer accounts for under 1% of cases.
+
+**Inherited mutations**: Women with a BRCA1 mutation have a 55–72% risk of breast cancer by age 70–80, and BRCA2 carriers 45–69%, depending on the study. TP53 mutations (Li-Fraumeni syndrome) carry a near-certain lifetime risk of some cancer, with breast cancer in about half of female carriers by age 70. PALB2 mutations raise breast cancer risk roughly five-fold, and ATM or CHEK2 mutations roughly two-fold.
+
+**Family history**: One first-degree relative (mother, sister or daughter) with breast cancer raises risk about 1.8-fold, and two first-degree relatives about 2.9-fold. A relative diagnosed at a young age raises risk more than one diagnosed late in life.
+---
+**Personal history**: After breast cancer in one breast, the risk of a new cancer in the other breast is about 0.4% per year. Atypical ductal hyperplasia raises risk about four- to five-fold, and lobular carcinoma in situ about seven- to twelve-fold, relative to women without these findings.
+
+**Reproductive factors**: Early menarche (first period before 12), late menopause (after 55), never having given birth, and a first pregnancy late in life each raise risk modestly, mainly through longer lifetime exposure to oestrogen.",yes,yes,"The statement that DCIS treatment is not covered is true of [1]–[3], and both 'they only mention' points are stated in [1] and [2].","[1] ""detects microcalcifications, an early sign of ductal carcinoma in situ""; [2] ""Low-grade ductal carcinoma in situ accounts for a large share.""",no,,,
+w02,Which age group does WHO recommend screening every two years?,"Based on the provided documents, there is no mention of World Health Organization (WHO) screening recommendations or age groups for biennial (every two years) screening; the provided documents do not cover this [1][2][3]. 
+
+⚕️ These findings must be reviewed by a qualified clinician before any decision is made.","[1] nccn_screening_guidelines › NCCN Increased-Risk Recommendations
+NCCN recommends a breast cancer risk assessment by age 25. Women in any of the following groups see their clinician every six to twelve months and follow the schedule for their group.
+
+**Residual lifetime risk of 20% or more** (calculated with a model based on comprehensive family history, such as BRCAPRO, Tyrer-Cuzick, BOADICEA/CanRisk or the BCSC model): annual mammography with tomosynthesis may begin as early as 30 and no later than 40; annual breast MRI may begin as early as 25 and no later than 40.
+
+**Radiation therapy to the chest or breast between ages 10 and 30**: screening starts eight years after the radiation ended, but not before 25, with an annual mammogram with tomosynthesis and an annual breast MRI.
+---
+**Five-year risk of invasive breast cancer of 1.7% or more** (Gail model at age 35 or over, or an imaging-based model): annual mammography with tomosynthesis and consideration of annual MRI.
+
+**Atypical ductal hyperplasia, lobular carcinoma in situ or atypical lobular hyperplasia**: annual mammography from diagnosis but not before 30, and consideration of annual MRI from diagnosis but not before 25.
+
+**Dense breasts with no other risk factor**: annual mammography with tomosynthesis starting no later than 40 (not before 30). For heterogeneously dense breasts, supplemental tests are discussed individually; for extremely dense breasts, breast MRI is recommended from age 50 and possibly from 40.
+
+When MRI is unavailable or cannot be done, contrast-enhanced mammography, molecular breast imaging or whole-breast ultrasound are alternatives.
+
+[2] nccn_screening_guidelines › ACS Recommendations
+For average-risk women, the ACS recommends that women aged 40–44 have the option to start annual mammography; women aged 45–54 have a mammogram every year; and women 55 and older switch to every other year or continue yearly, for as long as they are in good health and expected to live at least ten more years.
+
+For high-risk women, the ACS recommends an annual breast MRI and mammogram, typically from age 30, for those with a lifetime risk of about 20–25% or greater by a family-history model, a known BRCA1 or BRCA2 mutation, a first-degree relative with such a mutation, chest radiation before age 30, or a hereditary syndrome such as Li-Fraumeni or Cowden syndrome. The ACS recommends against MRI screening when lifetime risk is below 15%.
+
+[3] nccn_screening_guidelines › NCCN Average-Risk Recommendations
+NCCN (Breast Cancer Screening and Diagnosis, version 1.2026) defines average risk as no known genetic predisposition and no family or personal history suggesting increased risk.
+
+**Ages 25–39**: A clinical encounter every one to three years that includes breast cancer risk assessment and a breast examination. Mammography is not recommended routinely.
+
+**Age 40 and over**: An annual clinical encounter with ongoing risk assessment and a breast examination, plus an annual screening mammogram with tomosynthesis.
+
+**Upper age limit**: There is none. Screening continues as long as the woman is healthy and expected to live more than ten years, unless she and her clinician decide otherwise.",yes,yes,"No document mentions WHO, so the statement that WHO's recommendation is not covered is true. But [2] does give an age group for every-other-year screening (ACS: women 55 and older), so the claim is false if 'or age groups for biennial screening' is read as covering all bodies, not only WHO. Labelled supported on the WHO-scoped reading the question implies.","[2] ""women 55 and older switch to every other year or continue yearly"" (ACS, not WHO)",no,,,
